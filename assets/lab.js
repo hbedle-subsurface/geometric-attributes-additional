@@ -30,7 +30,20 @@ const LAB = (function () {
      ======================================================================= */
 
   function guard(needed) {
-    const missing = needed.filter((n) => typeof window[n] === 'undefined');
+    /* A top-level `const` in a classic <script> creates a binding in the global
+       LEXICAL scope, not a property of `window`. So `window.SEIS` is undefined
+       even when seismic.js loaded perfectly. Every library here is declared
+       that way, and lab.js is evaluated after all of them in the same global
+       scope, so the honest test is a plain `typeof` on the identifier - which
+       is safe on an undeclared name and returns 'undefined' if the file really
+       is missing. */
+    const present = {
+      SEIS: typeof SEIS !== 'undefined',
+      ATTR: typeof ATTR !== 'undefined',
+      EXTRA: typeof EXTRA !== 'undefined',
+      LAB: true,
+    };
+    const missing = needed.filter((n) => !present[n]);
     if (!missing.length) return true;
     const files = missing.map((n) => ({
       SEIS: 'assets/seismic.js', ATTR: 'assets/attributes.js',
