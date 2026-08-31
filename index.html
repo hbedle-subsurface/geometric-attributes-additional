@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>More Geometric Attributes, and How They Actually Work</title>
+<meta name="description" content="Interactive modules on four more AASPI geometric attribute programs: structure-oriented filtering and edge preservation, the disorder attribute, gray-level co-occurrence texture attributes, and nonparallelism. Built for teaching by AASPI at the University of Oklahoma.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="index.html"><span class="dot"></span>More geometric attributes, and how they <b>actually</b> work</a>
+    <nav>
+      <a href="#modules">Modules</a>
+      <a href="#about">About</a>
+      <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a>
+    </nav>
+  </header>
+
+  <!-- ================================ HERO ================================ -->
+  <section class="hero">
+   <div class="hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">AASPI &nbsp;·&nbsp; University of Oklahoma</p>
+      <h1 class="title">Coherence and curvature answer one kind of question. These four programs answer <em>the others</em>.</h1>
+      <p class="lede">Is this reflector broken, and is it bent? Those two questions cover a great deal of
+        structural interpretation, and the first set of modules is about how they get answered. They leave
+        out a lot. How do I clean the volume up without flattening the faults I am looking for? How much
+        should I trust this pick? What does this package <em>look</em> like, as a pattern rather than as a
+        set of amplitudes? Are these reflectors even parallel to each other?</p>
+      <p class="lede">Six modules on four AASPI programs — <span class="k">sof3d</span>,
+        <span class="k">disorder</span>, <span class="k">glcm3d</span> and
+        <span class="k">nonparallelism</span>. Build the data, watch the attribute being computed on it,
+        move the parameters that are usually left at their defaults, and read the numbers off the running
+        page. There is nothing to install.</p>
+      <p class="lede"><b>What you need first.</b> Written for undergraduate geology and geophysics students.
+        You should know what a seismic trace is, what a reflector is, and roughly what dip and coherence
+        are — <a href="https://hbedle-subsurface.github.io/geometric-attributes/">the first set</a> covers
+        those from the beginning if you do not. Everything after that is built up in order inside the
+        modules.</p>
+      <div class="hero-cta">
+        <a class="btn" href="modules/sof.html">Start with structure-oriented filtering →</a>
+        <a class="btn ghost" href="#modules">See all six modules</a>
+      </div>
+    </div>
+    <div class="hero-panel"><canvas id="heroCanvas" aria-label="A noisy faulted reflector package and the same package filtered"></canvas>
+      <div class="hero-cap"><span>the same reflectors, before and after filtering along structure</span><b>where these six modules start</b></div></div>
+   </div>
+  </section>
+
+  <!-- ============================== THE PREMISE ============================ -->
+  <section class="primer">
+   <div class="primer-grid">
+    <div>
+      <h3>Filtering is an interpretation</h3>
+      <p>Structure-oriented filtering decides what in your data is noise. Everything downstream inherits
+        that decision, and the only way to check it is to look at what the filter threw away.</p>
+    </div>
+    <div>
+      <h3>Not everything worth finding is an edge</h3>
+      <p>Coherence is built to find discontinuities. Chaos, poor data quality and non-parallel bedding are
+        none of those, and they need attributes that ask a different question.</p>
+    </div>
+    <div>
+      <h3>Some of these are not for looking at</h3>
+      <p>Texture attributes are built to be fed to a classifier. Judging them by whether the section looks
+        good is judging them by the wrong criterion, and the documentation says so.</p>
+    </div>
+   </div>
+  </section>
+
+  <!-- =============================== MODULES ============================== -->
+  <section id="modules" class="modules">
+    <div class="sec-head">
+      <h2>The modules</h2>
+      <p>In the order they build on each other. The first two are a pair, and so are the fourth and fifth.
+        Work through them in sequence and you should be able to say what each program measures and why
+        someone would run it, name the parameter that most changes the answer, tell which attributes are
+        telling you the same thing twice, and give more than one explanation for any anomaly you see.</p>
+    </div>
+
+    <div class="card-grid">
+
+      <a class="card" href="modules/sof.html">
+        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><path d="M14 70 Q60 34 100 44 Q140 54 186 30" fill="none" stroke="#16191C" stroke-width="2.6" stroke-linecap="round"/><path d="M14 86 Q60 50 100 60 Q140 70 186 46" fill="none" stroke="#16191C" stroke-width="2.6" stroke-linecap="round" opacity=".55"/><rect x="52" y="24" width="52" height="22" fill="none" stroke="#C7C9C0" stroke-width="1.7" stroke-dasharray="4 3"/><path d="M56 52 L104 40 L104 24 L56 36 Z" fill="rgba(132,22,23,.09)" stroke="#841617" stroke-width="2.2"/><circle cx="80" cy="38" r="3.6" fill="#841617"/></svg></div>
+        <div class="card-body">
+          <div class="card-no">01</div>
+          <h3>Filtering along structure</h3>
+          <p>Five filters over the same window of data, and one decision that matters more than the choice
+            between them: which direction to average in. Mean, alpha-trimmed, median, LUM and principal
+            component, with the error of each measured against a clean model.</p>
+          <div class="q">Which filter, and does it matter?</div>
+        </div>
+        <span class="flag next">Start here</span>
+      </a>
+
+      <a class="card" href="modules/edgepreserve.html">
+        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><path d="M14 40 L92 40" stroke="#16191C" stroke-width="2.8" stroke-linecap="round"/><path d="M108 62 L186 62" stroke="#16191C" stroke-width="2.8" stroke-linecap="round"/><path d="M14 62 L92 62" stroke="#16191C" stroke-width="2.8" stroke-linecap="round" opacity=".5"/><path d="M108 84 L186 84" stroke="#16191C" stroke-width="2.8" stroke-linecap="round" opacity=".5"/><line x1="100" y1="14" x2="100" y2="96" stroke="#C7C9C0" stroke-width="2" stroke-dasharray="5 4"/><rect x="42" y="28" width="46" height="24" fill="none" stroke="#841617" stroke-width="2.4"/><rect x="80" y="28" width="46" height="24" fill="none" stroke="#C7C9C0" stroke-width="1.8" stroke-dasharray="4 3"/></svg></div>
+        <div class="card-body">
+          <div class="card-no">02</div>
+          <h3>Edge-preserving filtering</h3>
+          <p>Every filter in module 01 smooths a fault away as happily as it smooths a reflector. Two fixes:
+            move the window off the edge, or refuse to filter where coherence says there is one. Both, with
+            the damage measured.</p>
+          <div class="q">Where did my fault go?</div>
+        </div>
+      </a>
+
+      <a class="card" href="modules/disorder.html">
+        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><path d="M14 30 Q56 22 100 30 Q144 38 186 30" fill="none" stroke="#16191C" stroke-width="2.4" stroke-linecap="round"/><path d="M14 52 L22 48 L28 58 L36 44 L44 60 L52 46 L60 58 L70 44 L78 62 L88 46 L96 58 L106 44 L114 60 L124 46 L132 58 L142 46 L150 58 L160 46 L170 56 L178 48 L186 54" fill="none" stroke="#841617" stroke-width="2.2" stroke-linejoin="round"/><path d="M14 82 Q56 74 100 82 Q144 90 186 82" fill="none" stroke="#16191C" stroke-width="2.4" stroke-linecap="round"/><circle cx="100" cy="52" r="5" fill="none" stroke="#841617" stroke-width="2.4"/></svg></div>
+        <div class="card-body">
+          <div class="card-no">03</div>
+          <h3>Disorder</h3>
+          <p>A second difference in all three directions, divided by the energy in the window. It ignores
+            faults on purpose and finds the places where the data are too messy to pick — which turns a
+            structure map into a structure map with error bars.</p>
+          <div class="q">How much should I trust this pick?</div>
+        </div>
+      </a>
+
+      <a class="card" href="modules/glcm.html">
+        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><rect x="18" y="18" width="68" height="68" fill="#FBFAF7" stroke="#C7C9C0" stroke-width="1.5"/><rect x="30" y="30" width="14" height="14" fill="#B9C3CA"/><rect x="44" y="44" width="14" height="14" fill="#8B99A4"/><rect x="58" y="30" width="14" height="14" fill="#DDE2E5"/><rect x="30" y="58" width="14" height="14" fill="#DDE2E5"/><rect x="114" y="18" width="68" height="68" fill="#FBFAF7" stroke="#C7C9C0" stroke-width="1.5"/><line x1="114" y1="18" x2="182" y2="86" stroke="#841617" stroke-width="1.4" stroke-dasharray="3 3"/><rect x="122" y="26" width="9" height="9" fill="#841617" opacity=".85"/><rect x="139" y="43" width="9" height="9" fill="#841617" opacity=".65"/><rect x="156" y="60" width="9" height="9" fill="#841617" opacity=".9"/><rect x="139" y="26" width="9" height="9" fill="#841617" opacity=".35"/><rect x="122" y="43" width="9" height="9" fill="#841617" opacity=".35"/><path d="M90 52 L110 52" stroke="#16191C" stroke-width="2"/><polygon points="112,52 104,48 104,56" fill="#16191C"/></svg></div>
+        <div class="card-body">
+          <div class="card-no">04</div>
+          <h3>The co-occurrence matrix</h3>
+          <p>Texture starts by throwing the amplitudes away and keeping only their rank, then tallying which
+            level sits next to which. Quantization, the 1.5σ clip, four directions, and why the matrix is
+            nearly always too sparse for comfort.</p>
+          <div class="q">What is a texture attribute computed from?</div>
+        </div>
+      </a>
+
+      <a class="card" href="modules/textures.html">
+        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><rect x="16" y="16" width="40" height="34" fill="#D9DEE1"/><rect x="60" y="16" width="40" height="34" fill="#B0BAC2"/><rect x="104" y="16" width="40" height="34" fill="#D9DEE1"/><rect x="148" y="16" width="36" height="34" fill="#8B99A4"/><rect x="16" y="54" width="40" height="34" fill="#C9A99A"/><rect x="60" y="54" width="40" height="34" fill="#A9646A"/><rect x="104" y="54" width="40" height="34" fill="#C9A99A"/><rect x="148" y="54" width="36" height="34" fill="#841617"/><line x1="58" y1="10" x2="58" y2="94" stroke="#F6F4EE" stroke-width="3"/><line x1="102" y1="10" x2="102" y2="94" stroke="#F6F4EE" stroke-width="3"/><line x1="146" y1="10" x2="146" y2="94" stroke="#F6F4EE" stroke-width="3"/><line x1="10" y1="52" x2="190" y2="52" stroke="#F6F4EE" stroke-width="3"/></svg></div>
+        <div class="card-body">
+          <div class="card-no">05</div>
+          <h3>The texture measures</h3>
+          <p>Contrast, dissimilarity, homogeneity, energy, entropy, mean, variance and correlation. Where
+            GLCM energy has nothing to do with amplitude, where GLCM variance turns out to be semblance, and
+            how few of the eight are saying different things.</p>
+          <div class="q">Which of these should I feed a classifier?</div>
+        </div>
+      </a>
+
+      <a class="card" href="modules/nonparallel.html">
+        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><g stroke="#16191C" stroke-width="2" stroke-linecap="round"><line x1="20" y1="30" x2="30" y2="22"/><line x1="42" y1="32" x2="52" y2="24"/><line x1="64" y1="34" x2="74" y2="26"/><line x1="20" y1="58" x2="30" y2="50"/><line x1="42" y1="60" x2="52" y2="52"/><line x1="64" y1="62" x2="74" y2="54"/><line x1="20" y1="86" x2="30" y2="78"/><line x1="42" y1="88" x2="52" y2="80"/><line x1="64" y1="90" x2="74" y2="82"/></g><g stroke="#841617" stroke-width="2" stroke-linecap="round"><line x1="112" y1="30" x2="124" y2="26"/><line x1="136" y1="24" x2="142" y2="36"/><line x1="160" y1="34" x2="170" y2="22"/><line x1="112" y1="60" x2="120" y2="50"/><line x1="136" y1="56" x2="148" y2="60"/><line x1="160" y1="50" x2="164" y2="64"/><line x1="112" y1="84" x2="124" y2="88"/><line x1="136" y1="90" x2="142" y2="78"/><line x1="160" y1="80" x2="172" y2="86"/></g><line x1="94" y1="10" x2="94" y2="94" stroke="#C7C9C0" stroke-width="1.6" stroke-dasharray="5 4"/></svg></div>
+        <div class="card-body">
+          <div class="card-no">06</div>
+          <h3>Nonparallelism</h3>
+          <p>Turn every dip into an arrow and measure how much the arrows in a window disagree. Salt, mass
+            transport complexes and karst fail that test while often passing coherence, and a channel with no
+            structural expression fails a different one.</p>
+          <div class="q">Is this package chaotic, or just dipping?</div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============================== DISCLAIMER ============================= -->
+  <section class="disclaimer">
+    <h4>What this is, and what it is not</h4>
+    <p>These modules are <b>teaching models, built to make ideas visible</b>. The algorithms follow the AASPI
+      documentation, but they run on small synthetic datasets, in two dimensions, and in their plain
+      brute-force form, so the method can be read and watched rather than assumed. Every module has a Method
+      tab listing what it has simplified and why.</p>
+    <p>Every number quoted in the text is measured from the page you are looking at, not estimated. Move a
+      slider and the numbers in the prose move with it — including, in a couple of places, past the point
+      where the conclusion in the text still holds. Those places are marked, because noticing them is the
+      more useful skill.</p>
+    <p>This is not attribute software. For production work on real volumes, use
+      <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> or your interpretation package. The numbers here
+      describe the model on the screen, not your survey.</p>
+  </section>
+
+  <!-- ================================ ABOUT =============================== -->
+  <section id="about" class="about">
+    <div class="about-copy">
+      <h2>About</h2>
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+        Attribute Assisted Seismic Processing and Interpretation
+        (<a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a>) consortium.</p>
+      <p>A companion to <em><a href="https://hbedle-subsurface.github.io/geometric-attributes/">How Geometric
+        Attributes Actually Work</a></em>, which covers dip, coherence, curvature and aberrancy. This set
+        takes four more AASPI programs that sit alongside those: the filtering that usually runs before them,
+        and three attributes that measure things coherence and curvature were never built to see.</p>
+      <p>Everything runs in the browser. No installation and no account. Nothing you do inside a module
+        — no slider, no click, no trace you generate — is transmitted anywhere. The module code makes no
+        network requests of its own.</p>
+      <p>The one request each page does make is a page-view count, which records that the page was opened
+        and nothing else: no cookie, no account, nothing about you. I keep that count for two reasons — so
+        the modules people actually use are the ones that get improved, and so I can show my university
+        that you all are using these, which is how they keep getting built.</p>
+      <p>Free to use for teaching, demonstration and non-commercial study, provided the source is credited.
+        Please do not republish or redistribute it, modified or otherwise, without permission. If you use it
+        in a course or a talk, a credit line and a link back are all that is asked.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-grid">
+      <p class="lic">To cite: H. Bedle, <i>More Geometric Attributes, and How They Actually Work</i>,
+        University of Oklahoma,
+        <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="assets/count.js"></script>
+<script src="assets/seismic.js"></script>
+<script src="assets/attributes.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* Hero: one reflector package with a fault, drawn twice. The left half keeps
+     the noise; the right half is the same package after a filter that followed
+     the structure. Same horizons, same fault, so the only difference the eye
+     sees is the one the first module is about. */
+  function drawHero() {
+    const c = document.getElementById('heroCanvas');
+    if (!c || !c.parentElement) return;
+    const w = c.parentElement.clientWidth;
+    const h = Math.max(230, Math.round(w * 0.60));
+    const ctx = SEIS.fitCanvas(c, w, h);
+    ctx.clearRect(0, 0, w, h);
+
+    const N = 14;
+    const top = h * 0.16, span = h * 0.64;
+    const AMP = h * 0.075;
+    const FX = 0.60 * w, FSL = 0.16;
+    const THROW = (span / (N - 1)) * 0.70;
+    const SPLIT = w * 0.46;
+
+    const rnd = SEIS.mulberry32(9);
+    const fold = (x) => AMP * Math.sin(2 * Math.PI * (x / w) * 1.15 - 0.4);
+    const cutAt = (yBase) => FX + FSL * (yBase - top);
+    const yOf = (x, yBase) => yBase + fold(x) + (x > cutAt(yBase) ? THROW : 0);
+
+    // a fixed noise field, so the two halves differ only in how much of it shows
+    const noise = [];
+    for (let i = 0; i < 4000; i++) noise.push(rnd() * 2 - 1);
+    const noiseAt = (x, n) => noise[(Math.round(x) * 7 + n * 131) % noise.length];
+
+    for (let n = 0; n < N; n++) {
+      const t = n / (N - 1);
+      const yBase = top + t * span;
+      const r = Math.round(132 + (108 - 132) * t);
+      const g = Math.round(22 + (116 - 22) * t);
+      const b = Math.round(23 + (126 - 23) * t);
+      ctx.save();
+      ctx.strokeStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+      ctx.globalAlpha = 0.95 - 0.28 * t;
+      ctx.lineWidth = 2.3 - 0.6 * t;
+      ctx.lineCap = 'round';
+      const cut = cutAt(yBase);
+      [[0, cut - 2], [cut + 2, w]].forEach((seg) => {
+        ctx.beginPath();
+        let first = true;
+        for (let x = seg[0]; x <= seg[1]; x += 2) {
+          // full noise on the left of the split, tapering to none on the right
+          const k = x < SPLIT ? 1 : Math.max(0, 1 - (x - SPLIT) / (w * 0.16));
+          const y = yOf(x, yBase) + k * AMP * 0.55 * noiseAt(x, n);
+          first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          first = false;
+        }
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    // the fault plane
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,.26)';
+    ctx.lineWidth = 1.3; ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.moveTo(cutAt(top), top - AMP - 10);
+    ctx.lineTo(cutAt(top + span), top + span + AMP + THROW + 10);
+    ctx.stroke();
+    ctx.restore();
+
+    // where the filter takes over
+    ctx.save();
+    ctx.strokeStyle = 'rgba(11,114,133,.55)';
+    ctx.lineWidth = 1.6; ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(SPLIT, top - AMP - 14);
+    ctx.lineTo(SPLIT, top + span + AMP + THROW + 14);
+    ctx.stroke();
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.fillStyle = 'rgba(11,114,133,.9)';
+    ctx.setLineDash([]);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('filtered \u2192', SPLIT + 7, top - AMP - 16);
+    ctx.restore();
+  }
+
+  drawHero();
+  let t;
+  window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(drawHero, 140); });
+  if (document.fonts) document.fonts.ready.then(drawHero);
+})();
+</script>
+</body>
+</html>
