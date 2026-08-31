@@ -88,7 +88,7 @@
     </div>
   </div>
 
-  <p class="tabhint">Work through the five steps in order, <b>then try the exercises</b>.
+  <p class="tabhint">Work through the six steps in order, <b>then try the exercises</b>.
     Method and references are there when you want them.</p>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Module steps">
     <button role="tab" data-tab="p1" aria-selected="false">1 · One question, three weights</button>
@@ -96,6 +96,7 @@
     <button role="tab" data-tab="p3" aria-selected="false">3 · The statistics</button>
     <button role="tab" data-tab="p4" aria-selected="false">4 · Eight maps</button>
     <button role="tab" data-tab="p5" aria-selected="false">5 · How many are independent</button>
+    <button role="tab" data-tab="p6" aria-selected="false">6 · In map view</button>
     <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
     <span class="gap"></span>
     <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
@@ -306,6 +307,56 @@
     </div>
   </section>
 
+  <!-- ================================ 6 ================================ -->
+  <section class="tabpane" id="p6" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">6</span>On a horizon slice</h3>
+      <span class="hint">Where these attributes are actually read</span>
+    </div>
+    <p class="lede">Everything so far has been on a vertical section, which is the honest place to learn the
+      arithmetic and the wrong place to use it. A texture attribute computed on a section is largely
+      measuring the pattern the <em>wavelet</em> makes: the strongest thing in any vertical window is the
+      peak-trough-peak of the wavelet itself, and that is why the Hilbert term of step 2 has to exist.</p>
+    <p class="lede">Sliced along a horizon, the same attribute is measuring the pattern the
+      <em>geology</em> makes. Amplitude changes laterally because the rock changes laterally, and the
+      texture of that change is the facies. This is how a GLCM volume normally gets looked at, and it is why
+      the AASPI examples are horizon and stratal slices rather than lines.</p>
+    <p class="lede">The map below is an amplitude extraction with four things on it: conformable background,
+      a chaotic body, a channel with bars across its axis, and a fault lineament. All four are around the
+      same brightness on purpose. An amplitude map struggles to separate them; the texture measures do not,
+      because they are not looking at brightness.</p>
+
+    <div class="sec-row" id="row6">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The amplitude extraction <span class="note">the input</span></p>
+        <canvas id="c6a" aria-label="Map view amplitude extraction along a horizon"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The selected attribute, in map view</p>
+        <canvas id="c6b" aria-label="The selected texture attribute computed on the horizon slice"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> One direction at a time
+          <span class="note">contrast, east against north</span></p>
+        <canvas id="c6c" aria-label="Contrast measured east-only and north-only for each facies"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Background</span><b id="s6a">—</b></div>
+      <div class="stat key"><span>Chaotic body</span><b id="s6b">—</b></div>
+      <div class="stat"><span>Channel</span><b id="s6c">—</b></div>
+      <div class="stat"><span>Fault lineament</span><b id="s6d">—</b></div>
+      <div class="stat key wide"><span>Channel contrast, north against east</span><b id="s6e">—</b></div>
+    </div>
+    <p class="legend prose"><span>In map view the four directions are the four compass directions, which
+      makes the anisotropy visible rather than theoretical. The channel is banded across its axis and smooth
+      along it, so a north-only matrix and an east-only matrix disagree about it by a large factor while
+      they agree almost exactly on the background. Summing all four directions, which is what AASPI does,
+      buys an answer that does not depend on how the channel happens to be oriented — and gives up the
+      ability to tell you that it is oriented at all.</span></p>
+  </section>
+
   <!-- ============================ WHY IT MATTERS ========================= -->
   <section class="tabpane" id="pw" role="tabpanel" hidden>
     <p class="lede">Texture attributes are not read; they are fed to something. That changes what makes a
@@ -371,6 +422,16 @@
             map tells you which. Contrast and dissimilarity, at 0.98, are the clearest redundancy;
             energy and entropy at &minus;0.95 are the next. Three components account for 90% of the variance
             in all eight, and the first alone takes 64%.</span></details></li>
+        <li><b>Watch a channel become invisible.</b> In step 6, switch the mapped attribute to
+          <em>mean</em>, then to <em>homogeneity</em>.
+          <details class="reveal"><summary>Hint</summary><span class="ans">GLCM mean reads 6.60 on the
+            channel against 6.70 on the background, a difference of one and a half percent that no color bar
+            will render visible. Homogeneity reads 0.721 against 0.873 and the channel is obvious. The
+            reason mean fails is that every window was quantized against its own standard deviation, so the
+            channel being brighter was normalized away before the matrix was ever built; what survives is
+            that the channel has bars across it and the background does not. That is the case for texture
+            attributes in one pair of images — the feature is a pattern, not an amplitude, and no amount of
+            tuning turns an amplitude map into something that finds it.</span></details></li>
         <li><b>Turn the Hilbert term off.</b> Uncheck it in the header and watch step 4.
           <details class="reveal"><summary>Hint</summary><span class="ans">The maps become banded: the
             attribute changes with the phase of the wavelet, so it oscillates vertically at the frequency of
@@ -403,6 +464,11 @@
           classifier.</li>
         <li><b>The Hilbert term removes the dependence on wavelet phase.</b> Without it the attributes band
           vertically at the frequency of the data.</li>
+        <li><b>On a section these measure the wavelet; on a horizon slice they measure the geology.</b> The
+          second is what they are for, and it is how AASPI displays them.</li>
+        <li><b>In map view the directions are compass directions.</b> A feature with a grain reads
+          differently east and north, and summing all four trades that information for an answer that does
+          not depend on orientation.</li>
       </ul>
     </div>
   </section>
@@ -428,6 +494,14 @@
         the full 33. That is a real effect and not only a speed compromise: it is the same sparsity argument
         module 04 makes, seen from the other side. AASPI computes fifteen measures in total, including
         Gao's randomness; the eight here are the ones the GUI offers as output volumes.</p>
+      <p><b>The map view in step 6</b> is a synthetic amplitude extraction rather than a slice through a
+        computed volume: ng by ng bins carrying four facies, each given a texture rather than only a
+        brightness, since a texture attribute cannot see brightness. The background varies slowly, the
+        chaotic body is fine random speckle, the channel is banded across its axis and smooth along it, and
+        the fault is a narrow dim lineament. The measures are computed on it exactly as they are on the
+        section, with a square window and the same four directions — which in map view are the four compass
+        directions, the sense Haralick originally defined them in. The window there is capped at 8 bins
+        radius and the maps are computed every other bin, for speed.</p>
       <p>The redundancy analysis in step 5 standardizes each measure to zero mean and unit variance before
         computing the correlation matrix and its eigenvalues, because the eight have wildly different units
         and an unstandardized analysis would simply rank them by magnitude.</p>
@@ -516,6 +590,8 @@
   /* =============================== model =============================== */
 
   let SEC, HIL, DIPG, COH, MAPS = null, GX = 0, GT = 0;
+  let SLICE = null, SMAP = null;          // the map-view model and its attributes
+  const NGM = 72, BINM = 25, SDEC = 2;    // map grid, bin size, decimation
 
   function hilbertOf(f) {
     const out = new Float32Array(NX * NT);
@@ -577,6 +653,64 @@
        is a claim about the attributes rather than about window sizes. */
     COH = ATTR.cohField(SEC.f, NX, NT, { half: S.half, kHalf: 5, decX: 1, decT: 2, grid: DIPG });
     buildMaps();
+    buildSliceMaps();
+  }
+
+  /* ------------------------- the map-view model ------------------------- */
+
+  const mHalf = () => Math.min(S.half, 8);   // a 25-bin window is enough, and slow
+
+  function sliceWindow(ix, iy, half) {
+    const n = 2 * half + 1;
+    const out = new Float64Array(n * n);
+    for (let dy = -half; dy <= half; dy++) {
+      for (let dx = -half; dx <= half; dx++) {
+        const x = clamp(ix + dx, 0, NGM - 1), y = clamp(iy + dy, 0, NGM - 1);
+        out[(dy + half) * n + (dx + half)] = SLICE.a[y * NGM + x];
+      }
+    }
+    return { v: out, n: n };
+  }
+
+  function sliceMeasures(ix, iy, dirs) {
+    const w = sliceWindow(ix, iy, mHalf());
+    const q = EXTRA.quantize(w.v, S.lev, 1.5);
+    const P = EXTRA.coOccurrence(q.levels, w.n, w.n, S.lev, dirs || EXTRA.GLCM_DIRS, true).P;
+    return EXTRA.haralick(P, S.lev, null);
+  }
+
+  function buildSliceMaps() {
+    SLICE = LAB.buildSlice({
+      ng: NGM, bin: BINM, seed: 5,
+      noise: S.noise / 100,
+      chaos: clamp(S.chaos / 60, 0, 1.4),
+      fault: S.thr > 0 ? 1 : 0,
+    });
+    const g = Math.floor(NGM / SDEC);
+    const data = KEYS.map(() => new Float64Array(g * g));
+    const fac = new Uint8Array(g * g);
+    // east-only and north-only contrast, for the anisotropy panel
+    const cE = new Float64Array(g * g), cN = new Float64Array(g * g);
+    for (let b = 0; b < g; b++) {
+      for (let a = 0; a < g; a++) {
+        const ix = a * SDEC, iy = b * SDEC;
+        const m = sliceMeasures(ix, iy, EXTRA.GLCM_DIRS);
+        for (let k = 0; k < KEYS.length; k++) data[k][b * g + a] = m[KEYS[k]];
+        fac[b * g + a] = SLICE.facies[iy * NGM + ix];
+        cE[b * g + a] = sliceMeasures(ix, iy, [EXTRA.GLCM_DIRS[0]]).contrast;
+        cN[b * g + a] = sliceMeasures(ix, iy, [EXTRA.GLCM_DIRS[2]]).contrast;
+      }
+    }
+    SMAP = { g: g, data: data, facies: fac, cE: cE, cN: cN };
+  }
+
+  function sliceMean(u, want) {
+    let s = 0, n = 0;
+    for (let i = 0; i < u.length; i++) {
+      if (SMAP.facies[i] !== want) continue;
+      s += u[i]; n++;
+    }
+    return n ? s / n : NaN;
   }
 
   /* Every measure at every point on a decimated grid, plus coherence there, so
@@ -1038,12 +1172,85 @@
     LAB.put('s5d', (100 * lam[0] / tot).toFixed(0) + '% of the variance');
   }
 
+  /* ------------------------------ step 6 ------------------------------- */
+
+  function draw6() {
+    const w = LAB.rowWidth('row6', 3), h = Math.max(250, Math.round(w * 1.12));
+    const ar = rangeOf(SLICE.a);
+
+    LAB.squareMap('c6a', w, h, NGM, BINM,
+      (ix, iy) => clamp((SLICE.a[iy * NGM + ix] - ar[0]) / ((ar[1] - ar[0]) || 1), 0, 1),
+      SEIS.COLORMAPS.gray,
+      { bar: (ctx, R) => LAB.colorbar(ctx, R, SEIS.COLORMAPS.gray, 'dim', 'bright',
+          'amplitude extraction', 40) });
+
+    const g = SMAP.g;
+    const u = SMAP.data[S.attr];
+    const ur = rangeOf(u);
+    LAB.squareMap('c6b', w, h, g, BINM * SDEC,
+      (ix, iy) => clamp((u[iy * g + ix] - ur[0]) / ((ur[1] - ur[0]) || 1), 0, 1),
+      EXTRA.MAPS.texture,
+      { bar: (ctx, R) => LAB.colorbar(ctx, R, EXTRA.MAPS.texture,
+          ur[0].toFixed(2), ur[1].toFixed(2), KEYS[S.attr], 40) });
+
+    // east against north, per facies
+    const el = $('c6c');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const M2 = { l: 54, r: 14, t: 22, b: 52 };
+      const R = { x: M2.l, y: M2.t, w: w - M2.l - M2.r, h: h - M2.t - M2.b };
+      const names = ['background', 'chaotic', 'channel', 'fault'];
+      const e = [0, 1, 2, 3].map((f) => sliceMean(SMAP.cE, f));
+      const n = [0, 1, 2, 3].map((f) => sliceMean(SMAP.cN, f));
+      let hi = 1e-9;
+      e.concat(n).forEach((v) => { if (!isNaN(v)) hi = Math.max(hi, v); });
+      hi *= 1.25;
+      const bw = R.w / 4;
+      for (let f = 0; f < 4; f++) {
+        [[e[f], 'rgba(92,102,112,.75)', 0], [n[f], 'rgba(132,22,23,.8)', 1]].forEach((d) => {
+          if (isNaN(d[0])) return;
+          const bh = (d[0] / hi) * R.h;
+          ctx.fillStyle = d[1];
+          ctx.fillRect(R.x + f * bw + bw * (0.16 + 0.34 * d[2]), R.y + R.h - bh, bw * 0.30, bh);
+        });
+        ctx.save();
+        ctx.font = '10px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(names[f], R.x + (f + 0.5) * bw, R.y + R.h + 6);
+        if (!isNaN(e[f]) && !isNaN(n[f]) && e[f] > 1e-9) {
+          ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = INK;
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('\u00d7' + (n[f] / e[f]).toFixed(1),
+            R.x + (f + 0.5) * bw, R.y + R.h - Math.max(e[f], n[f]) / hi * R.h - 4);
+        }
+        ctx.restore();
+      }
+      SEIS.frame(ctx, R);
+      SEIS.axisLeft(ctx, R, 0, hi, 'GLCM contrast', (v) => v.toFixed(1), { flip: true, ticks: 4 });
+      SEIS.tag(ctx, R.x + 8, R.y + 14, 'east only', SLATE);
+      SEIS.tag(ctx, R.x + 8, R.y + 32, 'north only', CRIM);
+      SEIS.tag(ctx, R.x, R.y - 8, 'the number above each pair is north \u00f7 east', SLATE);
+    }
+
+    const fmt = (v) => (isNaN(v) ? 'not in the model' : v.toFixed(3));
+    LAB.put('s6a', fmt(sliceMean(u, 0)));
+    LAB.put('s6b', fmt(sliceMean(u, 1)));
+    LAB.put('s6c', fmt(sliceMean(u, 2)));
+    LAB.put('s6d', S.thr > 0 ? fmt(sliceMean(u, 3)) : 'no fault \u2014 raise the throw');
+    const ce = sliceMean(SMAP.cE, 2), cn = sliceMean(SMAP.cN, 2);
+    const be = sliceMean(SMAP.cE, 0), bn = sliceMean(SMAP.cN, 0);
+    LAB.put('s6e', (isNaN(ce) || ce < 1e-9) ? 'no channel'
+      : (cn / ce).toFixed(1) + '\u00d7, against ' + (bn / be).toFixed(1)
+        + '\u00d7 on the background');
+  }
+
   /* ============================== plumbing ============================== */
 
-  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'pw', 'pe', 'pk', 'pm'];
+  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'pw', 'pe', 'pk', 'pm'];
   const NAMES = {
     p1: 'One question, three weights', p2: 'Orderliness', p3: 'The statistics',
-    p4: 'Eight maps', p5: 'How many are independent',
+    p4: 'Eight maps', p5: 'How many are independent', p6: 'In map view',
     pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
   };
 
@@ -1065,6 +1272,7 @@
     if (!$('p3').hidden) draw3();
     if (!$('p4').hidden) draw4();
     if (!$('p5').hidden) draw5();
+    if (!$('p6').hidden) draw6();
   }
 
   let busyT = null;
