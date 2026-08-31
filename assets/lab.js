@@ -77,6 +77,12 @@ const LAB = (function () {
                        what a regional tilt does once it is steep enough to be
                        worth looking at
        throw           fault throw, in samples; 0 removes the fault
+       faultAt         where the fault crosses mid-section, as a fraction of nx
+       faultDipDeg     dip of the fault plane as it will be DRAWN, in degrees
+                       from horizontal. 90 is vertical; the default 65 is a
+                       fairly ordinary normal fault. The plane is planar and
+                       its position is carried at sub-trace precision, so it
+                       does not come out as a staircase.
        faultAt         trace index of the fault
        chaos           0-1, how disordered the middle package is
        chaosTop/Bot    sample range of the chaotic package
@@ -89,7 +95,7 @@ const LAB = (function () {
   function buildSection(cfg) {
     const c = Object.assign({
       nx: 180, nt: 260, dt: 0.002, freq: 30,
-      fold: 16, foldWidth: 0.24, throw: 0, faultAt: 0.52,
+      fold: 16, foldWidth: 0.24, throw: 0, faultAt: 0.52, faultDipDeg: 65,
       chaos: 0, chaosTop: 0.34, chaosBot: 0.56,
       noise: 0, spike: 0, coherent: 0, seed: 7,
       channel: 0, channelAt: 0.30,
@@ -98,7 +104,28 @@ const LAB = (function () {
     const nx = c.nx, nt = c.nt;
     const rnd = SEIS.mulberry32(c.seed);
     const wav = SEIS.makeWavelet({ type: 'ricker', f: c.freq });
-    const fx = Math.round(c.faultAt * nx);
+    /* THE FAULT PLANE
+       Real normal faults are not vertical, and drawing one that way teaches a
+       picture nobody sees on a section. The plane is specified by the dip it
+       should APPEAR to have on screen, which is what a reader judges it by, so
+       the conversion has to go through the aspect ratio the section is drawn
+       at rather than through samples and traces directly.
+
+       Sections here are drawn roughly twice as wide as they are tall, so one
+       trace of width covers about (nt/nx)/2 samples' worth of height on
+       screen. A plane at theta degrees runs 1/tan(theta) horizontally for
+       every 1 vertically, and that ratio is converted into traces per sample
+       below. The position is kept as a float: rounding it to a whole trace at
+       each depth is exactly what produces a staircase. */
+    const DRAW_ASPECT = 2.0;                 // section width / height, as drawn
+    const fx0 = c.faultAt * nx;              // where it crosses mid-section
+    const theta = Math.max(20, Math.min(90, c.faultDipDeg)) * Math.PI / 180;
+    // traces of horizontal run per sample of depth
+    const faultSlope = (1 / Math.tan(theta)) * (nx / nt) / DRAW_ASPECT;
+    // the plane dips toward increasing trace, so the hanging wall on the right
+    // is the side that drops - an ordinary normal fault
+    const faultXAt = (z) => fx0 + faultSlope * (z - nt / 2);
+    const fx = Math.round(fx0);
 
     // --- the horizons ----------------------------------------------------
     // Nine reflectors. The upper and lower packages are conformable; the
@@ -119,7 +146,15 @@ const LAB = (function () {
         let z = base[h]
           - c.fold * grow * Math.exp(-Math.pow((u - 0.42) / c.foldWidth, 2))
           + 10 * grow * (u - 0.5);
-        if (c.throw && ix >= fx) z += c.throw;                 // the fault
+        if (c.throw) {
+          /* Which side of the plane this point sits on, decided at the
+             undisplaced depth. The transition is spread over about one trace
+             rather than snapped to the nearest one, so the boundary lands
+             between traces where it should and the plane reads as straight
+             instead of stepped. */
+          const d = ix - faultXAt(z);
+          z += c.throw * clamp(d / 1.0 + 0.5, 0, 1);
+        }
         if (inChaosPkg && c.chaos > 0) {
           // reflectors in a chaotic package wander: three wavelengths of
           // wobble, scaled by the slider
@@ -187,7 +222,100 @@ const LAB = (function () {
 
     let pk = 1e-9;
     for (let i = 0; i < f.length; i++) pk = Math.max(pk, Math.abs(f[i]));
-    return { f: f, nx: nx, nt: nt, dt: c.dt, peak: pk, horizons: HZ, faultX: fx, wav: wav };
+    return {
+      f: f, nx: nx, nt: nt, dt: c.dt, peak: pk, horizons: HZ, wav: wav,
+      // where the fault crosses mid-section, for anything that wants one number
+      faultX: fx,
+      // and where it crosses any given sample, for anything that should not
+      // pretend a dipping plane sits at one trace
+      faultXAt: faultXAt,
+      faultSlope: faultSlope,
+    };
+  }
+
+  /* =======================================================================
+     THE MAP-VIEW MODEL
+
+     An amplitude extraction along a picked horizon: ng by ng bins of
+     reflection strength, the thing an interpreter actually looks at when they
+     run a texture volume and slice it. The vertical-section model is the wrong
+     shape for this. A texture attribute on a section is measuring the pattern
+     the wavelet makes, and on a horizon slice it is measuring the pattern the
+     geology makes, which is the reason the attributes were brought into
+     seismic interpretation in the first place.
+
+     Four facies, each with a texture rather than just a brightness, because a
+     texture attribute cannot see brightness:
+
+       background    smooth, slowly varying - conformable section
+       chaotic body  fine random speckle - salt, or a mass transport complex
+       channel       banded ACROSS its axis and smooth along it, so it is
+                     anisotropic: the point of counting more than one direction
+       fault         a narrow dim lineament
+
+     Amplitudes come out roughly on 0 to 1. Nothing here is a wave equation;
+     it is four patterns arranged so the eight measures have something to
+     disagree about.
+     ======================================================================= */
+
+  function buildSlice(cfg) {
+    const c = Object.assign({
+      ng: 72, bin: 25, seed: 5, noise: 0.10,
+      chaosR: 0.17, chaos: 1, channel: 1, fault: 1,
+    }, cfg || {});
+    const ng = c.ng, N = ng * ng;
+    const rnd = SEIS.mulberry32(c.seed);
+    const a = new Float32Array(N);
+    const facies = new Uint8Array(N);
+
+    const bcx = ng * 0.64, bcy = ng * 0.66;      // the chaotic body
+    for (let iy = 0; iy < ng; iy++) {
+      for (let ix = 0; ix < ng; ix++) {
+        const i = iy * ng + ix;
+        const u = ix / (ng - 1), v = iy / (ng - 1);
+
+        // conformable background: low wavenumber, so neighbors agree
+        let amp = 0.55
+          + 0.13 * Math.sin(2 * Math.PI * 1.15 * u + 0.6)
+          + 0.09 * Math.cos(2 * Math.PI * 0.85 * v - 0.3)
+          + 0.05 * Math.sin(2 * Math.PI * 0.6 * (u + v));
+
+        // a channel running roughly east-west, banded across its axis
+        if (c.channel > 0) {
+          const cy = ng * (0.26 + 0.085 * Math.sin(u * 6.5));
+          const d = Math.abs(iy - cy) / (ng * 0.055);
+          if (d < 1) {
+            facies[i] = 2;
+            // bright, with bars across the channel: fast variation in y,
+            // slow in x, which is what makes it anisotropic
+            amp = 0.72 + 0.24 * c.channel * Math.sin(iy * 2.3 + ix * 0.05)
+                       + 0.05 * Math.sin(ix * 0.17);
+          }
+        }
+
+        // the chaotic body: fine speckle, no organization at all
+        if (c.chaosR > 0) {
+          const r = Math.hypot(ix - bcx, iy - bcy) / (c.chaosR * ng);
+          if (r < 1) {
+            facies[i] = 1;
+            const edge = Math.min(1, (1 - r) * 4);   // soften the rim slightly
+            amp = amp * (1 - edge) + edge * (0.50 + 0.42 * c.chaos * (rnd() * 2 - 1));
+          }
+        }
+
+        // a fault: a narrow dim lineament running roughly north-south
+        if (c.fault > 0) {
+          const fx = ng * 0.86 + 4 * Math.sin(iy * 0.10);
+          if (Math.abs(ix - fx) < 1.1) { facies[i] = 3; amp *= 1 - 0.6 * c.fault; }
+        }
+
+        a[i] = amp;
+      }
+    }
+    if (c.noise > 0) {
+      for (let i = 0; i < N; i++) a[i] += c.noise * 0.30 * (rnd() * 2 - 1);
+    }
+    return { ng: ng, bin: c.bin, a: a, facies: facies };
   }
 
   /* =======================================================================
@@ -573,7 +701,7 @@ const LAB = (function () {
   /* --------------------------------------------------------------------- */
 
   return {
-    guard, buildSection, buildHorizon,
+    guard, buildSection, buildHorizon, buildSlice,
     gatherTraces, gatherPlane,
     panelWidth, rowWidth, imageInto, colorbar, squareMap, gridToXY, marker,
     windowOutline, setupTabs, bindControls, attachProbe, put, clamp,

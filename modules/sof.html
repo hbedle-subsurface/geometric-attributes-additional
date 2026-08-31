@@ -397,8 +397,8 @@
             beds are not flat.</span></details></li>
         <li><b>Find where alpha-trimmed beats both of its end members.</b> Put bad samples at 40% and random
           noise at 30%, then read the four errors in step 3 at &alpha; = 0, 0.25 and 0.5.
-          <details class="reveal"><summary>Hint</summary><span class="ans">The errors read 0.0435 at
-            &alpha; = 0, 0.0402 at &alpha; = 0.25, and 0.0411 at &alpha; = 0.5. Notice first that the two ends
+          <details class="reveal"><summary>Hint</summary><span class="ans">The errors read 0.0572 at
+            &alpha; = 0, 0.0528 at &alpha; = 0.25, and 0.0540 at &alpha; = 0.5. Notice first that the two ends
             are not approximations of anything: the &alpha; = 0 figure is <em>identical</em> to the mean and
             the &alpha; = 0.5 figure is <em>identical</em> to the median, because at those settings the
             alpha-trimmed mean is those filters. The mean is dragged around by every spike; the median
@@ -406,8 +406,8 @@
             random noise. In between, both problems are handled and the measured error is lower than at
             either end. That is the entire argument for the filter.</span></details></li>
         <li><b>Make LUM do nothing.</b> Turn both noise sliders to zero and watch the LUM error.
-          <details class="reveal"><summary>Hint</summary><span class="ans">LUM reads 0.0023 against 0.0044
-            for the mean — about half the damage. On data with nothing wrong with it, LUM only changes a
+          <details class="reveal"><summary>Hint</summary><span class="ans">LUM reads 0.0026 against 0.0052
+            for the mean — exactly half the damage. On data with nothing wrong with it, LUM only changes a
             sample that falls outside the range of its neighbors, and hardly any do; the mean smooths
             everything whether or not it needed smoothing. Now put the noise sliders back up and read step 3
             again: LUM is the worst of the four there. That is the trade, and it is the reason the filter
@@ -702,10 +702,12 @@
   function flankLoss(filtered) {
     let sc = 0, sf = 0;
     for (let ix = 4; ix < NX - 4; ix++) {
-      // the fault is excluded: every filter here loses amplitude across a
-      // discontinuity, and that is module 02's subject, not this one
-      if (S.thr > 0 && Math.abs(ix - SEC.faultX) < 9) continue;
       for (let it = 14; it < NT - 14; it++) {
+        // the fault is excluded: every filter here loses amplitude across a
+        // discontinuity, and that is module 02's subject, not this one. The
+        // plane dips, so the exclusion has to be tested at each depth rather
+        // than against a single trace number.
+        if (S.thr > 0 && Math.abs(ix - SEC.faultXAt(it)) < 9) continue;
         if (Math.abs(ATTR.sampleGrid(DIPC, DIPC.p, ix, it)) < 0.6) continue;
         sc += CLEAN.f[ix * NT + it] * CLEAN.f[ix * NT + it];
         sf += filtered[ix * NT + it] * filtered[ix * NT + it];
@@ -720,8 +722,8 @@
   function steepestDip() {
     const v = [];
     for (let ix = 4; ix < NX - 4; ix++) {
-      if (S.thr > 0 && Math.abs(ix - SEC.faultX) < 9) continue;
       for (let it = 14; it < NT - 14; it++) {
+        if (S.thr > 0 && Math.abs(ix - SEC.faultXAt(it)) < 9) continue;
         v.push(Math.abs(ATTR.sampleGrid(DIPC, DIPC.p, ix, it)));
       }
     }

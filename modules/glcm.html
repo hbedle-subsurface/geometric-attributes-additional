@@ -846,7 +846,11 @@
 
   function samplePoints() {
     const qx = Math.round(NX * 0.22);
-    const fx = clamp(S.thr > 0 ? SEC.faultX : Math.round(NX * 0.8), S.half + 1, NX - S.half - 2);
+    // the fault window has to sit where the plane crosses the horizon it is
+    // being compared on, which is not the same trace at every depth
+    const ft = onHorizon(Math.round(SEC.faultXAt(NT * 0.20)), NT * 0.20);
+    const fx = clamp(S.thr > 0 ? Math.round(SEC.faultXAt(ft)) : Math.round(NX * 0.8),
+      S.half + 1, NX - S.half - 2);
     return {
       quiet: [qx, onHorizon(qx, NT * 0.20)],
       chaos: [Math.round(NX * 0.30), Math.round((CHAOS_TOP + CHAOS_BOT) / 2 * NT)],

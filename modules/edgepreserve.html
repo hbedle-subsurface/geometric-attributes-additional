@@ -634,8 +634,10 @@
     for (let ix = 0; ix < NX; ix++) line.push(clamp(ATTR.sampleGrid(cohGrid, cohGrid.c, ix, it), 0, 1));
     const sorted = line.slice().sort((a, b) => a - b);
     const bg = sorted[Math.floor(0.7 * (sorted.length - 1))];
-    let lo = 1, at = SEC.faultX;
-    for (let ix = clamp(SEC.faultX - 14, 2, NX - 3); ix < clamp(SEC.faultX + 14, 3, NX - 2); ix++) {
+    // the fault plane dips, so look for it where it actually crosses this line
+    const fxHere = Math.round(SEC.faultXAt(it));
+    let lo = 1, at = fxHere;
+    for (let ix = clamp(fxHere - 14, 2, NX - 3); ix < clamp(fxHere + 14, 3, NX - 2); ix++) {
       if (line[ix] < lo) { lo = line[ix]; at = ix; }
     }
     let steep = 0;

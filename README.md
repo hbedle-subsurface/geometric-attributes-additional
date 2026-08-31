@@ -29,7 +29,7 @@ page was opened (see *Page-view counting* below).
 | 02 | `modules/edgepreserve.html` | `sof3d` | Kuwahara window selection and the Fehmers–Höecker coherence weighting; s_low, s_high, s_center |
 | 03 | `modules/disorder.html` | `disorder` | The 27-point second-difference operator, normalization, and the `stat3d` second stage |
 | 04 | `modules/glcm.html` | `glcm3d` | Building the gray-level co-occurrence matrix: quantization, the 1.5σ clip, four directions, sparsity |
-| 05 | `modules/textures.html` | `glcm3d` | The eight Haralick measures, and how few of them are independent |
+| 05 | `modules/textures.html` | `glcm3d` | The eight Haralick measures, how few of them are independent, and how they read on a horizon slice |
 | 06 | `modules/nonparallel.html` | `nonparallelism` | Deviation of vector dip, deviation of energy gradient, and their covariance |
 
 01 and 02 are a pair, and so are 04 and 05 — the second of each opens by
@@ -147,6 +147,11 @@ into the widgets. A new module needs neither of those written again.
   the rule stands if one is added.
 - **Depth reads the way an interpreter expects**: negative, more negative
   downward, on a datum.
+- **Faults dip.** `buildSection` takes `faultDipDeg`, defaulting to 65° as
+  drawn on screen, and carries the plane's position as a float so it renders as
+  a plane rather than a staircase. Anything that needs to know where the fault
+  is must call `SEC.faultXAt(sample)`; `SEC.faultX` is only the mid-section
+  crossing and using it as *the* fault trace was a bug in five modules.
 - **Numbers in the prose are measured, not estimated.** If an exercise says an
   attribute reads 0.0402, that value was read out of the running page at the
   settings the exercise describes.
@@ -188,9 +193,33 @@ are all silent — the page still renders, it just renders something wrong.
 - **Metrics that move with what they measure.** An anomaly width defined
   relative to its own depth gets *narrower* as the anomaly is smoothed away.
   Module 02 measures the coherence minimum and the flank steepness instead.
+- **A top-level `const` is not a property of `window`.** Every library here is
+  `const SEIS = (function(){...})()`, which in a classic `<script>` creates a
+  binding in the global *lexical* scope: later scripts can say `SEIS`, but
+  `window.SEIS` is `undefined`. `LAB.guard` originally tested `window[name]`
+  and so declared all four libraries missing on a site where they had all
+  loaded fine. Test with a bare `typeof SEIS`, never through `window`.
+- **"Nothing threw" is not "it ran".** A module that bails out early — a failed
+  guard, an early `return` — raises no exception and renders a perfectly
+  reasonable-looking page with empty canvases and em-dashes in every statistic.
+  `check.js` now asserts that at least one pane is visible and at least one
+  stat field holds a real value.
+- **A test harness that loads the libraries differently from the browser tests
+  the harness.** `check.js` used to `eval` each library separately and copy the
+  names onto `globalThis`, which manufactured the `window.SEIS` that a browser
+  never provides and hid the bug above for six modules. It now evaluates the
+  libraries and the page script together in one scope, and fails if any library
+  turns up on `window`.
 - **Debounced recomputation** means an automated check that reads a value
   immediately after moving a slider will read the old one. Wait for it; the
   modules debounce at 90 ms.
+- **A vertical fault is a modeling shortcut, and it hides work.** When the
+  fault became a 65° plane every exclusion zone written as
+  `Math.abs(ix - SEC.faultX) < k` started missing the fault at the top and
+  bottom of the section and excluding clean data in the middle. The fix is to
+  test against `SEC.faultXAt(it)` inside the depth loop, which means the depth
+  loop has to come first. Every quoted number in modules 01–05 moved when
+  this changed and had to be re-measured.
 - **A dip volume estimated across a fault is wrong at the fault**, and a
   Kuwahara window steered by it reads from the wrong place. Module 02
   median-filters the dip grid first — the short version of AASPI's

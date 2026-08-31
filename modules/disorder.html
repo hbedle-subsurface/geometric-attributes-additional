@@ -583,9 +583,10 @@
   function bandMean(field, inBand) {
     let s = 0, n = 0;
     for (let ix = 6; ix < NX - 6; ix++) {
-      if (S.thr > 0 && Math.abs(ix - SEC.faultX) < 6) continue;
       for (let it = 12; it < NT - 12; it++) {
         if (!inBand(it)) continue;
+        // the fault plane dips, so it is excluded where it actually is
+        if (S.thr > 0 && Math.abs(ix - SEC.faultXAt(it)) < 6) continue;
         s += field[ix * NT + it]; n++;
       }
     }
@@ -874,9 +875,9 @@
       const st = (inBand) => {
         let s = 0, ss = 0, n = 0;
         for (let ix = 6; ix < NX - 6; ix++) {
-          if (S.thr > 0 && Math.abs(ix - SEC.faultX) < 6) continue;
           for (let it = 16; it < NT - 12; it++) {
             if (!inBand(it)) continue;
+            if (S.thr > 0 && Math.abs(ix - SEC.faultXAt(it)) < 6) continue;
             const v = f[ix * NT + it];
             s += v; ss += v * v; n++;
           }
@@ -938,7 +939,7 @@
       line((ix) => cohAt(ix, itH), TEAL, 2.2);
       line((ix) => STATD[ix * NT + itH] / dScale, CRIM, 2.2);
       if (S.thr > 0) {
-        const xf = R.x + (SEC.faultX / (NX - 1)) * R.w;
+        const xf = R.x + (SEC.faultXAt(itH) / (NX - 1)) * R.w;
         SEIS.dashedLine(ctx, xf, R.y, xf, R.y + R.h, SLATE, [5, 4], 1.5);
         SEIS.tag(ctx, xf + 3, R.y + R.h - 10, 'fault', SLATE);
       }
@@ -961,14 +962,16 @@
     function response(field, atFault, invert) {
       const away = [], inside = [];
       for (let ix = 6; ix < NX - 6; ix++) {
-        const nearFault = S.thr > 0 && Math.abs(ix - SEC.faultX) <= 1;
-        const farFromFault = !S.thr || Math.abs(ix - SEC.faultX) > 8;
         for (let it = 20; it < QUIET_END; it++) {
-          if (farFromFault) away.push(field[ix * NT + it]);
-          if (atFault && nearFault) inside.push(field[ix * NT + it]);
+          const d = S.thr > 0 ? Math.abs(ix - SEC.faultXAt(it)) : 1e9;
+          if (!S.thr || d > 8) away.push(field[ix * NT + it]);
+          if (atFault && S.thr > 0 && d <= 1) inside.push(field[ix * NT + it]);
         }
-        if (!atFault && farFromFault) {
-          for (let it = CHAOS_A; it < CHAOS_B; it++) inside.push(field[ix * NT + it]);
+        if (!atFault) {
+          for (let it = CHAOS_A; it < CHAOS_B; it++) {
+            const d = S.thr > 0 ? Math.abs(ix - SEC.faultXAt(it)) : 1e9;
+            if (!S.thr || d > 8) inside.push(field[ix * NT + it]);
+          }
         }
       }
       if (!away.length || !inside.length) return null;
