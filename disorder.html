@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disorder | More Geometric Attributes</title>
+<meta name="description" content="The disorder attribute: a second difference in all three directions, normalized by the energy in the window, giving a volumetric signal-to-noise estimate that treats faults as signal and answers how much to trust a horizon pick.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>More geometric attributes, and how they <b>actually</b> work</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="edgepreserve.html">Module 02</a>
+      <a href="#tabs" data-tab="pm">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 03 &nbsp;·&nbsp; Program disorder</p>
+    <h1>Disorder: measuring the noise instead of the geology</h1>
+    <p class="sub">Coherence is built to find edges and to treat everything else as background. Disorder is
+      built the other way round: edges are signal, and what it hunts for is the chaotic, unpickable mess
+      that makes a horizon hard to follow. That sounds like a small change of emphasis. It produces a
+      completely different map, and it answers a question no other attribute here answers — how much should
+      I trust this pick?</p>
+  </div>
+
+  <div class="labhead">
+    <div class="labgrid">
+      <div>
+        <p class="cap">The seismic line <span>&mdash; drag anywhere on it to move the analysis point</span></p>
+        <canvas id="cSec" aria-label="Vertical seismic section with a fault and a noisy zone"></canvas>
+      </div>
+      <div>
+        <p class="cap">Three kinds of difficulty, and the window</p>
+        <div class="controls">
+          <div class="ctl-col">
+            <h2>What is in the data</h2>
+            <div class="ctl">
+              <label for="noise">Random noise <span class="val" id="noiseV">10%</span></label>
+              <input type="range" data-key="noise" id="noise" min="0" max="70" step="5" value="10">
+            </div>
+            <div class="ctl">
+              <label for="coh">Migration artifacts <span class="val" id="cohV">20%</span></label>
+              <input type="range" data-key="coh" id="coh" min="0" max="60" step="5" value="20">
+            </div>
+            <div class="ctl">
+              <label for="chaos">Chaotic package <span class="val" id="chaosV">80%</span></label>
+              <input type="range" data-key="chaos" id="chaos" min="0" max="100" step="10" value="80">
+            </div>
+          </div>
+          <div class="ctl-col">
+            <h2>The measurement</h2>
+            <div class="ctl">
+              <label for="thr">Fault throw <span class="val" id="thrV">12 samples</span></label>
+              <input type="range" data-key="thr" id="thr" min="0" max="20" step="1" value="12">
+            </div>
+            <div class="ctl">
+              <label for="smooth">stat3d window <span class="val" id="smoothV">7 traces</span></label>
+              <input type="range" data-key="smooth" id="smooth" min="1" max="15" step="2" value="7">
+            </div>
+            <div class="check">
+              <input type="checkbox" data-key="steer" id="steer" checked>
+              <label for="steer" style="display:inline">Compute along structural dip</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="tabhint">Work through the five steps in order, <b>then try the exercises</b>.
+    Method and references are there when you want them.</p>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Module steps">
+    <button role="tab" data-tab="p1" aria-selected="false">1 · The operator</button>
+    <button role="tab" data-tab="p2" aria-selected="false">2 · Why divide</button>
+    <button role="tab" data-tab="p3" aria-selected="false">3 · The two-stage recipe</button>
+    <button role="tab" data-tab="p4" aria-selected="false">4 · Against coherence</button>
+    <button role="tab" data-tab="p5" aria-selected="false">5 · Confidence in a pick</button>
+    <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
+    <span class="gap"></span>
+    <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
+    <button role="tab" data-tab="pk" aria-selected="false">Key points</button>
+    <button role="tab" data-tab="pm" aria-selected="false">Method</button>
+  </nav>
+
+  <!-- ================================ 1 ================================ -->
+  <section class="tabpane" id="p1" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">1</span>Twenty-seven numbers and a stencil</h3>
+      <span class="hint">A second difference in every direction at once</span>
+    </div>
+    <p class="lede">Take a small cube of data around the analysis point, gathered along the local dip, and
+      multiply it point by point against a fixed set of 27 weights. That is the entire operator. The weights
+      are the pattern <b>1, &minus;2, 1</b> applied in all three directions, which is the standard recipe for
+      a second difference — the thing that measures how much a set of values <em>bends</em> rather than how
+      big they are or how fast they change.</p>
+    <p class="lede">A second difference is zero on anything smooth. Feed it a flat surface and it returns
+      zero; feed it a straight ramp and it still returns zero, because a ramp does not bend. Feed it
+      something that goes up, down, up from one sample to the next and it returns a large number. That is
+      what "rough" means, arithmetically, and it is why this operator is blind to gently dipping reflectors
+      and wide awake to noise.</p>
+
+    <div class="sec-row" id="row1">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The 27 weights <span class="note">three planes of the stencil</span></p>
+        <canvas id="c1a" aria-label="The three planes of the disorder operator"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The data under it <span class="note">gathered along dip</span></p>
+        <canvas id="c1b" aria-label="The data values under the operator at the analysis point"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Sum of the weights</span><b id="s1a">—</b></div>
+      <div class="stat"><span>Length of the operator, ‖L‖</span><b id="s1b">—</b></div>
+      <div class="stat"><span>Length of the data, ‖e‖</span><b id="s1c">—</b></div>
+      <div class="stat"><span>L · e</span><b id="s1d">—</b></div>
+      <div class="stat key"><span>Disorder here</span><b id="s1e">—</b></div>
+    </div>
+    <p class="legend prose"><span>The weights sum to zero, which is what makes the operator blind to a
+      constant. Anything you could add uniformly to all 27 samples cancels, so the answer says nothing about
+      whether the data are bright or dim — only about how they bend.</span></p>
+  </section>
+
+  <!-- ================================ 2 ================================ -->
+  <section class="tabpane" id="p2" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">2</span>Why the answer is divided by the data</h3>
+      <span class="hint">Turning a number into a ratio</span>
+    </div>
+    <p class="lede">L·e on its own is useless, because doubling the amplitude of the data doubles it. A
+      bright noisy reflector and a dim noisy reflector would get different scores for the same amount of
+      roughness. So the result is divided by the length of the operator and the length of the data:</p>
+    <p class="lede" style="font-family:var(--mono);font-size:15px;background:var(--cream);
+      border-left:3px solid var(--crimson);padding:8px 12px;display:inline-block">
+      disorder = | L &middot; e | / ( ‖L‖ ‖e‖ + &epsilon; )</p>
+    <p class="lede">Anyone who has met the dot product will recognize what that is: the cosine of the angle
+      between the data and the operator. It runs from 0 to 1 no matter how loud the data are. Zero means the
+      window contains nothing the operator responds to; one would mean the window <em>is</em> the operator's
+      pattern, which in practice means noise of the worst kind. It is a ratio of roughness to strength, and
+      that is a signal-to-noise measurement, which is what the attribute is for.</p>
+
+    <div class="sec-row" id="row2">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> With and without the division
+          <span class="note">as the gain slider moves</span></p>
+        <canvas id="c2a" aria-label="Raw operator output and normalized disorder against amplitude gain"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Disorder against the noise in the data
+          <span class="note">measured over the whole section</span></p>
+        <canvas id="c2b" aria-label="Mean disorder as a function of noise level"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Raw L · e at the analysis point</span><b id="s2a">—</b></div>
+      <div class="stat"><span>Same, with the data amplified ten times</span><b id="s2b">—</b></div>
+      <div class="stat key"><span>Disorder, both cases</span><b id="s2c">—</b></div>
+      <div class="stat"><span>Mean disorder across the section</span><b id="s2d">—</b></div>
+    </div>
+  </section>
+
+  <!-- ================================ 3 ================================ -->
+  <section class="tabpane" id="p3" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">3</span>The operator is only half of it</h3>
+      <span class="hint">disorder, then stat3d</span>
+    </div>
+    <p class="lede">Run the operator at every sample and you get a volume that flickers: high at one sample,
+      low at the next, because it is responding to individual wiggles. That volume is an intermediate
+      result, not the attribute. AASPI hands it to a second program, <span class="k">stat3d</span>, which
+      takes its <b>standard deviation</b> along dip over a second window.</p>
+    <p class="lede">Taking a standard deviation rather than an average is a deliberate choice, and it is
+      what makes the attribute mappable. An average asks how rough the data are on the whole. A standard
+      deviation asks how <em>inconsistently</em> rough they are — and a package where roughness varies
+      wildly from sample to sample is exactly a package where a horizon tracker will jump.</p>
+
+    <div class="sec-row" id="row3">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Raw operator output <span class="note">flickery, one value per sample</span></p>
+        <canvas id="c3a" aria-label="The raw disorder operator output"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> After stat3d <span class="note">the attribute you would map</span></p>
+        <canvas id="c3b" aria-label="Disorder after the stat3d standard-deviation step"></canvas>
+      </div>
+    </div>
+
+    <p class="lede" style="margin-top:12px">Move the <span class="k">stat3d</span> window slider and watch
+      the second panel resolve out of the first. The mean disorder inside the chaotic package barely
+      changes as you do it. What changes is the scatter around that mean, and with it whether the package
+      has a visible boundary at all.</p>
+
+    <div class="stats">
+      <div class="stat"><span>Sample-to-sample flicker, raw</span><b id="s3a">—</b></div>
+      <div class="stat"><span>Sample-to-sample flicker, after stat3d</span><b id="s3b">—</b></div>
+      <div class="stat key"><span>Separation of the two zones, raw</span><b id="s3c">—</b></div>
+      <div class="stat key"><span>Separation after stat3d</span><b id="s3d">—</b></div>
+    </div>
+    <p class="legend prose"><span>Separation is the gap between the mean disorder of the chaotic package and
+      that of the conformable package above it, divided by the scatter within them. It is the number that
+      says whether you could actually draw a boundary between the two on the map. The raw volume and the
+      stat3d volume have nearly the same <em>ratio</em> of means, and completely different separations,
+      which is the point of the second stage.</span></p>
+  </section>
+
+  <!-- ================================ 4 ================================ -->
+  <section class="tabpane" id="p4" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">4</span>Disorder is not coherence upside down</h3>
+      <span class="hint">The fault is the test</span>
+    </div>
+    <p class="lede">Both attributes return a number near zero for well-behaved data and a larger one for
+      trouble, so it is tempting to assume they are the same measurement with the sign flipped. Put a fault
+      in front of them and the difference is immediate.</p>
+    <p class="lede">Neither attribute is silent at either feature, so the question worth asking is not
+      whether each responds but which it responds to <em>more</em>. Coherence moves by roughly the same
+      amount at the fault as it does in the chaotic package: it is a discontinuity detector and both are
+      discontinuities. Disorder moves several times further in the chaotic package than at the fault,
+      because the traces on either side of a fault are perfectly smooth — they are just at different times,
+      and a second difference has much less to say about that than about data that genuinely bends.</p>
+    <p class="lede">That preference is the design, and it is what makes the attribute useful for the job in
+      step 5. If you are asking which parts of a horizon you can trust, a fault is not the answer you want:
+      your pick against a fault may be one of the best on the survey. What you want is the attribute that
+      reserves its strongest response for data that cannot be picked at all.</p>
+
+    <div class="sec-row" id="row4">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Coherence <span class="note">dark is a discontinuity</span></p>
+        <canvas id="c4a" aria-label="Coherence of the section"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Disorder <span class="note">red is hard to pick</span></p>
+        <canvas id="c4b" aria-label="Disorder of the section"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Along one horizon <span class="note">the two side by side</span></p>
+        <canvas id="c4c" aria-label="Coherence and disorder extracted along a single horizon"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Coherence at the fault</span><b id="s4a">—</b></div>
+      <div class="stat"><span>Coherence in the chaotic package</span><b id="s4c">—</b></div>
+      <div class="stat"><span>Disorder at the fault</span><b id="s4b">—</b></div>
+      <div class="stat"><span>Disorder in the chaotic package</span><b id="s4d">—</b></div>
+      <div class="stat key wide"><span>What each attribute prefers</span><b id="s4e">—</b></div>
+    </div>
+    <p class="legend prose"><span>Coherence and disorder share neither units nor sense, so each is measured
+      against itself: the figures are how far the attribute moves at that feature as a percentage of its own
+      level in the quiet part of the section. An attribute that detects something moves a long way; one that
+      ignores it barely moves at all.</span></p>
+  </section>
+
+  <!-- ================================ 5 ================================ -->
+  <section class="tabpane" id="p5" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">5</span>A confidence map for a pick</h3>
+      <span class="hint">The reason the attribute exists</span>
+    </div>
+    <p class="lede">Alistair Brown's workflow for quantifying interpretation confidence asked the
+      interpreter to score each pick 0, 1 or 2 for reflector quality and build a map from those scores. It
+      is a good idea that almost nobody does, because scoring every pick by hand on a modern survey is not
+      realistic. Disorder computes the same thing volumetrically.</p>
+    <p class="lede">The panel below tracks a horizon automatically — following the strongest peak from trace
+      to trace, the way an autopicker does — and colors the result by the disorder along it. Green is a pick
+      you can defend. Red is a pick you should look at before you contour it, and the two are impossible to
+      tell apart on the time-structure map alone.</p>
+
+    <div class="sec-row" id="row5">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The pick on the section <span class="note">colored by disorder</span></p>
+        <canvas id="c5a" aria-label="Automatically tracked horizon colored by disorder"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The pick against the truth
+          <span class="note">where the tracker went wrong</span></p>
+        <canvas id="c5b" aria-label="Tracked horizon time compared with the true horizon time"></canvas>
+      </div>
+    </div>
+
+    <p class="lede" style="margin-top:12px">Because the model was built from known horizons, the tracker can
+      be scored: the lower panel shows how far each pick is from where the reflector actually is. The
+      question this step exists to answer is whether disorder predicted the errors before you knew about
+      them.</p>
+
+    <div class="stats">
+      <div class="stat"><span>Traces the tracker got within one sample</span><b id="s5a">—</b></div>
+      <div class="stat"><span>Mean disorder where the pick is good</span><b id="s5b">—</b></div>
+      <div class="stat key"><span>Mean disorder where the pick is bad</span><b id="s5c">—</b></div>
+      <div class="stat key wide"><span>Does disorder predict the bad picks?</span><b id="s5d">—</b></div>
+    </div>
+  </section>
+
+  <!-- ============================ WHY IT MATTERS ========================= -->
+  <section class="tabpane" id="pw" role="tabpanel" hidden>
+    <p class="lede">Every map an interpreter hands over carries an implied claim that it is equally reliable
+      everywhere on it, and that claim is never true. Disorder is one of the few attributes whose output is
+      about the interpretation rather than about the rock.</p>
+    <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
+      <li><b>It turns a contour map into a contour map with error bars.</b> A closure that sits entirely in
+        a high-disorder area is a different prospect from the same closure in a quiet one, and nothing on the
+        structure map itself says which you have.</li>
+      <li><b>It tells you where autotracking will fail before you run it.</b> That is worth knowing in
+        advance rather than after a day of editing.</li>
+      <li><b>It is a data-quality map, so it is also a processing map.</b> Areas of persistently high
+        disorder are where reprocessing, or a different migration, has something to offer. Areas of low
+        disorder are where it does not.</li>
+      <li><b>Its preference for chaos over faults is what makes it usable for this.</b> Coherence marks
+        every fault as low confidence, and a pick against a fault is often one of the better picks on the
+        survey.</li>
+      <li><b>Read it alongside coherence, never instead of it.</b> They answer different questions and the
+        useful thing is usually where they disagree — high coherence and high disorder together means the
+        traces agree with each other and are all equally bad, which is a specific and treacherous situation
+        the AASPI documentation describes on a real horizon in the Norwegian North Sea.</li>
+    </ul>
+  </section>
+
+  <!-- ============================== EXERCISES ============================ -->
+  <section class="tabpane" id="pe" role="tabpanel" hidden>
+    <div class="tryit" style="max-width:none">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Confirm the operator ignores a dipping reflector.</b> Put every noise slider to zero, leave
+          the fault throw where it is, and read the disorder in step 1 while dragging the analysis point
+          along a strong reflector.
+          <details class="reveal"><summary>Hint</summary><span class="ans">It stays small everywhere on the
+            reflector, including on the steepest flanks, because a smooth dipping event has nothing for a
+            second difference to respond to once the window is gathered along its dip. Now uncheck
+            <em>Compute along structural dip</em> and watch it climb: an unsteered window cuts across the
+            wavelet, the samples inside it go up and down, and the operator reports that as
+            disorder. The attribute would then be mapping structure, not data
+            quality.</span></details></li>
+        <li><b>Watch the normalization work.</b> In step 2, compare the raw operator output with the
+          disorder at the same point.
+          <details class="reveal"><summary>Hint</summary><span class="ans">Amplifying the data ten times
+            multiplies the raw number by ten and leaves the disorder unchanged to every decimal place shown.
+            That invariance is the whole reason for dividing by ‖e‖, and it is what lets you compare
+            disorder between a bright shallow section and a dim deep one — or between two surveys — without
+            first balancing their amplitudes.</span></details></li>
+        <li><b>Break the second stage.</b> In step 3, run the <span class="k">stat3d</span> window down to 1
+          trace and then up to 15, watching the contrast figure.
+          <details class="reveal"><summary>Hint</summary><span class="ans">At 1 trace there is almost
+            nothing to take a standard deviation over, so the panel is the raw speckle and the separation is
+            close to the raw volume's. It improves quickly over the first few window lengths — most of the
+            gain is in by about 7 traces — and then flattens: going from 11 to 15 buys very little. Meanwhile
+            the cost keeps accruing, because a wider window puts the boundary of the chaotic package in more
+            places at once and the edges of the anomaly blur outward. Stop where the curve
+            flattens rather than where the number is highest.</span></details></li>
+        <li><b>Separate the two attributes.</b> In step 4, set the fault throw to maximum and every noise
+          slider to zero, then reverse it.
+          <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
+            with, coherence falls 16% at the fault and 23% in the chaotic package — it reacts to both, and
+            almost equally. Disorder rises 23% at the fault and 133% in the chaotic package, so it reacts to
+            the chaos about six times as strongly. Neither attribute is blind to either feature; what
+            separates them is which one they reserve their response for, and that is enough to make them
+            answer different questions. Note also what happens when you take the chaos away entirely: with
+            clean data the background disorder is so close to zero that any response at all looks enormous
+            as a percentage, which is a good reminder that a ratio against a near-zero baseline is not a
+            measurement you should quote.</span></details></li>
+        <li><b>Test the confidence claim.</b> In step 5, raise the noise until the tracker starts making
+          mistakes, then compare the two mean-disorder figures.
+          <details class="reveal"><summary>Hint</summary><span class="ans">Disorder along the mistracked
+            traces runs well above disorder along the good ones. That gap is the entire practical claim of
+            the attribute, and you can watch it open up as the data get worse. Note the limitation too: it
+            tells you the pick is <em>unreliable</em>, not which way it is wrong, and a confident wrong pick
+            in quiet data is something no attribute here will catch.</span></details></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================= KEY POINTS ============================ -->
+  <section class="tabpane" id="pk" role="tabpanel" hidden>
+    <div class="takeaway" style="max-width:none">
+      <h3>The main points</h3>
+      <ul>
+        <li><b>The operator is a second difference in all three directions.</b> The weights are 1, &minus;2,
+          1 applied along each axis; they sum to zero, so a constant cannot affect the answer.</li>
+        <li><b>Dividing by ‖L‖‖e‖ makes it a cosine.</b> The result runs 0 to 1 and does not care how loud
+          the data are, which is what makes it comparable between surveys.</li>
+        <li><b>Program <span class="k">disorder</span> is one of two steps.</b> The mappable attribute is
+          the standard deviation of its output, taken along dip by <span class="k">stat3d</span>.</li>
+        <li><b>It must be computed along dip.</b> Without steering, the operator reports structure as
+          disorder and the whole measurement is about the wrong thing.</li>
+        <li><b>It is relatively insensitive to faults, on purpose.</b> A fault offsets smooth data more
+          than it makes data rough, so disorder reserves most of its response for the chaotic zones.
+          Coherence reacts to a fault and to chaos about equally.</li>
+        <li><b>Coherence answers "is there an edge here", disorder answers "can I pick here".</b> Those are
+          different questions, and the interesting places are where the two disagree.</li>
+        <li><b>Its output is a statement about the interpretation.</b> It is a confidence map for a horizon,
+          computed rather than scored by hand.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- =============================== METHOD ============================== -->
+  <section class="tabpane" id="pm" role="tabpanel" hidden>
+    <details class="notes" open>
+      <summary>Method, sources, and what has been simplified</summary>
+      <p>The model is a section with conformable packages above and below a middle package whose reflectors
+        can be made to wander and whose amplitudes can be made erratic, plus an optional normal fault. Three
+        separate difficulties can be added: band-limited random noise, steeply dipping cross-cutting events
+        standing in for migration artifacts, and the chaotic package itself. They are separate sliders
+        because they are separate problems and the attribute responds to them differently.</p>
+      <p>Dip is the semblance scan of the first module set. The operator is gathered along that dip with
+        linear interpolation, and the disorder at each sample is computed exactly as
+        |L&middot;e| / (‖L‖‖e‖ + &epsilon;) with L the 27-point stencil. The stencil is separable — it is
+        the outer product of [1, &minus;2, 1] with itself three times — which is why ‖L‖ works out to
+        6<sup>3/2</sup> = 14.697, the figure quoted in step 1. The <span class="k">stat3d</span> stage is
+        the standard deviation of the raw disorder over a window along dip, whose length is the slider.</p>
+      <p><b>Where this departs from AASPI.</b> Two dimensions rather than three, so the operator is the
+        nine-point 2D form of the same separable stencil rather than the full 27-point one, and there is no
+        crossline direction; the arithmetic and the behavior are identical, and step 1 draws all three planes
+        of the true 3D operator so that what is being simplified is visible. AASPI offers rectangular and
+        elliptical analysis windows and a choice of window size for the <span class="k">stat3d</span> stage;
+        here the window is a fixed-height strip whose width is the slider. The horizon tracker in step 5 is
+        a simple peak-follower rather than a production autopicker, which makes it fail earlier than a good
+        one would — the relationship it is used to demonstrate is unaffected.</p>
+      <p>The comparison in step 4 uses the energy-ratio coherence of the first module set. Both attributes
+        there are scaled by their own range across the section before the responses are compared, because
+        coherence and disorder have neither the same units nor the same sense, and quoting them against each
+        other unscaled would be meaningless.</p>
+      <ul>
+        <li>AASPI, <em>Computing volumetric estimates of the signal-to-noise ratio: Program disorder</em>,
+          University of Oklahoma — the workflow, the two-stage computation, and the Gulf of Mexico and
+          Halten Terrace examples.</li>
+        <li>Al-Dossary, S., W. Yuchun, and M. McFarlane, 2014, A new algorithm for the seismic disorder
+          attribute: <em>Interpretation</em>, 2, SA93–SA97.</li>
+        <li>Ha, T., and K. J. Marfurt, 2014, Quantifying confidence in horizon picking: <em>AAPG Explorer
+          Geophysical Corner</em>, July.</li>
+        <li>Brown, A. R., <em>Interpretation of Three-Dimensional Seismic Data</em>: AAPG Memoir 42 — the
+          hand-scored interpretation confidence workflow this attribute automates.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="nextup" id="nextup" hidden>
+    <p class="eyebrow">Next up</p>
+    <h3><a href="glcm.html">04 · The co-occurrence matrix</a></h3>
+    <p>Texture attributes start by doing something none of the others do: throwing the amplitudes away and
+      keeping only their rank. What is left is a picture of which brightnesses sit next to which, and every
+      texture measure is a different summary of that picture.</p>
+    <a class="btn" href="glcm.html">Open module 04 →</a>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
+
+  <div class="pager" id="pager" hidden>
+    <a class="btn ghost" href="edgepreserve.html">← Module 02: edge preservation</a>
+    <a class="btn" href="glcm.html">Next: the co-occurrence matrix →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+        <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+      <p class="lic"><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather
+        Bedle is licensed under
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. You are
+        free to share this material in any medium or format and to adapt it &mdash; remix it, build on it,
+        translate it, teach from it, use parts of it in something of your own &mdash; for any purpose,
+        including commercially. Two conditions apply. <b>Attribution:</b> credit the source, link to the
+        license, and indicate whether you changed anything; do it in a way that does not suggest the
+        licensor endorses you. <b>ShareAlike:</b> if you remix or build on the material, you must
+        distribute what you make under this same license. You may not add legal terms or technical
+        measures that stop anyone else from doing what the license permits. Full legal text at
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/legalcode">creativecommons.org/licenses/by-sa/4.0/legalcode</a>.</p>
+      <p class="lic">To cite: H. Bedle, <i>More Geometric Attributes, and How They Actually Work</i>,
+        University of Oklahoma,
+        <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
+      <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
+        trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
+        count, so that I can show the university these are being used &mdash; no cookie, no account,
+        nothing about you.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/count.js"></script>
+<script src="../assets/popout.js"></script>
+<script src="../assets/seismic.js"></script>
+<script src="../assets/attributes.js"></script>
+<script src="../assets/extra.js"></script>
+<script src="../assets/lab.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!LAB.guard(['SEIS', 'ATTR', 'EXTRA', 'LAB'])) return;
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = LAB.clamp;
+  const CRIM = '#841617', SLATE = '#5C6670', TEAL = '#0B7285', INK = '#16191C';
+
+  const NX = 150, NT = 210, DT = 0.002;
+  const CHAOS_TOP = 0.36, CHAOS_BOT = 0.60;
+  // the same limits as whole samples, because they index arrays
+  const CHAOS_A = Math.round(CHAOS_TOP * NT) + 4;
+  const CHAOS_B = Math.round(CHAOS_BOT * NT) - 4;
+  const QUIET_END = Math.round(CHAOS_TOP * NT) - 8;
+
+  const DEF = {
+    noise: 10, coh: 20, chaos: 80, thr: 12, smooth: 7, steer: 1,
+    px: 40, pt: 105, tab: 'p1',
+  };
+  let S = SEIS.readState(DEF);
+  const CAN_LINK = location.protocol !== 'file:';
+  const saveState = () => { if (CAN_LINK) { try { SEIS.writeState(S, DEF); } catch (e) { } } };
+
+  /* ======================= model, dip, attributes ====================== */
+
+  let SEC, DIPG, RAWD, STATD, COH;
+
+  function recompute() {
+    SEC = LAB.buildSection({
+      nx: NX, nt: NT, dt: DT, freq: 30, fold: 22, foldWidth: 0.22,
+      throw: S.thr, faultAt: 0.62, seed: 21,
+      chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
+      noise: S.noise / 100, coherent: S.coh / 100,
+    });
+    DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
+    RAWD = rawDisorder();
+    STATD = statStage(RAWD, S.smooth);
+    COH = ATTR.cohField(SEC.f, NX, NT, { half: 2, kHalf: 5, decX: 1, decT: 2, grid: DIPG });
+  }
+
+  const dipAt = (ix, it) => (S.steer ? ATTR.sampleGrid(DIPG, DIPG.p, ix, it) : 0);
+  const cohAt = (ix, it) => clamp(ATTR.sampleGrid(COH, COH.c, ix, it), 0, 1);
+
+  /* The nine values under the 2D form of the stencil, gathered along dip. */
+  function gather9(ix, it, p) {
+    const out = new Float64Array(9);
+    let n = 0;
+    for (let j = -1; j <= 1; j++) {
+      const x = clamp(ix + j, 0, NX - 1);
+      for (let k = -1; k <= 1; k++) {
+        const tt = it + k + p * j;
+        const i0 = Math.floor(tt), fr = tt - i0;
+        const v0 = SEC.f[x * NT + clamp(i0, 0, NT - 1)];
+        const v1 = SEC.f[x * NT + clamp(i0 + 1, 0, NT - 1)];
+        out[n++] = v0 * (1 - fr) + v1 * fr;
+      }
+    }
+    return out;
+  }
+
+  function rawDisorder() {
+    const out = new Float32Array(NX * NT);
+    for (let ix = 0; ix < NX; ix++) {
+      for (let it = 0; it < NT; it++) {
+        out[ix * NT + it] = EXTRA.disorder2D(gather9(ix, it, dipAt(ix, it)));
+      }
+    }
+    return out;
+  }
+
+  /* Program stat3d: the standard deviation of the raw volume, taken along dip
+     over a window. Not the average - see step 3 for why that matters. */
+  function statStage(raw, len) {
+    const out = new Float32Array(NX * NT);
+    const half = Math.floor(len / 2);
+    for (let ix = 0; ix < NX; ix++) {
+      for (let it = 0; it < NT; it++) {
+        const p = dipAt(ix, it);
+        let s = 0, ss = 0, n = 0;
+        for (let j = -half; j <= half; j++) {
+          const x = clamp(ix + j, 0, NX - 1);
+          for (let k = -1; k <= 1; k++) {
+            const t = clamp(Math.round(it + k + p * j), 0, NT - 1);
+            const v = raw[x * NT + t];
+            s += v; ss += v * v; n++;
+          }
+        }
+        const m = s / n;
+        out[ix * NT + it] = Math.sqrt(Math.max(0, ss / n - m * m));
+      }
+    }
+    return out;
+  }
+
+  const chaosBand = (it) => it >= CHAOS_A && it <= CHAOS_B;
+  const quietBand = (it) => it < QUIET_END && it > 15;
+
+  function bandMean(field, inBand) {
+    let s = 0, n = 0;
+    for (let ix = 6; ix < NX - 6; ix++) {
+      for (let it = 12; it < NT - 12; it++) {
+        if (!inBand(it)) continue;
+        // the fault plane dips, so it is excluded where it actually is
+        if (S.thr > 0 && Math.abs(ix - SEC.faultXAt(it)) < 6) continue;
+        s += field[ix * NT + it]; n++;
+      }
+    }
+    return n ? s / n : 0;
+  }
+
+  /* ============================== drawing ============================== */
+
+  const M = { l: 52, r: 12, t: 10, b: 34 };
+
+  function rect(w, h, bar) {
+    return { x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b - (bar ? 26 : 0) };
+  }
+
+  function secPanel(canvasId, data, w, h, opts) {
+    const o = opts || {};
+    const el = $(canvasId);
+    if (!el) return null;
+    const ctx = SEIS.fitCanvas(el, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const R = rect(w, h, false);
+    SEIS.drawVarDensity(ctx, data, NX, NT, R, { cmap: SEIS.COLORMAPS.gray, clip: SEC.peak });
+    if (o.overlay) o.overlay(ctx, R);
+    SEIS.frame(ctx, R);
+    SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+    SEIS.axisLeft(ctx, R, 0, (NT - 1) * DT * 1000, 'time (ms)', (v) => String(Math.round(v)), { ticks: 4 });
+    return { ctx, R };
+  }
+
+  function attrPanel(canvasId, get, map, w, h, bar, lim) {
+    const el = $(canvasId);
+    if (!el) return null;
+    const ctx = SEIS.fitCanvas(el, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const R = rect(w, h, true);
+    LAB.imageInto(ctx, R, NX, NT, (ix, it) => get(ix, NT - 1 - it) / (lim || 1), map);
+    markOn(ctx, R);
+    SEIS.frame(ctx, R);
+    SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+    SEIS.axisLeft(ctx, R, 0, (NT - 1) * DT * 1000, 'time (ms)', (v) => String(Math.round(v)), { ticks: 4 });
+    if (bar) LAB.colorbar(ctx, R, map, bar[0], bar[1], bar[2], 34);
+    return { ctx, R };
+  }
+
+  function markOn(ctx, R) {
+    const x = R.x + (S.px / (NX - 1)) * R.w, y = R.y + (S.pt / (NT - 1)) * R.h;
+    LAB.marker(ctx, x, y, CRIM, 5);
+  }
+
+  /* the 98th percentile, so one wild sample cannot set the color scale */
+  function scaleOf(field) {
+    const v = [];
+    for (let i = 0; i < field.length; i += 7) v.push(field[i]);
+    v.sort((a, b) => a - b);
+    return Math.max(1e-6, v[Math.floor(0.98 * (v.length - 1))]);
+  }
+
+  function drawHeader() {
+    const el = $('cSec');
+    if (!el) return;
+    const w = LAB.panelWidth(el, 320);
+    secPanel('cSec', SEC.f, w, Math.max(210, Math.round(w * 0.46)), {
+      overlay: (ctx, R) => {
+        const y0 = R.y + CHAOS_TOP * R.h, y1 = R.y + CHAOS_BOT * R.h;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(11,114,133,.75)'; ctx.lineWidth = 1.4; ctx.setLineDash([6, 4]);
+        ctx.strokeRect(R.x, y0, R.w, y1 - y0);
+        ctx.restore();
+        SEIS.tag(ctx, R.x + 6, y0 + 12, 'chaotic package', TEAL);
+        markOn(ctx, R);
+      },
+    });
+  }
+
+  /* ------------------------------ step 1 ------------------------------- */
+
+  function draw1() {
+    const w = LAB.rowWidth('row1', 2), h = Math.max(220, Math.round(w * 0.72));
+    const K = EXTRA.DISORDER_KERNEL;
+
+    // panel 1: the three planes of the stencil
+    const el = $('c1a');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const pad = 14, cell = Math.min((w - 4 * pad) / 9, (h - 46) / 3.4);
+      const planeW = 3 * cell;
+      const x0 = (w - (3 * planeW + 2 * pad)) / 2, y0 = 28;
+      for (let k = 0; k < 3; k++) {
+        const px = x0 + k * (planeW + pad);
+        ctx.save();
+        ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(['one sample above', 'the analysis sample', 'one sample below'][k],
+          px + planeW / 2, y0 - 6);
+        ctx.restore();
+        for (let m = 0; m < 3; m++) {
+          for (let n = 0; n < 3; n++) {
+            const v = K[k][m][n];
+            const X = px + n * cell, Y = y0 + m * cell;
+            const t = clamp((v + 8) / 16, 0, 1);
+            const col = v > 0 ? [246 - 60 * t, 224 - 120 * t, 190 - 140 * t]
+                              : [200 + 55 * t, 214 + 40 * t, 226 + 26 * t];
+            ctx.fillStyle = 'rgb(' + col.map(Math.round).join(',') + ')';
+            ctx.fillRect(X, Y, cell - 1.5, cell - 1.5);
+            ctx.save();
+            ctx.font = (cell > 34 ? '13px' : '11px') + ' "IBM Plex Mono", monospace';
+            ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(String(v), X + (cell - 1.5) / 2, Y + (cell - 1.5) / 2);
+            ctx.restore();
+          }
+        }
+      }
+      ctx.save();
+      ctx.font = '11px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('each plane is [1, \u22122, 1] across and down; the planes are [1, \u22122, 1] deep',
+        w / 2, y0 + 3 * cell + 12);
+      ctx.restore();
+    }
+
+    // panel 2: the data under it
+    const p = dipAt(S.px, S.pt);
+    const e = gather9(S.px, S.pt, p);
+    const el2 = $('c1b');
+    if (el2) {
+      const ctx = SEIS.fitCanvas(el2, w, h);
+      ctx.clearRect(0, 0, w, h);
+      let lim = 1e-9;
+      for (const v of e) lim = Math.max(lim, Math.abs(v));
+      const cell = Math.min((w - 120) / 3, (h - 70) / 3);
+      const x0 = (w - 3 * cell) / 2, y0 = 34;
+      const a = [1, -2, 1];
+      let i = 0;
+      for (let j = 0; j < 3; j++) {
+        for (let k = 0; k < 3; k++) {
+          const v = e[i++];
+          const X = x0 + j * cell, Y = y0 + k * cell;
+          const c = SEIS.COLORMAPS.gray(v / lim);
+          ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+          ctx.fillRect(X, Y, cell - 1.5, cell - 1.5);
+          ctx.save();
+          ctx.font = '11px "IBM Plex Mono", monospace';
+          ctx.fillStyle = Math.abs(v) / lim > 0.55 ? '#fff' : INK;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(v.toFixed(3), X + (cell - 1.5) / 2, Y + (cell - 1.5) / 2 - 7);
+          ctx.fillStyle = Math.abs(v) / lim > 0.55 ? 'rgba(255,255,255,.75)' : CRIM;
+          ctx.fillText('\u00d7 ' + (a[j] * a[k]), X + (cell - 1.5) / 2, Y + (cell - 1.5) / 2 + 9);
+          ctx.restore();
+        }
+      }
+      ctx.save();
+      ctx.font = '11px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('trace \u2192 across, time \u2193 down, read along the local dip',
+        w / 2, y0 + 3 * cell + 10);
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('the 2D form of the stencil, which is what a section can show', w / 2, y0 - 8);
+      ctx.restore();
+    }
+
+    let dot = 0, en = 0, nrm = 0, i = 0;
+    const a = [1, -2, 1];
+    for (let j = 0; j < 3; j++) {
+      for (let k = 0; k < 3; k++) {
+        const c = a[j] * a[k], v = e[i++];
+        dot += c * v; en += v * v; nrm += c * c;
+      }
+    }
+    LAB.put('s1a', '0  (exactly)');
+    LAB.put('s1b', Math.sqrt(nrm).toFixed(3) + ' in 2D, ' + EXTRA.DISORDER_NORM.toFixed(3) + ' in 3D');
+    LAB.put('s1c', Math.sqrt(en).toFixed(4));
+    LAB.put('s1d', dot.toFixed(4));
+    LAB.put('s1e', EXTRA.disorder2D(e).toFixed(4));
+  }
+
+  /* ------------------------------ step 2 ------------------------------- */
+
+  function draw2() {
+    const w = LAB.rowWidth('row2', 2), h = Math.max(210, Math.round(w * 0.72));
+    const p = dipAt(S.px, S.pt);
+    const e = gather9(S.px, S.pt, p);
+    const a = [1, -2, 1];
+    const rawOf = (g, scale) => {
+      let d = 0, i = 0;
+      for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++) d += a[j] * a[k] * g[i++] * scale;
+      return d;
+    };
+
+    // panel 1: raw against normalized, as the gain is swept
+    const el = $('c2a');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      const gains = [];
+      for (let i = 0; i <= 60; i++) gains.push(0.1 + (i / 60) * 9.9);
+      let lim = 1e-9;
+      gains.forEach((g) => { lim = Math.max(lim, Math.abs(rawOf(e, g))); });
+      const line = (fn, color, wd) => {
+        ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = wd; ctx.beginPath();
+        gains.forEach((g, i) => {
+          const x = R.x + (i / (gains.length - 1)) * R.w;
+          const y = R.y + R.h - clamp(fn(g), 0, 1) * R.h;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke(); ctx.restore();
+      };
+      line((g) => Math.abs(rawOf(e, g)) / lim, SLATE, 2);
+      line(() => EXTRA.disorder2D(e), CRIM, 2.4);
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0.1, 10, 'gain applied to the data', (v) => v.toFixed(1) + '\u00d7',
+        { ticks: 5 });
+      SEIS.axisLeft(ctx, R, 0, 1, 'scaled to its own maximum', (v) => v.toFixed(1),
+        { flip: true, ticks: 4 });
+      SEIS.tag(ctx, R.x + 8, R.y + 14, 'raw L \u00b7 e  \u2014 grows with the data', SLATE);
+      SEIS.tag(ctx, R.x + 8, R.y + 32, 'disorder \u2014 flat', CRIM);
+    }
+
+    // panel 2: mean disorder against the noise slider's range
+    const el2 = $('c2b');
+    if (el2) {
+      const ctx = SEIS.fitCanvas(el2, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      const pts = [];
+      for (let n = 0; n <= 70; n += 10) {
+        const test = LAB.buildSection({
+          nx: 60, nt: 120, dt: DT, freq: 30, fold: 12, foldWidth: 0.22, seed: 21, noise: n / 100,
+        });
+        let s = 0, cnt = 0;
+        for (let ix = 2; ix < 58; ix++) {
+          for (let it = 4; it < 116; it++) {
+            const g = new Float64Array(9);
+            let q = 0;
+            for (let j = -1; j <= 1; j++) {
+              for (let k = -1; k <= 1; k++) {
+                g[q++] = test.f[clamp(ix + j, 0, 59) * 120 + clamp(it + k, 0, 119)];
+              }
+            }
+            s += EXTRA.disorder2D(g); cnt++;
+          }
+        }
+        pts.push({ n: n, d: s / cnt });
+      }
+      const dmax = Math.max.apply(null, pts.map((q) => q.d)) * 1.15;
+      ctx.save(); ctx.strokeStyle = CRIM; ctx.lineWidth = 2.4; ctx.beginPath();
+      pts.forEach((q, i) => {
+        const x = R.x + (q.n / 70) * R.w, y = R.y + R.h - (q.d / dmax) * R.h;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      pts.forEach((q) => {
+        const x = R.x + (q.n / 70) * R.w, y = R.y + R.h - (q.d / dmax) * R.h;
+        ctx.fillStyle = CRIM; ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 6.2832); ctx.fill();
+      });
+      ctx.restore();
+      const xh = R.x + (clamp(S.noise, 0, 70) / 70) * R.w;
+      SEIS.dashedLine(ctx, xh, R.y, xh, R.y + R.h, TEAL, [4, 3], 1.5);
+      SEIS.tag(ctx, xh + 3, R.y + 14, 'you are here', TEAL);
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0, 70, 'noise added (%)', (v) => String(Math.round(v)), { ticks: 5 });
+      SEIS.axisLeft(ctx, R, 0, dmax, 'mean disorder', (v) => v.toFixed(2), { flip: true, ticks: 4 });
+    }
+
+    LAB.put('s2a', rawOf(e, 1).toFixed(4));
+    LAB.put('s2b', rawOf(e, 10).toFixed(4));
+    LAB.put('s2c', EXTRA.disorder2D(e).toFixed(4) + ' either way');
+    LAB.put('s2d', bandMean(RAWD, () => true).toFixed(4));
+  }
+
+  /* ------------------------------ step 3 ------------------------------- */
+
+  function draw3() {
+    const w = LAB.rowWidth('row3', 2), h = Math.max(215, Math.round(w * 0.8));
+    attrPanel('c3a', (ix, it) => RAWD[ix * NT + it], EXTRA.MAPS.confidence, w, h,
+      ['0 · smooth', 'rough', 'raw disorder'], scaleOf(RAWD));
+    attrPanel('c3b', (ix, it) => STATD[ix * NT + it], EXTRA.MAPS.confidence, w, h,
+      ['0 · easy to pick', 'hard to pick', 'disorder after stat3d'], scaleOf(STATD));
+
+    /* How far apart the two packages are, in units of the scatter inside them.
+       A ratio of the means would not do here: the raw volume and the stat3d
+       volume have almost the same ratio, and the whole difference between them
+       is that one is speckle and the other is a map. */
+    const separation = (f) => {
+      const st = (inBand) => {
+        let s = 0, ss = 0, n = 0;
+        for (let ix = 6; ix < NX - 6; ix++) {
+          for (let it = 16; it < NT - 12; it++) {
+            if (!inBand(it)) continue;
+            if (S.thr > 0 && Math.abs(ix - SEC.faultXAt(it)) < 6) continue;
+            const v = f[ix * NT + it];
+            s += v; ss += v * v; n++;
+          }
+        }
+        const m = n ? s / n : 0;
+        return { m: m, sd: Math.sqrt(Math.max(0, (n ? ss / n : 0) - m * m)) };
+      };
+      const a = st(quietBand), b = st(chaosBand);
+      const pooled = Math.sqrt((a.sd * a.sd + b.sd * b.sd) / 2) || 1e-9;
+      return (b.m - a.m) / pooled;
+    };
+
+    // sample-to-sample scatter, vertically, as a measure of flicker
+    const flicker = (f) => {
+      let s = 0, n = 0;
+      for (let ix = 6; ix < NX - 6; ix += 2) {
+        for (let it = 14; it < NT - 14; it++) {
+          const d = f[ix * NT + it] - f[ix * NT + it - 1];
+          s += d * d; n++;
+        }
+      }
+      return Math.sqrt(s / n);
+    };
+    LAB.put('s3a', flicker(RAWD).toFixed(4));
+    LAB.put('s3b', flicker(STATD).toFixed(4)
+      + '  \u2014 ' + (flicker(RAWD) / (flicker(STATD) || 1e-9)).toFixed(1) + ' times calmer');
+    const dr = separation(RAWD), ds = separation(STATD);
+    LAB.put('s3c', dr.toFixed(2));
+    LAB.put('s3d', ds.toFixed(2) + (ds > dr * 1.15 ? '  \u2014 ' + (ds / dr).toFixed(1)
+      + ' times better' : ''));
+  }
+
+  /* ------------------------------ step 4 ------------------------------- */
+
+  function draw4() {
+    const w = LAB.rowWidth('row4', 3), h = Math.max(210, Math.round(w * 1.05));
+    attrPanel('c4a', (ix, it) => cohAt(ix, it), ATTR.MAPS.coherence, w, h,
+      ['0 · edge', '1 · continuous', 'coherence'], 1);
+    attrPanel('c4b', (ix, it) => STATD[ix * NT + it], EXTRA.MAPS.confidence, w, h,
+      ['0 · easy', 'hard', 'disorder'], scaleOf(STATD));
+
+    // both attributes along one horizon in the quiet package
+    const itH = Math.round(NT * 0.22);
+    const el = $('c4c');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      const dScale = scaleOf(STATD);
+      const line = (fn, color, wd) => {
+        ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = wd; ctx.beginPath();
+        for (let ix = 0; ix < NX; ix++) {
+          const x = R.x + (ix / (NX - 1)) * R.w;
+          const y = R.y + R.h - clamp(fn(ix), 0, 1) * R.h;
+          ix === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke(); ctx.restore();
+      };
+      line((ix) => cohAt(ix, itH), TEAL, 2.2);
+      line((ix) => STATD[ix * NT + itH] / dScale, CRIM, 2.2);
+      if (S.thr > 0) {
+        const xf = R.x + (SEC.faultXAt(itH) / (NX - 1)) * R.w;
+        SEIS.dashedLine(ctx, xf, R.y, xf, R.y + R.h, SLATE, [5, 4], 1.5);
+        SEIS.tag(ctx, xf + 3, R.y + R.h - 10, 'fault', SLATE);
+      }
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, 0, 1, 'each scaled to its own range', (v) => v.toFixed(1),
+        { flip: true, ticks: 4 });
+      SEIS.tag(ctx, R.x + 8, R.y + 14, 'coherence', TEAL);
+      SEIS.tag(ctx, R.x + 8, R.y + 32, 'disorder', CRIM);
+    }
+
+    /* How far each attribute moves at a feature, as a percentage of its own
+       background level. Scaling each attribute by itself is the only way to put
+       coherence and disorder on the same footing - they share neither units nor
+       sense - and a percentage of background is stable in a way that a fraction
+       of the observed range is not: on clean data the range collapses toward
+       zero and any ratio against it explodes. Both the feature value and the
+       background are medians, so neither attribute is credited for a response
+       that is really one noisy sample. */
+    function response(field, atFault, invert) {
+      const away = [], inside = [];
+      for (let ix = 6; ix < NX - 6; ix++) {
+        for (let it = 20; it < QUIET_END; it++) {
+          const d = S.thr > 0 ? Math.abs(ix - SEC.faultXAt(it)) : 1e9;
+          if (!S.thr || d > 8) away.push(field[ix * NT + it]);
+          if (atFault && S.thr > 0 && d <= 1) inside.push(field[ix * NT + it]);
+        }
+        if (!atFault) {
+          for (let it = CHAOS_A; it < CHAOS_B; it++) {
+            const d = S.thr > 0 ? Math.abs(ix - SEC.faultXAt(it)) : 1e9;
+            if (!S.thr || d > 8) inside.push(field[ix * NT + it]);
+          }
+        }
+      }
+      if (!away.length || !inside.length) return null;
+      away.sort((x, y) => x - y);
+      inside.sort((x, y) => x - y);
+      const bg = away[Math.floor(0.5 * (away.length - 1))];
+      const v = inside[Math.floor(0.5 * (inside.length - 1))];
+      if (Math.abs(bg) < 1e-9) return null;
+      return Math.max(0, (invert ? bg - v : v - bg) / Math.abs(bg));
+    }
+    const pct = (r) => (r === null ? '\u2014'
+      : r > 9.99 ? 'more than 10 times its background'
+      : (100 * r).toFixed(0) + '% of its background');
+
+    const cohField = new Float32Array(NX * NT);
+    for (let ix = 0; ix < NX; ix++) for (let it = 0; it < NT; it++) cohField[ix * NT + it] = cohAt(ix, it);
+    const cf = S.thr === 0 ? null : response(cohField, true, true);
+    const df = S.thr === 0 ? null : response(STATD, true, false);
+    const cz = response(cohField, false, true);
+    const dz = response(STATD, false, false);
+    LAB.put('s4a', S.thr === 0 ? 'no fault in the model' : 'falls by ' + pct(cf));
+    LAB.put('s4b', S.thr === 0 ? 'no fault in the model' : 'rises by ' + pct(df));
+    LAB.put('s4c', 'falls by ' + pct(cz));
+    LAB.put('s4d', 'rises by ' + pct(dz));
+
+    /* The comparison that matters is not between the two attributes - their
+       percentages are not commensurate - but within each one: does it react
+       more to the fault, or more to the chaotic package? */
+    const ratio = (feat, zone) =>
+      (feat === null || zone === null || zone < 1e-6) ? null : feat / zone;
+    const rc = ratio(cf, cz), rd = ratio(df, dz);
+    LAB.put('s4e', (rc === null || rd === null)
+      ? 'Turn the fault throw and the chaotic package both up to compare them'
+      : 'coherence reacts to the fault ' + rc.toFixed(2)
+        + ' times as strongly as to the chaotic package; disorder, ' + rd.toFixed(2)
+        + ' times'
+        + (rd < rc * 0.7 ? '  \u2014 disorder clearly prefers the chaos' : ''));
+  }
+
+  /* ------------------------------ step 5 ------------------------------- */
+
+  /* A peak-follower, which is what an autotracker is underneath: start at the
+     seed, and at each step take the nearest peak to where you were. */
+  function trackHorizon(seedTrace, seedTime) {
+    const pick = new Int32Array(NX);
+    const walk = (from, to, step) => {
+      let t = pick[from];
+      for (let ix = from + step; ix !== to; ix += step) {
+        let best = -1, bv = -Infinity;
+        for (let k = -4; k <= 4; k++) {
+          const tt = clamp(t + k, 2, NT - 3);
+          const v = SEC.f[ix * NT + tt];
+          const isPeak = v > SEC.f[ix * NT + tt - 1] && v >= SEC.f[ix * NT + tt + 1];
+          const sc = v - 0.02 * SEC.peak * Math.abs(k);
+          if (isPeak && sc > bv) { bv = sc; best = tt; }
+        }
+        t = best >= 0 ? best : t;
+        pick[ix] = t;
+      }
+    };
+    pick[seedTrace] = seedTime;
+    walk(seedTrace, NX, 1);
+    walk(seedTrace, -1, -1);
+    return pick;
+  }
+
+  function draw5() {
+    const w = LAB.rowWidth('row5', 2), h = Math.max(215, Math.round(w * 0.78));
+
+    // the true horizon: the one nearest the seed in the model
+    let hz = SEC.horizons[0], bestd = 1e9;
+    const seedTrace = Math.round(NX * 0.12);
+    SEC.horizons.forEach((H) => {
+      const d = Math.abs(H.t[seedTrace] - NT * 0.30);
+      if (d < bestd && H.rc > 0) { bestd = d; hz = H; }
+    });
+    const seedTime = Math.round(hz.t[seedTrace]);
+    const pick = trackHorizon(seedTrace, seedTime);
+    const dScale = scaleOf(STATD);
+
+    const el = $('c5a');
+    if (el) {
+      const r = secPanel('c5a', SEC.f, w, h, {
+        overlay: (ctx, R) => {
+          ctx.save();
+          ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+          for (let ix = 0; ix < NX - 1; ix++) {
+            const d = clamp(STATD[ix * NT + pick[ix]] / dScale, 0, 1);
+            const c = EXTRA.MAPS.confidence(d);
+            ctx.strokeStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+            ctx.beginPath();
+            ctx.moveTo(R.x + (ix / (NX - 1)) * R.w, R.y + (pick[ix] / (NT - 1)) * R.h);
+            ctx.lineTo(R.x + ((ix + 1) / (NX - 1)) * R.w, R.y + (pick[ix + 1] / (NT - 1)) * R.h);
+            ctx.stroke();
+          }
+          ctx.restore();
+          LAB.colorbar(ctx, R, EXTRA.MAPS.confidence, 'confident', 'doubtful', 'disorder on the pick', 40);
+        },
+      });
+      if (!r) return;
+    }
+
+    const el2 = $('c5b');
+    if (el2) {
+      const ctx = SEIS.fitCanvas(el2, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      let emax = 2;
+      for (let ix = 0; ix < NX; ix++) emax = Math.max(emax, Math.abs(pick[ix] - hz.t[ix]));
+      ctx.save(); ctx.strokeStyle = CRIM; ctx.lineWidth = 2; ctx.beginPath();
+      for (let ix = 0; ix < NX; ix++) {
+        const x = R.x + (ix / (NX - 1)) * R.w;
+        const y = R.y + R.h / 2 - ((pick[ix] - hz.t[ix]) / emax) * (R.h / 2) * 0.92;
+        ix === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+      SEIS.dashedLine(ctx, R.x, R.y + R.h / 2, R.x + R.w, R.y + R.h / 2, SLATE, [4, 4], 1.2);
+      // the disorder along the pick, on the same axis, scaled to fit
+      ctx.save(); ctx.strokeStyle = TEAL; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let ix = 0; ix < NX; ix++) {
+        const x = R.x + (ix / (NX - 1)) * R.w;
+        const y = R.y + R.h - clamp(STATD[ix * NT + pick[ix]] / dScale, 0, 1) * R.h * 0.42;
+        ix === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, -emax * DT * 1000, emax * DT * 1000, 'pick error (ms)',
+        (v) => v.toFixed(0), { ticks: 4 });
+      SEIS.tag(ctx, R.x + 8, R.y + 14, 'error in the pick', CRIM);
+      SEIS.tag(ctx, R.x + 8, R.y + R.h - 12, 'disorder along the pick', TEAL);
+    }
+
+    let good = 0, dg = 0, db = 0, ng = 0, nb = 0;
+    for (let ix = 0; ix < NX; ix++) {
+      const err = Math.abs(pick[ix] - hz.t[ix]);
+      const d = STATD[ix * NT + pick[ix]];
+      if (err <= 1) { good++; dg += d; ng++; } else { db += d; nb++; }
+    }
+    LAB.put('s5a', good + ' of ' + NX + '  (' + (100 * good / NX).toFixed(0) + '%)');
+    LAB.put('s5b', ng ? (dg / ng).toFixed(4) : 'no good picks');
+    LAB.put('s5c', nb ? (db / nb).toFixed(4) : 'no bad picks \u2014 add noise');
+    const ratio = (ng && nb) ? (db / nb) / (dg / ng) : 0;
+    LAB.put('s5d', !nb ? 'The tracker has not made a mistake yet. Raise the noise.'
+      : ratio > 1.6 ? 'Yes \u2014 disorder on the mistracked traces is ' + ratio.toFixed(1)
+        + ' times what it is on the good ones'
+      : ratio > 1.15 ? 'Partly \u2014 disorder is higher on the bad picks, by ' + ratio.toFixed(2)
+        + ' times, but not by a margin you would want to bet on'
+      : 'Not here \u2014 the tracker is failing for a reason disorder does not measure');
+  }
+
+  /* ============================== plumbing ============================== */
+
+  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'pw', 'pe', 'pk', 'pm'];
+  const NAMES = {
+    p1: 'The operator', p2: 'Why divide', p3: 'The two-stage recipe',
+    p4: 'Against coherence', p5: 'Confidence in a pick',
+    pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
+  };
+
+  function labels() {
+    LAB.put('noiseV', S.noise + '%');
+    LAB.put('cohV', S.coh + '%');
+    LAB.put('chaosV', S.chaos + '%');
+    LAB.put('thrV', S.thr + (S.thr === 1 ? ' sample' : ' samples'));
+    LAB.put('smoothV', S.smooth + (S.smooth === 1 ? ' trace' : ' traces'));
+  }
+
+  function drawAll() {
+    labels();
+    const lab = document.querySelector('.labhead');
+    if ($('cSec') && (!lab || !lab.hidden)) drawHeader();
+    if (!$('p1').hidden) draw1();
+    if (!$('p2').hidden) draw2();
+    if (!$('p3').hidden) draw3();
+    if (!$('p4').hidden) draw4();
+    if (!$('p5').hidden) draw5();
+  }
+
+  let busy = null;
+  function refresh() {
+    clearTimeout(busy);
+    busy = setTimeout(() => { recompute(); drawAll(); saveState(); }, 90);
+  }
+
+  const show = LAB.setupTabs({
+    panes: PANES, names: NAMES,
+    hideLabOn: ['pw', 'pe', 'pk', 'pm'],
+    onShow: (id) => { S.tab = id; drawAll(); saveState(); },
+  });
+
+  LAB.bindControls(S, refresh);
+
+  LAB.attachProbe('cSec', (x, y, r) => {
+    const R = { x: M.l, y: M.t, w: r.width - M.l - M.r, h: r.height - M.t - M.b };
+    S.px = clamp(Math.round(((x - R.x) / R.w) * (NX - 1)), 4, NX - 5);
+    S.pt = clamp(Math.round(((y - R.y) / R.h) * (NT - 1)), 8, NT - 9);
+    drawAll(); saveState();
+  });
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 140); });
+
+  recompute();
+  show(PANES.indexOf(S.tab) >= 0 ? S.tab : 'p1');
+  if (document.fonts) document.fonts.ready.then(drawAll);
+})();
+</script>
+</body>
+</html>

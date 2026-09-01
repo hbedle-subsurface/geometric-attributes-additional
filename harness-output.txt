@@ -1,0 +1,133 @@
+====================================================================
+  disorder.html
+====================================================================
+PASS  exercises pane found
+PASS  button injected   [Open in new window]
+PASS  button uses site classes
+PASS  heading laid out as a row
+PASS  window.open called
+PASS  window name is per-module   [exercises__geometric_attributes_additional_modules_disorder_html]
+PASS  doctype written
+PASS  title carries module name   [Exercises — Disorder: measuring the noise instead of the geology]
+PASS  stylesheet linked absolutely   [https://hbedle-subsurface.github.io/geometric-attributes-additional/assets/style.css]
+PASS  fonts linked
+PASS  exercise list copied   [5 items]
+PASS  reveal toggles copied   [5 hints]
+PASS  button not duplicated into popout
+PASS  window focused
+PASS  no server needed: nothing fetched
+
+15/15 passed
+
+====================================================================
+  edgepreserve.html
+====================================================================
+PASS  exercises pane found
+PASS  button injected   [Open in new window]
+PASS  button uses site classes
+PASS  heading laid out as a row
+PASS  window.open called
+PASS  window name is per-module   [exercises__geometric_attributes_additional_modules_edgepreserve_html]
+PASS  doctype written
+PASS  title carries module name   [Exercises — Edge preservation: the fault is signal, not noise]
+PASS  stylesheet linked absolutely   [https://hbedle-subsurface.github.io/geometric-attributes-additional/assets/style.css]
+PASS  fonts linked
+PASS  exercise list copied   [5 items]
+PASS  reveal toggles copied   [5 hints]
+PASS  button not duplicated into popout
+PASS  window focused
+PASS  no server needed: nothing fetched
+
+15/15 passed
+
+====================================================================
+  glcm.html
+====================================================================
+PASS  exercises pane found
+PASS  button injected   [Open in new window]
+PASS  button uses site classes
+PASS  heading laid out as a row
+PASS  window.open called
+PASS  window name is per-module   [exercises__geometric_attributes_additional_modules_glcm_html]
+PASS  doctype written
+PASS  title carries module name   [Exercises — The co-occurrence matrix: throwing the amplitudes away on purpose]
+PASS  stylesheet linked absolutely   [https://hbedle-subsurface.github.io/geometric-attributes-additional/assets/style.css]
+PASS  fonts linked
+PASS  exercise list copied   [5 items]
+PASS  reveal toggles copied   [5 hints]
+PASS  button not duplicated into popout
+PASS  window focused
+PASS  no server needed: nothing fetched
+
+15/15 passed
+
+====================================================================
+  nonparallel.html
+====================================================================
+PASS  exercises pane found
+PASS  button injected   [Open in new window]
+PASS  button uses site classes
+PASS  heading laid out as a row
+PASS  window.open called
+PASS  window name is per-module   [exercises__geometric_attributes_additional_modules_nonparallel_html]
+PASS  doctype written
+PASS  title carries module name   [Exercises — Nonparallelism: are the reflectors parallel to each other?]
+PASS  stylesheet linked absolutely   [https://hbedle-subsurface.github.io/geometric-attributes-additional/assets/style.css]
+PASS  fonts linked
+PASS  exercise list copied   [5 items]
+PASS  reveal toggles copied   [5 hints]
+PASS  button not duplicated into popout
+PASS  window focused
+PASS  no server needed: nothing fetched
+
+15/15 passed
+
+====================================================================
+  sof.html
+====================================================================
+PASS  exercises pane found
+PASS  button injected   [Open in new window]
+PASS  button uses site classes
+PASS  heading laid out as a row
+PASS  window.open called
+PASS  window name is per-module   [exercises__geometric_attributes_additional_modules_sof_html]
+PASS  doctype written
+PASS  title carries module name   [Exercises — Filtering along structure: cleaning the data without flattening it]
+PASS  stylesheet linked absolutely   [https://hbedle-subsurface.github.io/geometric-attributes-additional/assets/style.css]
+PASS  fonts linked
+PASS  exercise list copied   [5 items]
+PASS  reveal toggles copied   [5 hints]
+PASS  button not duplicated into popout
+PASS  window focused
+PASS  no server needed: nothing fetched
+
+15/15 passed
+
+====================================================================
+  textures.html
+====================================================================
+PASS  exercises pane found
+PASS  button injected   [Open in new window]
+PASS  button uses site classes
+PASS  heading laid out as a row
+PASS  window.open called
+PASS  window name is per-module   [exercises__geometric_attributes_additional_modules_textures_html]
+PASS  doctype written
+PASS  title carries module name   [Exercises — Eight measures, and how many of them are really different]
+PASS  stylesheet linked absolutely   [https://hbedle-subsurface.github.io/geometric-attributes-additional/assets/style.css]
+PASS  fonts linked
+PASS  exercise list copied   [6 items]
+PASS  reveal toggles copied   [6 hints]
+PASS  button not duplicated into popout
+PASS  window focused
+PASS  no server needed: nothing fetched
+
+15/15 passed
+
+SUMMARY
+disorder.html            15/15 passed
+edgepreserve.html        15/15 passed
+glcm.html                15/15 passed
+nonparallel.html         15/15 passed
+sof.html                 15/15 passed
+textures.html            15/15 passed

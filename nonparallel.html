@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nonparallelism | More Geometric Attributes</title>
+<meta name="description" content="Deviation of vector dip, deviation of energy gradient, and their covariance: measuring whether reflectors are parallel to each other rather than whether they are continuous, and why that separates salt and mass transport complexes from conformable section.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>More geometric attributes, and how they <b>actually</b> work</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="textures.html">Module 05</a>
+      <a href="#tabs" data-tab="pm">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 06 &nbsp;·&nbsp; Program nonparallelism</p>
+    <h1>Nonparallelism: are the reflectors parallel to each other?</h1>
+    <p class="sub">Coherence asks whether neighboring traces look alike. Disorder asks whether the data are
+      rough. Neither asks the question a stratigrapher asks first, which is whether the reflectors in a
+      package run parallel to one another or wander independently. Salt, mass transport complexes and karst
+      collapse all fail that test while often passing the other two, and this is the attribute that catches
+      them.</p>
+  </div>
+
+  <div class="labhead">
+    <div class="labgrid">
+      <div>
+        <p class="cap">The horizon <span>&mdash; drag anywhere on it to move the analysis point</span></p>
+        <canvas id="cMap" aria-label="Map view of a picked horizon with a salt body, a channel and a fault"></canvas>
+      </div>
+      <div>
+        <p class="cap">The surface, and the analysis window</p>
+        <div class="controls">
+          <div class="ctl-col">
+            <h2>What is on the map</h2>
+            <div class="ctl">
+              <label for="salt">Chaotic body <span class="val" id="saltV">radius 0.18</span></label>
+              <input type="range" data-key="salt" id="salt" min="0" max="30" step="2" value="18">
+            </div>
+            <div class="ctl">
+              <label for="chaos">How chaotic <span class="val" id="chaosV">70%</span></label>
+              <input type="range" data-key="chaos" id="chaos" min="0" max="100" step="10" value="70">
+            </div>
+            <div class="ctl">
+              <label for="chan">Channel dimming <span class="val" id="chanV">60%</span></label>
+              <input type="range" data-key="chan" id="chan" min="0" max="90" step="10" value="60">
+            </div>
+            <div class="ctl">
+              <label for="thr">Fault throw <span class="val" id="thrV">18 m</span></label>
+              <input type="range" data-key="thr" id="thr" min="0" max="40" step="2" value="18">
+            </div>
+          </div>
+          <div class="ctl-col">
+            <h2>The measurement</h2>
+            <div class="ctl">
+              <label for="attr">Attribute mapped <span class="val" id="attrV">dip deviation</span></label>
+              <select data-key="attr" id="attr">
+                <option value="0" selected>Deviation of vector dip</option>
+                <option value="1">Deviation of energy gradient</option>
+                <option value="2">Covariance of the two</option>
+              </select>
+            </div>
+            <div class="ctl">
+              <label for="half">Window radius <span class="val" id="halfV">3 bins</span></label>
+              <input type="range" data-key="half" id="half" min="1" max="7" step="1" value="3">
+            </div>
+            <div class="ctl">
+              <label for="noise">Noise on the pick <span class="val" id="noiseV">10%</span></label>
+              <input type="range" data-key="noise" id="noise" min="0" max="50" step="5" value="10">
+            </div>
+            <div class="check">
+              <input type="checkbox" data-key="wt" id="wt" checked>
+              <label for="wt" style="display:inline">Weight the dips by energy</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="tabhint">Work through the five steps in order, <b>then try the exercises</b>.
+    Method and references are there when you want them.</p>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Module steps">
+    <button role="tab" data-tab="p1" aria-selected="false">1 · Dips as arrows</button>
+    <button role="tab" data-tab="p2" aria-selected="false">2 · Deviation of vector dip</button>
+    <button role="tab" data-tab="p3" aria-selected="false">3 · The energy gradient</button>
+    <button role="tab" data-tab="p4" aria-selected="false">4 · The covariance</button>
+    <button role="tab" data-tab="p5" aria-selected="false">5 · What each one finds</button>
+    <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
+    <span class="gap"></span>
+    <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
+    <button role="tab" data-tab="pk" aria-selected="false">Key points</button>
+    <button role="tab" data-tab="pm" aria-selected="false">Method</button>
+  </nav>
+
+  <!-- ================================ 1 ================================ -->
+  <section class="tabpane" id="p1" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">1</span>Every dip is an arrow</h3>
+      <span class="hint">And parallel means the arrows agree</span>
+    </div>
+    <p class="lede">Take the inline and crossline dip components at a point, <i>p</i> and <i>q</i>, and turn
+      them into a unit vector pointing perpendicular to the reflector:</p>
+    <p class="lede" style="font-family:var(--mono);font-size:14px;background:var(--cream);
+      border-left:3px solid var(--crimson);padding:10px 14px;display:inline-block">
+      n = (p, q, 1) / (p<sup>2</sup> + q<sup>2</sup> + 1)<sup>1/2</sup></p>
+    <p class="lede">A package of parallel reflectors gives a tight cluster of these arrows all pointing the
+      same way. A chaotic package gives arrows pointing everywhere. That is the entire idea, and everything
+      that follows is a way of putting a number on how tight the cluster is.</p>
+    <p class="lede">Note what the measurement does <em>not</em> care about: which way the arrows point.
+      A steeply dipping but perfectly conformable package has arrows that all lean together, and its
+      deviation is as low as a flat one's. This is a measurement of agreement, not of dip.</p>
+
+    <div class="sec-row" id="row1">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The surface, with dip arrows
+          <span class="note">the window is outlined</span></p>
+        <canvas id="c1a" aria-label="The horizon surface with dip vectors drawn on it"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The arrows in the window, on one plot
+          <span class="note">tail to tail</span></p>
+        <canvas id="c1b" aria-label="The dip vectors inside the analysis window, plotted from a common origin"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Points in the window</span><b id="s1a">—</b></div>
+      <div class="stat"><span>Mean dip magnitude here</span><b id="s1b">—</b></div>
+      <div class="stat"><span>Scatter of the normals, σ<sub>n</sub></span><b id="s1c">—</b></div>
+      <div class="stat key"><span>As an angle, σ<sub>dip</sub> = arcsin σ<sub>n</sub></span><b id="s1d">—</b></div>
+    </div>
+  </section>
+
+  <!-- ================================ 2 ================================ -->
+  <section class="tabpane" id="p2" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">2</span>Deviation of vector dip</h3>
+      <span class="hint">The scatter, mapped everywhere</span>
+    </div>
+    <p class="lede">Averaging the arrows in the window gives a mean direction; measuring how far the
+      individual arrows sit from that mean gives the attribute:</p>
+    <p class="lede" style="font-family:var(--mono);font-size:14px;background:var(--cream);
+      border-left:3px solid var(--crimson);padding:10px 14px;display:inline-block;line-height:1.9">
+      &mu;<sub>k</sub> = &Sigma; e<sub>j</sub> n<sub>kj</sub> / &Sigma; e<sub>j</sub><br>
+      &sigma;<sub>n</sub> = { &Sigma; e<sub>j</sub> &Sigma;<sub>k</sub> (n<sub>kj</sub> &minus;
+        &mu;<sub>k</sub>)<sup>2</sup> / &Sigma; e<sub>j</sub> }<sup>1/2</sup></p>
+    <p class="lede">The weights <i>e<sub>j</sub></i> are the energy, or RMS amplitude, at each point. That
+      weighting matters more than it looks: a dip estimate made where the reflection is weak is mostly
+      measuring noise, and without the weights those bad estimates would count as heavily as the good ones.
+      Switch the weighting off in the header and watch the map get noisier where the amplitudes are
+      low.</p>
+
+    <div class="sec-row" id="row2">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Deviation of vector dip <span class="note">red is chaotic</span></p>
+        <canvas id="c2a" aria-label="Map of the deviation of vector dip"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> What it responds to
+          <span class="note">by what is actually there</span></p>
+        <canvas id="c2b" aria-label="Deviation of vector dip grouped by the feature at each point"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Conformable background</span><b id="s2a">—</b></div>
+      <div class="stat key"><span>Chaotic body</span><b id="s2b">—</b></div>
+      <div class="stat"><span>Fault</span><b id="s2c">—</b></div>
+      <div class="stat"><span>Channel</span><b id="s2d">—</b></div>
+      <div class="stat key wide"><span>What this attribute is for</span><b id="s2e">—</b></div>
+    </div>
+    <p class="legend prose"><span>The four figures are the mean attribute value over the points the model
+      knows belong to each feature. On real data you would not have that luxury, which is why the model is
+      built with the answer known.</span></p>
+  </section>
+
+  <!-- ================================ 3 ================================ -->
+  <section class="tabpane" id="p3" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">3</span>Deviation of energy gradient</h3>
+      <span class="hint">The same statistic, applied to amplitude</span>
+    </div>
+    <p class="lede">The second attribute changes what is measured and keeps the arithmetic. Instead of the
+      dip vectors, it takes the lateral gradient of energy — how fast reflection strength is changing, and
+      in which direction — rotates it into the plane of the reflector, and measures how much that gradient
+      varies across the window.</p>
+    <p class="lede">The rotation matters. An energy gradient measured on a steeply dipping reflector is
+      partly an artifact of the dip: you are sampling the reflector obliquely. Dividing by
+      (1 + p<sup>2</sup>)<sup>1/2</sup> removes that, so what is left is amplitude variation along the bed
+      rather than variation caused by geometry.</p>
+    <p class="lede">This one lights up boundaries rather than interiors. The edge of a salt body is where
+      reflection strength changes fastest, so that is where the gradient deviation peaks — and the middle of
+      the body, where the amplitudes are uniformly poor, can be quiet.</p>
+
+    <div class="sec-row" id="row3">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Reflection strength <span class="note">the input</span></p>
+        <canvas id="c3a" aria-label="Map of reflection strength"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Deviation of energy gradient</p>
+        <canvas id="c3b" aria-label="Map of the deviation of the energy gradient"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Both across one line
+          <span class="note">through the chaotic body</span></p>
+        <canvas id="c3c" aria-label="Profiles of both nonparallelism attributes across the chaotic body"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Conformable background</span><b id="s3a">—</b></div>
+      <div class="stat"><span>Inside the chaotic body</span><b id="s3b">—</b></div>
+      <div class="stat key"><span>On its edge</span><b id="s3c">—</b></div>
+      <div class="stat key"><span>Channel margin</span><b id="s3d">—</b></div>
+    </div>
+  </section>
+
+  <!-- ================================ 4 ================================ -->
+  <section class="tabpane" id="p4" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">4</span>Putting the two together</h3>
+      <span class="hint">A 2×2 matrix and its larger eigenvalue</span>
+    </div>
+    <p class="lede">The third attribute asks whether the two deviations vary together. The two are
+      normalized onto a common footing, arranged as a 2×2 covariance matrix, and the attribute is its larger
+      eigenvalue — the same device as the energy-ratio coherence of the first module set, applied to a much
+      smaller matrix.</p>
+    <p class="lede">Because an eigenvalue responds to either input, this attribute lights up where dip is
+      chaotic, where energy is changing fast, and most strongly where both happen at once. The AASPI
+      documentation puts it plainly: the covariance expresses both the chaotic and the high-energy features,
+      showing the merged anomalies of the first two.</p>
+    <p class="lede">That merging is a convenience and a hazard. One map is easier to look at than two, and
+      a bright anomaly on it no longer tells you which of the two measurements produced it. The two-panel
+      crossplot below is the honest version: where a point sits in it says which attribute is
+      responding.</p>
+
+    <div class="sec-row" id="row4">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Covariance of dip and energy gradient</p>
+        <canvas id="c4a" aria-label="Map of the covariance of vector dip and energy gradient"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Dip deviation against gradient deviation
+          <span class="note">colored by what is there</span></p>
+        <canvas id="c4b" aria-label="Crossplot of the two deviations, colored by the feature at each point"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Correlation between the two deviations</span><b id="s4a">—</b></div>
+      <div class="stat"><span>Covariance, conformable background</span><b id="s4b">—</b></div>
+      <div class="stat key"><span>Covariance, chaotic body</span><b id="s4c">—</b></div>
+      <div class="stat"><span>Covariance, channel</span><b id="s4d">—</b></div>
+    </div>
+    <p class="legend prose"><span>A low correlation between the two deviations means they are finding
+      different things, which is the case for combining them. A high one means the covariance is a more
+      expensive way of computing something you already have.</span></p>
+  </section>
+
+  <!-- ================================ 5 ================================ -->
+  <section class="tabpane" id="p5" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">5</span>Four features, three attributes</h3>
+      <span class="hint">Which one to reach for</span>
+    </div>
+    <p class="lede">The model contains a chaotic body, a fault, a dimmed channel with no structural
+      expression at all, and conformable background. Each attribute has a different opinion about which of
+      those is interesting, and the table below is the whole argument for computing more than one.</p>
+
+    <div class="sec-row" id="row5">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> How strongly each attribute responds
+          <span class="note">to each feature</span></p>
+        <canvas id="c5a" aria-label="Grid of attribute response to each feature in the model"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The selected attribute, full size</p>
+        <canvas id="c5b" aria-label="The selected nonparallelism attribute shown at full size"></canvas>
+      </div>
+    </div>
+
+    <p class="lede" style="margin-top:12px">The channel is the interesting row. It is a dimming with no
+      structural expression whatsoever — the reflector runs straight through it — so the dip deviation has
+      nothing to report, and only the attributes that look at amplitude find it. If you were mapping
+      channels with dip deviation alone you would miss it entirely, and nothing in the map would tell you
+      that you had.</p>
+
+    <div class="stats">
+      <div class="stat"><span>Best attribute for the chaotic body</span><b id="s5a">—</b></div>
+      <div class="stat"><span>Best for the channel</span><b id="s5b">—</b></div>
+      <div class="stat"><span>Best for the fault</span><b id="s5c">—</b></div>
+      <div class="stat key wide"><span>Dip deviation's response to the channel</span><b id="s5d">—</b></div>
+    </div>
+    <p class="legend prose"><span>Response is the mean attribute value over a feature minus the background
+      mean, divided by the spread of the attribute across the map, so that three attributes with different
+      units can be ranked against each other. Above about 0.3 the feature is visible on the map; below about
+      0.1 the attribute cannot see it at all. Compare down a column to ask what one attribute finds; compare
+      across a row to choose which attribute to compute.</span></p>
+  </section>
+
+  <!-- ============================ WHY IT MATTERS ========================= -->
+  <section class="tabpane" id="pw" role="tabpanel" hidden>
+    <p class="lede">Nonparallelism exists because the seismic facies that matter most in exploration are
+      often the ones that coherence handles worst.</p>
+    <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
+      <li><b>Salt, mass transport complexes and karst collapse are defined by non-parallelism.</b> Not by
+        being incoherent — the interior of a mass transport complex can be locally quite coherent — but by
+        reflectors that do not run with each other. This attribute measures that property directly instead
+        of hoping a discontinuity detector will notice.</li>
+      <li><b>It is built for machine learning, and it shows.</b> The documentation frames the whole family
+        as an answer to "which dip is useful for machine learning in differentiating seismic facies", and
+        the answer it gives is a statistic of dip rather than dip itself. These are volumes to cluster, not
+        volumes to contour.</li>
+      <li><b>Energy weighting is not a detail.</b> Dip estimated where there is no reflection is noise, and
+        a statistic that counts it equally is a statistic of the noise. The weighting is what makes the
+        attribute usable on real data with real amplitude variation.</li>
+      <li><b>The salt-and-pepper problem is real and documented.</b> The deviation of vector dip and the
+        covariance both highlight salt domes and both produce scattered spurious anomalies. Expect to smooth
+        the result, and expect that smoothing to cost you the small features.</li>
+      <li><b>The two deviations agreeing is a fact about your geology, not about the attributes.</b> The
+        documentation makes this point about the Great South Basin example: dip and amplitude change in the
+        same places there because faults and progradation change both. On different geology they
+        separate.</li>
+      <li><b>Window size is inherited from <span class="k">dip3d</span>.</b> AASPI defaults the analysis
+        window to double the one used to compute the dips, which is a reminder that this attribute is a
+        statistic of an estimate — everything wrong with the dip volume arrives here first.</li>
+    </ul>
+  </section>
+
+  <!-- ============================== EXERCISES ============================ -->
+  <section class="tabpane" id="pe" role="tabpanel" hidden>
+    <div class="tryit" style="max-width:none">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Confirm it ignores dip itself.</b> In step 1, move the analysis point from the flat part of
+          the map onto the flank of the dome and watch σ<sub>dip</sub>.
+          <details class="reveal"><summary>Hint</summary><span class="ans">On the flat background the dip
+            is about 2.5&deg; and &sigma;<sub>dip</sub> reads about 2.9&deg;, which is where the module opens.
+            On the flank of the dome the dip climbs several times over and &sigma;<sub>dip</sub> hardly moves,
+            because the arrows on the flank all
+            lean the same way as each other. Move into the chaotic body and the dip is similar again while
+            &sigma;<sub>dip</sub> jumps past 8&deg;. Steep and parallel reads low; gently dipping and
+            disordered reads high. Anyone who reads this attribute as a dip magnitude map will get it
+            exactly backwards on a monocline.</span></details></li>
+        <li><b>Turn the energy weighting off.</b> Uncheck it in the header, then look at step 2 over the
+          channel.
+          <details class="reveal"><summary>Hint</summary><span class="ans">The dimmed channel starts
+            producing dip-deviation anomalies it should not have, because the dips picked on a weak
+            reflection are unreliable and, unweighted, they count as much as the good ones. The weighting is
+            what stops the attribute from mapping the quality of its own input.</span></details></li>
+        <li><b>Find the feature dip deviation cannot see.</b> In step 5, read the channel row.
+          <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings dip
+            deviation scores 0.08 on the channel and the gradient deviation 0.22 — not a large number in
+            absolute terms, but nearly three times as much, and the channel is visible on one map and not on
+            the other. The reason is that the channel is a pure amplitude feature: the reflector runs
+            straight through it without bending, so there is nothing there for a statistic of dip to find.
+            This is the clearest case in the module for computing both. Neither attribute is more sensitive
+            than the other; they are sensitive to different things, and no amount of tuning turns one into
+            the other.</span></details></li>
+        <li><b>Make the covariance redundant.</b> In step 4, turn the channel dimming to zero.
+          <details class="reveal"><summary>Hint</summary><span class="ans">With the only pure-amplitude
+            feature gone, the two deviations start agreeing, because everything that remains changes dip and
+            amplitude together. The covariance is then a more expensive way of computing what either one
+            already told you. Put the channel back and they separate again. That is what the correlation
+            figure in that step is for — it tells you whether the third attribute is earning its
+            place on <em>your</em> data.</span></details></li>
+        <li><b>Buy resolution and sell it back.</b> Set the window radius to 1, then to 7, watching step 2.
+          <details class="reveal"><summary>Hint</summary><span class="ans">At radius 1 the map is
+            speckled — a handful of dip estimates is not enough for a standard deviation to mean much, and
+            this is the salt-and-pepper pattern the AASPI documentation warns about. At radius 7 the
+            speckle is gone and so is the edge of the chaotic body, smeared several bins wide. Nothing in
+            the middle of that range is correct; there is a size of feature you are looking for, and the
+            window has to be chosen for it.</span></details></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================= KEY POINTS ============================ -->
+  <section class="tabpane" id="pk" role="tabpanel" hidden>
+    <div class="takeaway" style="max-width:none">
+      <h3>The main points</h3>
+      <ul>
+        <li><b>Each dip becomes a unit vector normal to the reflector.</b> Parallel reflectors give a tight
+          cluster of those vectors.</li>
+        <li><b>The attribute is the scatter of the cluster, not its direction.</b> Steep conformable dip
+          reads as low as flat conformable dip.</li>
+        <li><b>σ<sub>dip</sub> = arcsin σ<sub>n</sub></b> turns that scatter into degrees, which is
+          something you can talk about.</li>
+        <li><b>The dips are weighted by energy.</b> A dip measured where there is no reflection is a noise
+          measurement and should not count equally.</li>
+        <li><b>The energy gradient version finds edges rather than interiors.</b> Salt boundaries, channel
+          margins, amplitude fronts.</li>
+        <li><b>The covariance is the larger eigenvalue of a 2×2 matrix</b> built from the two, and responds
+          to either — convenient, and no longer diagnostic of which.</li>
+        <li><b>A pure amplitude feature is invisible to dip deviation.</b> The channel in this model proves
+          it, and nothing on the map would warn you.</li>
+        <li><b>Expect salt-and-pepper.</b> It is documented behavior, not a bug in your parameters.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- =============================== METHOD ============================== -->
+  <section class="tabpane" id="pm" role="tabpanel" hidden>
+    <details class="notes" open>
+      <summary>Method, sources, and what has been simplified</summary>
+      <p>The model is a picked horizon in map view: a dome with regional dip and a gentle roll, a
+        sinuous normal fault, a circular chaotic body whose relief is scrambled by three superposed
+        patterns, and a sinuous channel that dims the reflection strength without touching the structure.
+        Every point carries a label saying which of those it belongs to, which is what lets the response
+        figures on the page be measured rather than judged by eye.</p>
+      <p>Dip components <i>p</i> and <i>q</i> are central differences of the surface in meters per meter,
+        and the energy is the square of the reflection strength with its own central-difference gradients.
+        The three attributes are computed exactly as printed on the page: the energy-weighted scatter of the
+        unit normals; the scatter of the dip-rotated energy gradient; and the larger eigenvalue of the 2×2
+        covariance matrix of the two, each normalized by its own median before being combined so that
+        neither dominates by virtue of its units.</p>
+      <p><b>Where this departs from AASPI.</b> The attribute is computed on one picked surface rather than
+        volumetrically, so there is no vertical component to the analysis window and no vertical dip
+        variation; AASPI computes it in a 3D window along structural dip, and its analysis window defaults
+        to double the one used in <span class="k">dip3d</span>. The dip components here come from
+        differentiating a known surface rather than from a semblance scan, which makes them cleaner than
+        real ones — the noise slider adds scatter back to compensate, and the effect it has on the
+        speckliness of the result is the honest part of that trade. The normalization constants inside the
+        covariance are medians of the two deviations over the map; AASPI's are set differently, and the
+        choice affects the balance between the two contributions but not the character of the
+        result.</p>
+      <ul>
+        <li>AASPI, <em>Measuring chaotic vs. conformal reflectors: Program nonparallelism</em>, University of
+          Oklahoma — the three attributes, the Great South Basin and Gulf of Mexico examples, and the
+          salt-and-pepper caveat.</li>
+        <li>Barnes, A. E., 2002, Attributes for automating seismic facies analysis: 72nd Annual
+          International Meeting, SEG, Expanded Abstracts, 553–556 — the original standard deviation of
+          vector dip.</li>
+        <li>Marfurt, K. J., and J. R. Rich, 2010, Beyond curvature: volumetric estimates of reflector
+          rotation and convergence: 80th Annual International Meeting, SEG, Expanded Abstracts,
+          1467–1472.</li>
+        <li>Qi, J., B. Zhang, H. Zhou, and K. J. Marfurt, 2014, Attribute expression of fault-controlled
+          karst — Fort Worth Basin, TX: <em>Interpretation</em>, 2, SF91–SF110.</li>
+        <li>Marfurt, K. J., 2006, Robust estimates of reflector dip and azimuth: <em>Geophysics</em>, 71,
+          P29–P40.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="nextup" id="nextup" hidden>
+    <p class="eyebrow">That is the set</p>
+    <h3><a href="../index.html">Back to all six modules</a></h3>
+    <p>Four AASPI programs, six modules: filtering along structure and preserving its edges, measuring the
+      noise instead of the geology, and two different ways of asking what a package of reflectors is
+      doing.</p>
+    <a class="btn" href="../index.html">All modules</a>
+    <a class="btn ghost" href="sof.html">Back to module 01</a>
+  </section>
+
+  <div class="pager" id="pager" hidden>
+    <a class="btn ghost" href="textures.html">← Module 05: the texture measures</a>
+    <a class="btn" href="../index.html">All modules</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+        <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+      <p class="lic"><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather
+        Bedle is licensed under
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. You are
+        free to share this material in any medium or format and to adapt it &mdash; remix it, build on it,
+        translate it, teach from it, use parts of it in something of your own &mdash; for any purpose,
+        including commercially. Two conditions apply. <b>Attribution:</b> credit the source, link to the
+        license, and indicate whether you changed anything; do it in a way that does not suggest the
+        licensor endorses you. <b>ShareAlike:</b> if you remix or build on the material, you must
+        distribute what you make under this same license. You may not add legal terms or technical
+        measures that stop anyone else from doing what the license permits. Full legal text at
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/legalcode">creativecommons.org/licenses/by-sa/4.0/legalcode</a>.</p>
+      <p class="lic">To cite: H. Bedle, <i>More Geometric Attributes, and How They Actually Work</i>,
+        University of Oklahoma,
+        <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
+      <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
+        trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
+        count, so that I can show the university these are being used &mdash; no cookie, no account,
+        nothing about you.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/count.js"></script>
+<script src="../assets/popout.js"></script>
+<script src="../assets/seismic.js"></script>
+<script src="../assets/attributes.js"></script>
+<script src="../assets/extra.js"></script>
+<script src="../assets/lab.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!LAB.guard(['SEIS', 'ATTR', 'EXTRA', 'LAB'])) return;
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = LAB.clamp;
+  const CRIM = '#841617', SLATE = '#5C6670', TEAL = '#0B7285', INK = '#16191C';
+  const OCHRE = '#7A5C10';
+
+  const NG = 88, BIN = 25;
+  const ATTRNAMES = ['dip deviation', 'gradient deviation', 'covariance'];
+  const FACIES = ['background', 'chaotic body', 'channel', 'fault'];
+  const FCOLOR = [SLATE, CRIM, TEAL, OCHRE];
+
+  const DEF = {
+    salt: 18, chaos: 70, chan: 60, thr: 18, attr: 0, half: 3, noise: 10, wt: 1,
+    px: 22, py: 22, tab: 'p1',
+  };
+  let S = SEIS.readState(DEF);
+  const CAN_LINK = location.protocol !== 'file:';
+  const saveState = () => { if (CAN_LINK) { try { SEIS.writeState(S, DEF); } catch (e) { } } };
+
+  /* =============================== model =============================== */
+
+  let H, A = [null, null, null], NORM = null;
+
+  function recompute() {
+    H = LAB.buildHorizon({
+      ng: NG, bin: BIN, fold: 60, seed: 11,
+      saltR: S.salt / 100, chaos: S.chaos / 100,
+      channel: S.chan / 100, throwM: S.thr, noise: S.noise / 100,
+    });
+    buildAttributes();
+  }
+
+  const idx = (ix, iy) => clamp(iy, 0, NG - 1) * NG + clamp(ix, 0, NG - 1);
+
+  /* Collect the window around a point as flat arrays, which is the shape the
+     EXTRA routines want. */
+  function gather(ix, iy, half) {
+    const p = [], q = [], e = [], gx = [], gy = [];
+    for (let dy = -half; dy <= half; dy++) {
+      for (let dx = -half; dx <= half; dx++) {
+        const i = idx(ix + dx, iy + dy);
+        p.push(H.p[i]); q.push(H.q[i]);
+        e.push(S.wt ? Math.max(1e-6, H.e[i]) : 1);
+        gx.push(H.gx[i]); gy.push(H.gy[i]);
+      }
+    }
+    return { p: p, q: q, e: e, gx: gx, gy: gy };
+  }
+
+  function buildAttributes() {
+    const N = NG * NG;
+    const dipD = new Float64Array(N), gradD = new Float64Array(N), cov = new Float64Array(N);
+    const half = S.half;
+    // two passes: the covariance needs the scale of the other two first
+    for (let iy = 0; iy < NG; iy++) {
+      for (let ix = 0; ix < NG; ix++) {
+        const w = gather(ix, iy, half);
+        dipD[iy * NG + ix] = EXTRA.dipDeviation(w.p, w.q, w.e).sigmaDipDeg;
+        gradD[iy * NG + ix] = EXTRA.gradientDeviation(w.gx, w.gy, w.p, w.q).sigma;
+      }
+    }
+    const med = (u) => {
+      const a = Array.from(u).sort((x, y) => x - y);
+      return Math.max(1e-12, a[Math.floor(0.5 * (a.length - 1))]);
+    };
+    // sigma_n rather than degrees, to match what the covariance routine expects
+    const Rn = Math.sin(med(dipD) * Math.PI / 180) || 1e-6, Rg = med(gradD);
+    for (let iy = 0; iy < NG; iy++) {
+      for (let ix = 0; ix < NG; ix++) {
+        const w = gather(ix, iy, half);
+        cov[iy * NG + ix] = EXTRA.dipEnergyCovariance(w.p, w.q, w.e, w.gx, w.gy, Rn, Rg).lambda1;
+      }
+    }
+    A = [dipD, gradD, cov];
+    NORM = { Rn: Rn, Rg: Rg };
+  }
+
+  function rangeOf(u) {
+    const a = Array.from(u).sort((x, y) => x - y);
+    return [a[Math.floor(0.02 * (a.length - 1))], a[Math.floor(0.98 * (a.length - 1))]];
+  }
+
+  /* Mean of an attribute over the points the model labels as a given facies.
+     The chaotic body is split into its edge and its interior, because the two
+     attributes disagree about which of those is interesting. */
+  function faciesMean(u, want) {
+    let s = 0, n = 0;
+    for (let iy = 2; iy < NG - 2; iy++) {
+      for (let ix = 2; ix < NG - 2; ix++) {
+        if (classOf(ix, iy) !== want) continue;
+        s += u[iy * NG + ix]; n++;
+      }
+    }
+    return n ? s / n : NaN;
+  }
+
+  function classOf(ix, iy) {
+    return H.facies[iy * NG + ix];
+  }
+
+  /* Is this point on the rim of the chaotic body rather than inside it? */
+  function isEdge(ix, iy) {
+    if (classOf(ix, iy) !== 1) return false;
+    for (let dy = -2; dy <= 2; dy++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        if (H.facies[idx(ix + dx, iy + dy)] !== 1) return true;
+      }
+    }
+    return false;
+  }
+
+  function edgeMean(u, wantEdge) {
+    let s = 0, n = 0;
+    for (let iy = 2; iy < NG - 2; iy++) {
+      for (let ix = 2; ix < NG - 2; ix++) {
+        if (classOf(ix, iy) !== 1) continue;
+        if (isEdge(ix, iy) !== wantEdge) continue;
+        s += u[iy * NG + ix]; n++;
+      }
+    }
+    return n ? s / n : NaN;
+  }
+
+  /* A response scaled by the attribute's own spread, so three attributes with
+     three sets of units can be ranked against each other. */
+  function response(u, want) {
+    const bg = faciesMean(u, 0);
+    const r = rangeOf(u);
+    const span = Math.max(1e-12, r[1] - r[0]);
+    const v = faciesMean(u, want);
+    return isNaN(v) ? 0 : (v - bg) / span;
+  }
+
+  function pearson(u, v) {
+    const n = u.length;
+    let su = 0, sv = 0;
+    for (let i = 0; i < n; i++) { su += u[i]; sv += v[i]; }
+    const mu = su / n, mv = sv / n;
+    let a = 0, b = 0, c = 0;
+    for (let i = 0; i < n; i++) {
+      const du = u[i] - mu, dv = v[i] - mv;
+      a += du * dv; b += du * du; c += dv * dv;
+    }
+    return (b > 1e-12 && c > 1e-12) ? a / Math.sqrt(b * c) : 0;
+  }
+
+  /* ============================== drawing ============================== */
+
+  function attrMap(canvasId, w, h, u, cmap, label, overlay) {
+    const r = rangeOf(u);
+    return LAB.squareMap(canvasId, w, h, NG, BIN,
+      (ix, iy) => clamp((u[iy * NG + ix] - r[0]) / ((r[1] - r[0]) || 1), 0, 1), cmap,
+      {
+        bar: label ? (ctx, R) => LAB.colorbar(ctx, R, cmap,
+          r[0].toFixed(2), r[1].toFixed(2), label, 40) : null,
+        overlay: (ctx, R) => {
+          if (overlay) overlay(ctx, R);
+          const pt = LAB.gridToXY(R, NG, S.px, S.py);
+          LAB.marker(ctx, pt.x, pt.y, CRIM, 5);
+        },
+      });
+  }
+
+  function drawHeader() {
+    const el = $('cMap');
+    if (!el) return;
+    const w = LAB.panelWidth(el, 300);
+    const h = Math.max(250, Math.round(w * 0.82));
+    const zr = rangeOf(H.z);
+    LAB.squareMap('cMap', w, h, NG, BIN,
+      (ix, iy) => clamp((H.z[iy * NG + ix] - zr[0]) / ((zr[1] - zr[0]) || 1), 0, 1),
+      EXTRA.MAPS.texture,
+      {
+        bar: (ctx, R) => LAB.colorbar(ctx, R, EXTRA.MAPS.texture, 'deep', 'shallow',
+          'structure (m relative)', 40),
+        overlay: (ctx, R) => {
+          // outline the window
+          const a = LAB.gridToXY(R, NG, S.px - S.half, S.py - S.half);
+          const b = LAB.gridToXY(R, NG, S.px + S.half, S.py + S.half);
+          ctx.save();
+          ctx.strokeStyle = CRIM; ctx.lineWidth = 1.6; ctx.setLineDash([4, 3]);
+          ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y),
+            Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+          ctx.restore();
+          const pt = LAB.gridToXY(R, NG, S.px, S.py);
+          LAB.marker(ctx, pt.x, pt.y, CRIM, 5);
+        },
+      });
+  }
+
+  /* ------------------------------ step 1 ------------------------------- */
+
+  function draw1() {
+    const w = LAB.rowWidth('row1', 2), h = Math.max(280, Math.round(w * 0.92));
+    const zr = rangeOf(H.z);
+    LAB.squareMap('c1a', w, h, NG, BIN,
+      (ix, iy) => clamp((H.z[iy * NG + ix] - zr[0]) / ((zr[1] - zr[0]) || 1), 0, 1),
+      EXTRA.MAPS.texture,
+      {
+        bar: (ctx, R) => LAB.colorbar(ctx, R, EXTRA.MAPS.texture, 'deep', 'shallow',
+          'structure (m relative)', 40),
+        overlay: (ctx, R) => {
+          const step = Math.max(2, Math.round(NG / 26));
+          const cell = R.w / NG;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(22,25,28,.55)'; ctx.lineWidth = 1.1;
+          for (let iy = 1; iy < NG; iy += step) {
+            for (let ix = 1; ix < NG; ix += step) {
+              const i = iy * NG + ix;
+              const pt = LAB.gridToXY(R, NG, ix, iy);
+              const len = cell * step * 0.42;
+              const m = Math.hypot(H.p[i], H.q[i]) || 1e-9;
+              const ux = H.p[i] / m, uy = H.q[i] / m;
+              const sc = clamp(m / 0.4, 0.25, 1);
+              ctx.beginPath();
+              ctx.moveTo(pt.x, pt.y);
+              ctx.lineTo(pt.x + ux * len * sc, pt.y - uy * len * sc);
+              ctx.stroke();
+            }
+          }
+          ctx.restore();
+          const a = LAB.gridToXY(R, NG, S.px - S.half, S.py - S.half);
+          const b = LAB.gridToXY(R, NG, S.px + S.half, S.py + S.half);
+          ctx.save();
+          ctx.strokeStyle = CRIM; ctx.lineWidth = 2;
+          ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y),
+            Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+          ctx.restore();
+        },
+      });
+
+    const wI = gather(S.px, S.py, S.half);
+    const dd = EXTRA.dipDeviation(wI.p, wI.q, wI.e);
+
+    const el = $('c1b');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const M = { l: 52, r: 14, t: 10, b: 34 };
+      const side = Math.max(40, Math.min(w - M.l - M.r, h - M.t - M.b));
+      const R = { x: M.l + (w - M.l - M.r - side) / 2, y: M.t, w: side, h: side };
+      // the p,q plane, with every normal in the window drawn as a point
+      let lim = 0.05;
+      for (let j = 0; j < wI.p.length; j++) {
+        lim = Math.max(lim, Math.abs(wI.p[j]), Math.abs(wI.q[j]));
+      }
+      lim *= 1.2;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(22,25,28,.2)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(R.x + R.w / 2, R.y); ctx.lineTo(R.x + R.w / 2, R.y + R.h);
+      ctx.moveTo(R.x, R.y + R.h / 2); ctx.lineTo(R.x + R.w, R.y + R.h / 2);
+      ctx.stroke();
+      ctx.restore();
+      const X = (v) => R.x + R.w / 2 + (v / lim) * (R.w / 2);
+      const Y = (v) => R.y + R.h / 2 - (v / lim) * (R.h / 2);
+      let emax = 1e-9;
+      for (let j = 0; j < wI.e.length; j++) emax = Math.max(emax, wI.e[j]);
+      ctx.save();
+      for (let j = 0; j < wI.p.length; j++) {
+        ctx.strokeStyle = 'rgba(132,22,23,.55)'; ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(wI.p[j]), Y(wI.q[j]));
+        ctx.stroke();
+        const rr = 2 + 2.6 * (wI.e[j] / emax);
+        ctx.fillStyle = 'rgba(132,22,23,.75)';
+        ctx.beginPath(); ctx.arc(X(wI.p[j]), Y(wI.q[j]), rr, 0, 6.2832); ctx.fill();
+      }
+      // the mean direction
+      const mp = dd.mean[2] > 1e-9 ? dd.mean[0] / dd.mean[2] : 0;
+      const mq = dd.mean[2] > 1e-9 ? dd.mean[1] / dd.mean[2] : 0;
+      ctx.strokeStyle = INK; ctx.lineWidth = 2.6;
+      ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(mp), Y(mq)); ctx.stroke();
+      ctx.restore();
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, -lim, lim, 'inline dip p', (v) => v.toFixed(2), { ticks: 3 });
+      SEIS.axisLeft(ctx, R, -lim, lim, 'crossline dip q', (v) => v.toFixed(2),
+        { flip: true, ticks: 3 });
+      SEIS.tag(ctx, R.x + 6, R.y + 14, 'dot size is the energy weight', SLATE);
+      SEIS.tag(ctx, R.x + 6, R.y + 32, 'black is the weighted mean', INK);
+    }
+
+    let mm = 0;
+    for (let j = 0; j < wI.p.length; j++) mm += Math.hypot(wI.p[j], wI.q[j]);
+    mm /= wI.p.length;
+    LAB.put('s1a', wI.p.length + '  (' + (2 * S.half + 1) + ' \u00d7 ' + (2 * S.half + 1) + ' bins)');
+    LAB.put('s1b', (Math.atan(mm) * 180 / Math.PI).toFixed(1) + '\u00b0 from horizontal');
+    LAB.put('s1c', dd.sigmaN.toFixed(4));
+    LAB.put('s1d', dd.sigmaDipDeg.toFixed(2) + '\u00b0');
+  }
+
+  /* ------------------------------ step 2 ------------------------------- */
+
+  function draw2() {
+    const w = LAB.rowWidth('row2', 2), h = Math.max(280, Math.round(w * 0.92));
+    attrMap('c2a', w, h, A[0], EXTRA.MAPS.chaos, 'dip deviation (deg)');
+
+    const el = $('c2b');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const M = { l: 56, r: 14, t: 10, b: 44 };
+      const R = { x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b };
+      const means = [0, 1, 2, 3].map((f) => faciesMean(A[0], f));
+      const hi = Math.max.apply(null, means.filter((v) => !isNaN(v))) * 1.2 || 1;
+      const bw = R.w / 4;
+      means.forEach((m, i) => {
+        if (isNaN(m)) return;
+        const bh = (m / hi) * R.h;
+        ctx.fillStyle = FCOLOR[i];
+        ctx.globalAlpha = 0.75;
+        ctx.fillRect(R.x + i * bw + bw * 0.18, R.y + R.h - bh, bw * 0.64, bh);
+        ctx.globalAlpha = 1;
+        ctx.save();
+        ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = INK;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillText(m.toFixed(2) + '\u00b0', R.x + (i + 0.5) * bw, R.y + R.h - bh - 4);
+        ctx.restore();
+      });
+      ctx.save();
+      ctx.font = '10px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      FACIES.forEach((f, i) => ctx.fillText(f, R.x + (i + 0.5) * bw, R.y + R.h + 6));
+      ctx.restore();
+      SEIS.frame(ctx, R);
+      SEIS.axisLeft(ctx, R, 0, hi, 'mean dip deviation (deg)', (v) => v.toFixed(1),
+        { flip: true, ticks: 4 });
+    }
+
+    const m = [0, 1, 2, 3].map((f) => faciesMean(A[0], f));
+    LAB.put('s2a', m[0].toFixed(3) + '\u00b0');
+    LAB.put('s2b', isNaN(m[1]) ? 'no chaotic body \u2014 raise its radius' : m[1].toFixed(3) + '\u00b0');
+    LAB.put('s2c', isNaN(m[3]) ? 'no fault \u2014 raise the throw' : m[3].toFixed(3) + '\u00b0');
+    LAB.put('s2d', isNaN(m[2]) ? 'no channel' : m[2].toFixed(3) + '\u00b0');
+    /* Say which feature actually responds most, rather than grading the result
+       against a threshold that a slider can move. */
+    let top = 1, tv = -1e9;
+    for (let f = 1; f <= 3; f++) if (!isNaN(m[f]) && m[f] > tv) { tv = m[f]; top = f; }
+    const rch = isNaN(m[2]) ? 0 : (m[2] - m[0]) / (m[0] || 1e-9);
+    LAB.put('s2e', tv < m[0] * 1.5
+      ? 'Nothing is standing out from the conformable background. Raise the chaotic body\u2019s '
+        + 'radius, or how chaotic it is.'
+      : 'Structure, in both senses: the ' + FACIES[top] + ' responds most, at '
+        + (tv / m[0]).toFixed(1) + ' times the background'
+        + (rch < 0.35 ? ', while the channel barely registers because it bends nothing.' : '.'));
+  }
+
+  /* ------------------------------ step 3 ------------------------------- */
+
+  function draw3() {
+    const w = LAB.rowWidth('row3', 3), h = Math.max(250, Math.round(w * 1.08));
+    const ar = rangeOf(H.a);
+    LAB.squareMap('c3a', w, h, NG, BIN,
+      (ix, iy) => clamp((H.a[iy * NG + ix] - ar[0]) / ((ar[1] - ar[0]) || 1), 0, 1),
+      EXTRA.MAPS.texture,
+      {
+        bar: (ctx, R) => LAB.colorbar(ctx, R, EXTRA.MAPS.texture,
+          'dim', 'bright', 'reflection strength', 40),
+        overlay: (ctx, R) => {
+          const pt = LAB.gridToXY(R, NG, S.px, S.py);
+          LAB.marker(ctx, pt.x, pt.y, CRIM, 5);
+        },
+      });
+    attrMap('c3b', w, h, A[1], EXTRA.MAPS.chaos, 'gradient deviation');
+
+    // both attributes across a line through the middle of the chaotic body
+    const el = $('c3c');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const M = { l: 52, r: 14, t: 10, b: 34 };
+      const R = { x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b - 26 };
+      const iy = Math.round(NG * 0.44);
+      const r0 = rangeOf(A[0]), r1 = rangeOf(A[1]);
+      const line = (u, rr, color) => {
+        ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.beginPath();
+        for (let ix = 0; ix < NG; ix++) {
+          const v = clamp((u[iy * NG + ix] - rr[0]) / ((rr[1] - rr[0]) || 1), 0, 1);
+          const x = R.x + (ix / (NG - 1)) * R.w, y = R.y + R.h - v * R.h;
+          ix === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke(); ctx.restore();
+      };
+      // shade where the model says the chaotic body is
+      ctx.save();
+      ctx.fillStyle = 'rgba(11,114,133,.10)';
+      for (let ix = 0; ix < NG; ix++) {
+        if (H.facies[iy * NG + ix] !== 1) continue;
+        ctx.fillRect(R.x + (ix / (NG - 1)) * R.w, R.y, R.w / NG + 1, R.h);
+      }
+      ctx.restore();
+      line(A[0], r0, CRIM);
+      line(A[1], r1, TEAL);
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0, (NG - 1) * BIN / 1000, 'east (km)', (v) => v.toFixed(1), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, 0, 1, 'each scaled to its own range', (v) => v.toFixed(1),
+        { flip: true, ticks: 4 });
+      SEIS.tag(ctx, R.x + 6, R.y + 14, 'dip deviation', CRIM);
+      SEIS.tag(ctx, R.x + 6, R.y + 32, 'gradient deviation', TEAL);
+      SEIS.tag(ctx, R.x + 6, R.y + R.h - 8, 'shaded: the chaotic body', TEAL);
+    }
+
+    LAB.put('s3a', faciesMean(A[1], 0).toExponential(2));
+    const inside = edgeMean(A[1], false), rim = edgeMean(A[1], true);
+    LAB.put('s3b', isNaN(inside) ? 'no chaotic body' : inside.toExponential(2));
+    LAB.put('s3c', isNaN(rim) ? 'no chaotic body' : rim.toExponential(2)
+      + (rim > inside ? '  \u2014 stronger than the interior' : ''));
+    const ch = faciesMean(A[1], 2);
+    LAB.put('s3d', isNaN(ch) ? 'no channel' : ch.toExponential(2));
+  }
+
+  /* ------------------------------ step 4 ------------------------------- */
+
+  function draw4() {
+    const w = LAB.rowWidth('row4', 2), h = Math.max(280, Math.round(w * 0.92));
+    attrMap('c4a', w, h, A[2], EXTRA.MAPS.chaos, 'covariance');
+
+    const el = $('c4b');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const M = { l: 58, r: 14, t: 10, b: 40 };
+      const R = { x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b };
+      const r0 = rangeOf(A[0]), r1 = rangeOf(A[1]);
+      ctx.save();
+      for (let iy = 2; iy < NG - 2; iy++) {
+        for (let ix = 2; ix < NG - 2; ix++) {
+          const i = iy * NG + ix;
+          const f = H.facies[i];
+          const x = R.x + clamp((A[0][i] - r0[0]) / ((r0[1] - r0[0]) || 1), 0, 1) * R.w;
+          const y = R.y + R.h - clamp((A[1][i] - r1[0]) / ((r1[1] - r1[0]) || 1), 0, 1) * R.h;
+          ctx.fillStyle = f === 0 ? 'rgba(92,102,112,.28)'
+            : f === 1 ? 'rgba(132,22,23,.65)'
+            : f === 2 ? 'rgba(11,114,133,.7)' : 'rgba(122,92,16,.7)';
+          ctx.fillRect(x - 1.4, y - 1.4, 2.8, 2.8);
+        }
+      }
+      ctx.restore();
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, r0[0], r0[1], 'dip deviation (deg)', (v) => v.toFixed(1), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, r1[0], r1[1], 'gradient deviation', (v) => v.toExponential(0),
+        { flip: true, ticks: 4 });
+      FACIES.forEach((f, i) => SEIS.tag(ctx, R.x + 8, R.y + 14 + i * 17, f, FCOLOR[i]));
+    }
+
+    LAB.put('s4a', pearson(A[0], A[1]).toFixed(3));
+    const m = [0, 1, 2].map((f) => faciesMean(A[2], f));
+    LAB.put('s4b', m[0].toExponential(2));
+    LAB.put('s4c', isNaN(m[1]) ? 'no chaotic body' : m[1].toExponential(2));
+    LAB.put('s4d', isNaN(m[2]) ? 'no channel' : m[2].toExponential(2));
+  }
+
+  /* ------------------------------ step 5 ------------------------------- */
+
+  function draw5() {
+    const w = LAB.rowWidth('row5', 2), h = Math.max(280, Math.round(w * 0.92));
+
+    const el = $('c5a');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const M = { l: 118, r: 14, t: 34, b: 46 };
+      const R = { x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b };
+      const rows = [1, 3, 2];                    // chaotic body, fault, channel
+      const cw = R.w / 3, ch = R.h / rows.length;
+      rows.forEach((f, r) => {
+        for (let a = 0; a < 3; a++) {
+          const v = response(A[a], f);
+          const t = clamp(Math.abs(v) / 1.6, 0, 1);
+          const c = EXTRA.MAPS.chaos(t);
+          ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+          ctx.fillRect(R.x + a * cw, R.y + r * ch, cw - 2, ch - 2);
+          ctx.save();
+          ctx.font = '12px "IBM Plex Mono", monospace';
+          ctx.fillStyle = t > 0.55 ? 'rgba(255,255,255,.92)' : 'rgba(22,25,28,.8)';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(v.toFixed(2), R.x + (a + 0.5) * cw - 1, R.y + (r + 0.5) * ch - 1);
+          ctx.restore();
+        }
+        ctx.save();
+        ctx.font = '11px "IBM Plex Sans", sans-serif'; ctx.fillStyle = INK;
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(FACIES[f], R.x - 8, R.y + (r + 0.5) * ch);
+        ctx.restore();
+      });
+      ctx.save();
+      ctx.font = '11px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ATTRNAMES.forEach((a, i) => ctx.fillText(a, R.x + (i + 0.5) * cw, R.y - 8));
+      ctx.textBaseline = 'top';
+      ctx.fillText('response, scaled by each attribute\u2019s own spread across the map',
+        R.x + R.w / 2, R.y + R.h + 10);
+      ctx.restore();
+      SEIS.frame(ctx, R);
+    }
+
+    attrMap('c5b', w, h, A[S.attr], EXTRA.MAPS.chaos, ATTRNAMES[S.attr]);
+
+    const best = (f) => {
+      let bi = 0, bv = -1e9;
+      for (let a = 0; a < 3; a++) {
+        const v = response(A[a], f);
+        if (v > bv) { bv = v; bi = a; }
+      }
+      return ATTRNAMES[bi] + ', at ' + bv.toFixed(2);
+    };
+    LAB.put('s5a', H.facies.includes(1) ? best(1) : 'no chaotic body \u2014 raise its radius');
+    LAB.put('s5b', H.facies.includes(2) ? best(2) : 'no channel');
+    LAB.put('s5c', H.facies.includes(3) ? best(3) : 'no fault \u2014 raise the throw');
+    const dv = H.facies.includes(2) ? response(A[0], 2) : NaN;
+    LAB.put('s5d', isNaN(dv) ? 'no channel in the model'
+      : dv.toFixed(2) + (Math.abs(dv) < 0.15
+        ? '  \u2014 it cannot see it, because there is no structure there to see'
+        : Math.abs(dv) < 0.35
+          ? '  \u2014 barely visible, and what there is comes from the edges of the dimming'
+          : '  \u2014 visible, because at these settings the dimming is disturbing the dips too'));
+  }
+
+  /* ============================== plumbing ============================== */
+
+  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'pw', 'pe', 'pk', 'pm'];
+  const NAMES = {
+    p1: 'Dips as arrows', p2: 'Deviation of vector dip', p3: 'The energy gradient',
+    p4: 'The covariance', p5: 'What each one finds',
+    pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
+  };
+
+  function labels() {
+    LAB.put('saltV', S.salt === 0 ? 'none' : 'radius ' + (S.salt / 100).toFixed(2));
+    LAB.put('chaosV', S.chaos + '%');
+    LAB.put('chanV', S.chan === 0 ? 'none' : S.chan + '%');
+    LAB.put('thrV', S.thr + ' m');
+    LAB.put('attrV', ATTRNAMES[S.attr]);
+    LAB.put('halfV', S.half + (S.half === 1 ? ' bin' : ' bins'));
+    LAB.put('noiseV', S.noise + '%');
+  }
+
+  function drawAll() {
+    labels();
+    const lab = document.querySelector('.labhead');
+    if ($('cMap') && (!lab || !lab.hidden)) drawHeader();
+    if (!$('p1').hidden) draw1();
+    if (!$('p2').hidden) draw2();
+    if (!$('p3').hidden) draw3();
+    if (!$('p4').hidden) draw4();
+    if (!$('p5').hidden) draw5();
+  }
+
+  let busyT = null;
+  function refresh() {
+    clearTimeout(busyT);
+    busyT = setTimeout(() => { recompute(); drawAll(); saveState(); }, 90);
+  }
+
+  const show = LAB.setupTabs({
+    panes: PANES, names: NAMES,
+    hideLabOn: ['pw', 'pe', 'pk', 'pm'],
+    onShow: (id) => { S.tab = id; drawAll(); saveState(); },
+  });
+
+  LAB.bindControls(S, refresh);
+
+  LAB.attachProbe('cMap', (x, y, r) => {
+    const M = { l: 52, r: 14, t: 10, b: 34 };
+    const availW = r.width - M.l - M.r, availH = r.height - M.t - M.b;
+    const side = Math.max(40, Math.min(availW, availH));
+    const R = { x: M.l + (availW - side) / 2, y: M.t, w: side, h: side };
+    S.px = clamp(Math.round(((x - R.x) / R.w) * NG - 0.5), 2, NG - 3);
+    S.py = clamp(Math.round(((R.y + R.h - y) / R.h) * NG - 0.5), 2, NG - 3);
+    drawAll(); saveState();
+  });
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 140); });
+
+  recompute();
+  show(PANES.indexOf(S.tab) >= 0 ? S.tab : 'p1');
+  if (document.fonts) document.fonts.ready.then(drawAll);
+})();
+</script>
+</body>
+</html>

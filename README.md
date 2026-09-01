@@ -82,7 +82,15 @@ this in its own Method tab and names what specifically is lost.
 
 ## License and citation
 
-CC BY-SA 4.0
+*More Geometric Attributes, and How They Actually Work* © 2026 by Heather Bedle
+is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+Share it and adapt it for any purpose, including commercially, provided you
+credit the source, link to the license, indicate any changes, and license what
+you build under the same terms. Full text in [`LICENSE`](LICENSE).
+
+To cite: H. Bedle, *More Geometric Attributes, and How They Actually Work*,
+University of Oklahoma,
+`hbedle-subsurface.github.io/geometric-attributes-additional`.
 
 Need to add SSRN working paper
 
