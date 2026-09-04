@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The co-occurrence matrix | More Geometric Attributes</title>
+<meta name="description" content="How a gray-level co-occurrence matrix is built from seismic data: quantizing amplitudes to levels, clipping at 1.5 standard deviations, counting neighboring pairs in four directions, and reading the matrix that results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>More geometric attributes, and how they <b>actually</b> work</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="disorder.html">Module 03</a>
+      <a href="#tabs" data-tab="pm">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 04 &nbsp;·&nbsp; Program glcm3d</p>
+    <h1>The co-occurrence matrix: throwing the amplitudes away on purpose</h1>
+    <p class="sub">Texture attributes begin with a step none of the others take. The amplitudes are
+      discarded and replaced by their rank on a scale of 33 levels. Then even the levels are discarded in
+      favor of a tally: how often does a sample at level <i>i</i> sit next to a sample at level <i>j</i>?
+      That tally is a 33 by 33 table, and every texture attribute in the next module is one number squeezed
+      out of it. This module builds the table.</p>
+  </div>
+
+  <div class="labhead">
+    <div class="labgrid">
+      <div>
+        <p class="cap">The seismic line <span>&mdash; drag anywhere on it to move the analysis window</span></p>
+        <canvas id="cSec" aria-label="Vertical seismic section with the texture analysis window drawn on it"></canvas>
+      </div>
+      <div>
+        <p class="cap">The data, and how it is quantized</p>
+        <div class="controls">
+          <div class="ctl-col">
+            <h2>The data</h2>
+            <div class="ctl">
+              <label for="noise">Random noise <span class="val" id="noiseV">15%</span></label>
+              <input type="range" data-key="noise" id="noise" min="0" max="60" step="5" value="15">
+            </div>
+            <div class="ctl">
+              <label for="chaos">Chaotic package <span class="val" id="chaosV">60%</span></label>
+              <input type="range" data-key="chaos" id="chaos" min="0" max="100" step="10" value="60">
+            </div>
+            <div class="ctl">
+              <label for="spike">Bad samples <span class="val" id="spikeV">20%</span></label>
+              <input type="range" data-key="spike" id="spike" min="0" max="40" step="5" value="20">
+            </div>
+            <div class="ctl">
+              <label for="thr">Fault throw <span class="val" id="thrV">10 samples</span></label>
+              <input type="range" data-key="thr" id="thr" min="0" max="10" step="1" value="10">
+            </div>
+          </div>
+          <div class="ctl-col">
+            <h2>The matrix</h2>
+            <div class="ctl">
+              <label for="lev">Gray levels <span class="val" id="levV">33</span></label>
+              <input type="range" data-key="lev" id="lev" min="5" max="49" step="4" value="33">
+            </div>
+            <div class="ctl">
+              <label for="clip">Clip at <span class="val" id="clipV">1.5 σ</span></label>
+              <input type="range" data-key="clip" id="clip" min="5" max="40" step="5" value="15">
+            </div>
+            <div class="ctl">
+              <label for="half">Window radius <span class="val" id="halfV">6 traces</span></label>
+              <input type="range" data-key="half" id="half" min="2" max="12" step="1" value="6">
+            </div>
+            <div class="ctl">
+              <label for="dirs">Directions counted <span class="val" id="dirsV">all four</span></label>
+              <select data-key="dirs" id="dirs">
+                <option value="0">East only</option>
+                <option value="1">Northeast only</option>
+                <option value="2">North only</option>
+                <option value="3">Northwest only</option>
+                <option value="4" selected>All four, as AASPI does</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="tabhint">Work through the five steps in order, <b>then try the exercises</b>.
+    Method and references are there when you want them.</p>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Module steps">
+    <button role="tab" data-tab="p1" aria-selected="false">1 · Amplitudes to levels</button>
+    <button role="tab" data-tab="p2" aria-selected="false">2 · Counting pairs</button>
+    <button role="tab" data-tab="p3" aria-selected="false">3 · Reading the matrix</button>
+    <button role="tab" data-tab="p4" aria-selected="false">4 · Direction and window</button>
+    <button role="tab" data-tab="p5" aria-selected="false">5 · Why clip at 1.5σ</button>
+    <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
+    <span class="gap"></span>
+    <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
+    <button role="tab" data-tab="pk" aria-selected="false">Key points</button>
+    <button role="tab" data-tab="pm" aria-selected="false">Method</button>
+  </nav>
+
+  <!-- ================================ 1 ================================ -->
+  <section class="tabpane" id="p1" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">1</span>From amplitudes to levels</h3>
+      <span class="hint">The step that makes it texture rather than amplitude</span>
+    </div>
+    <p class="lede">The window of data is scaled so that its amplitudes land on a small set of integers —
+      33 of them by default, numbered 0 to 32, with zero amplitude at the middle level. Anything beyond
+      1.5 standard deviations of the local distribution is pushed onto the end level rather than being
+      allowed to stretch the scale.</p>
+    <p class="lede">After this the actual millivolts are gone. Two windows with identical patterns and very
+      different amplitudes quantize to the same set of levels and produce the same texture attributes.
+      Whether that is a feature or a problem depends on what you are asking, and it is the single most
+      important thing to know about this family of attributes.</p>
+
+    <div class="sec-row" id="row1">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The window, as amplitudes</p>
+        <canvas id="c1a" aria-label="The analysis window shown as seismic amplitudes"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The same window, as levels</p>
+        <canvas id="c1b" aria-label="The same window after quantization to gray levels"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Where the levels came from
+          <span class="note">the histogram and the clip</span></p>
+        <canvas id="c1c" aria-label="Histogram of amplitudes in the window with the clip limits marked"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Samples in the window</span><b id="s1a">—</b></div>
+      <div class="stat"><span>Standard deviation of the window</span><b id="s1b">—</b></div>
+      <div class="stat"><span>Amplitude at the top level</span><b id="s1c">—</b></div>
+      <div class="stat key"><span>Samples pushed onto an end level</span><b id="s1d">—</b></div>
+      <div class="stat"><span>Levels actually used</span><b id="s1e">—</b></div>
+    </div>
+  </section>
+
+  <!-- ================================ 2 ================================ -->
+  <section class="tabpane" id="p2" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">2</span>Counting who sits next to whom</h3>
+      <span class="hint">Every neighboring pair, tallied into a table</span>
+    </div>
+    <p class="lede">Walk over the quantized window. At every sample, look at its neighbor in a chosen
+      direction, read off the two levels <i>i</i> and <i>j</i>, and add one to the box at row <i>i</i>,
+      column <i>j</i> of a table. Repeat for every sample and every direction. Divide the finished table by
+      the total count so it sums to one, and that table is the gray-level co-occurrence matrix.</p>
+    <p class="lede">The matrix is symmetric, because each pair is counted both ways round. It is also almost
+      entirely empty. A 33-level matrix has 1089 boxes, and a small window has only a few hundred pairs to
+      put in them. Where those pairs land is the whole message.</p>
+
+    <div class="sec-row" id="row2">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The levels, with one pair highlighted</p>
+        <canvas id="c2a" aria-label="The quantized window with one neighboring pair highlighted"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Where that pair lands in the matrix</p>
+        <canvas id="c2b" aria-label="The co-occurrence matrix with the highlighted pair's cell marked"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Pairs counted</span><b id="s2a">—</b></div>
+      <div class="stat"><span>Boxes in the matrix</span><b id="s2b">—</b></div>
+      <div class="stat key"><span>Boxes that got anything at all</span><b id="s2c">—</b></div>
+      <div class="stat"><span>Busiest box</span><b id="s2d">—</b></div>
+    </div>
+    <p class="legend prose"><span>Every few seconds a different pair is picked out and drawn on both panels,
+      so you can watch the tally being built. The pair being shown is chosen at random from the
+      window.</span></p>
+  </section>
+
+  <!-- ================================ 3 ================================ -->
+  <section class="tabpane" id="p3" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">3</span>Reading a matrix on sight</h3>
+      <span class="hint">Diagonal, spread, and clumps</span>
+    </div>
+    <p class="lede">Three patterns cover almost everything you will see, and once you can name them the
+      texture attributes of the next module stop being arbitrary.</p>
+    <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
+      <li><b>Everything on the diagonal.</b> Neighbors have the same level as each other. That is smooth,
+        continuous data — a conformable reflector package.</li>
+      <li><b>Spread away from the diagonal.</b> Neighbors differ a lot. That is rough data: noise, a chaotic
+        package, or a genuine edge.</li>
+      <li><b>A tight clump somewhere.</b> Only a few levels occur at all, so the window is dominated by one
+        or two amplitudes. A dim, uniform interval does this.</li>
+    </ul>
+    <p class="lede">The three windows below are taken from different parts of the same section, and the
+      fourth follows wherever you put the analysis point. The first and third are snapped onto a reflector
+      on purpose. Quantization scales each window by its own standard deviation. So a window sitting in the
+      quiet gap between two reflectors is scaled by its own noise, and reports the texture of that noise
+      rather than of the geology. That is not a quirk of the display — it is how these attributes behave,
+      and it is worth knowing before you interpret a texture volume.</p>
+
+    <div class="sec-row" id="row3">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Conformable package</p>
+        <canvas id="c3a" aria-label="Co-occurrence matrix from a conformable part of the section"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Chaotic package</p>
+        <canvas id="c3b" aria-label="Co-occurrence matrix from the chaotic package"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Across the fault</p>
+        <canvas id="c3c" aria-label="Co-occurrence matrix from a window straddling the fault"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> Where you are now</p>
+        <canvas id="c3d" aria-label="Co-occurrence matrix at the analysis point"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Mean level step, conformable</span><b id="s3a">—</b></div>
+      <div class="stat"><span>Mean level step, chaotic</span><b id="s3b">—</b></div>
+      <div class="stat"><span>Mean level step, at the fault</span><b id="s3c">—</b></div>
+      <div class="stat key"><span>Mean level step, where you are</span><b id="s3d">—</b></div>
+    </div>
+    <p class="legend prose"><span>The mean level step is the average distance between a sample's level and
+      its neighbor's, divided by the full scale. It runs from 0 for a matrix entirely on the diagonal to 1
+      for one entirely in the corners. That is the crudest possible summary the matrix admits, and it
+      already separates the three windows — a fair warning that the eight measures of the next module are
+      not eight independent pieces of information.</span></p>
+  </section>
+
+  <!-- ================================ 4 ================================ -->
+  <section class="tabpane" id="p4" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">4</span>Which neighbor, and how many</h3>
+      <span class="hint">Direction, window size, and structural dip</span>
+    </div>
+    <p class="lede">"The neighbor" is not one thing. East is the trace beside you at the same level; north
+      is the sample above; northeast and northwest are the diagonals. A single direction makes the matrix
+      sensitive to features that run one way — which is useful if you know the orientation you care about,
+      and misleading if you do not. AASPI counts all four and adds them, so the answer does not depend on
+      how the survey happens to be oriented.</p>
+    <p class="lede">Window size trades detail for reliability in the usual way, with one extra twist that
+      matters here. A 33 by 33 matrix has 1089 boxes, and a window of 13 traces by 3 samples supplies only
+      a few hundred pairs. Most boxes are empty not because that combination cannot happen but because there
+      were not enough pairs to find out. Attributes computed on a sparse matrix are noisy, and entropy in
+      particular is badly biased by it.</p>
+
+    <div class="sec-row" id="row4">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> One direction at a time <span class="note">four matrices</span></p>
+        <canvas id="c4a" aria-label="Co-occurrence matrices for each of the four directions separately"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> How full the matrix is
+          <span class="note">against window size</span></p>
+        <canvas id="c4b" aria-label="Fraction of matrix boxes occupied as the window grows"></canvas>
+      </div>
+    </div>
+
+    <p class="lede" style="margin-top:12px">One thing the window does not do is stay level. Like everything
+      else in this set, the window is gathered along structural dip, so that a dipping conformable package
+      quantizes to a set of near-identical rows rather than to a staircase. Without that step the matrix
+      would report structure as texture, which is the same failure disorder has in module 03 when steering
+      is switched off.</p>
+
+    <div class="stats">
+      <div class="stat"><span>Pairs available at this window size</span><b id="s4a">—</b></div>
+      <div class="stat"><span>Boxes in the matrix</span><b id="s4b">—</b></div>
+      <div class="stat key"><span>Fraction of boxes that are occupied</span><b id="s4c">—</b></div>
+      <div class="stat wide"><span>Is the matrix well enough sampled?</span><b id="s4d">—</b></div>
+    </div>
+  </section>
+
+  <!-- ================================ 5 ================================ -->
+  <section class="tabpane" id="p5" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">5</span>Why the data are clipped first</h3>
+      <span class="hint">One bright sample, and 33 levels to spend</span>
+    </div>
+    <p class="lede">Quantization has a fixed budget of levels and has to decide what range to spend them on.
+      If the range is set by the largest sample in the window, then a single bright spike takes the top
+      level and every ordinary sample is squeezed into the few levels near the middle. The matrix collapses
+      onto a small clump, the texture measures all report "uniform", and the window looks featureless
+      because of one sample.</p>
+    <p class="lede">Clipping at a fixed number of standard deviations fixes this. AASPI's default is 1.5σ,
+      which puts about 87% of a Gaussian distribution inside the range and pushes the rest onto the end
+      levels. The outliers are not deleted; they are just prevented from setting the scale.</p>
+    <p class="lede">The <b>bad samples</b> slider adds isolated wild values to the data, which is what gives
+      the clip something to protect against. Turn it to zero and the two matrices below become nearly
+      identical, which is the honest answer to "does the clip matter": only when there is an outlier.</p>
+
+    <div class="sec-row" id="row5">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Clipped at the current setting</p>
+        <canvas id="c5a" aria-label="Matrix computed with the current clip setting"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Scaled by the largest sample instead
+          <span class="note">no clip at all</span></p>
+        <canvas id="c5b" aria-label="Matrix computed with no clipping, scaled to the largest sample"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Levels used, against the clip
+          <span class="note">move the clip slider</span></p>
+        <canvas id="c5c" aria-label="Number of levels used as a function of the clip threshold"></canvas>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Largest sample in the window</span><b id="s5e">—</b></div>
+      <div class="stat"><span>Levels the bulk of the data spreads over, clipped</span><b id="s5a">—</b></div>
+      <div class="stat"><span>Same, scaled by the largest sample</span><b id="s5b">—</b></div>
+      <div class="stat"><span>Occupied boxes, clipped against unclipped</span><b id="s5c">—</b></div>
+      <div class="stat key wide"><span>What the clip is buying here</span><b id="s5d">—</b></div>
+    </div>
+  </section>
+
+  <!-- ============================ WHY IT MATTERS ========================= -->
+  <section class="tabpane" id="pw" role="tabpanel" hidden>
+    <p class="lede">The co-occurrence matrix is not an attribute you would ever display. It is the
+      intermediate object that decides what the texture attributes can possibly say.</p>
+    <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
+      <li><b>Discarding the amplitudes is the point, and the risk.</b> Texture attributes describe pattern
+        independently of brightness, which is what lets them separate two facies of similar amplitude. It
+        also means a bright sand and a dim sand with the same internal pattern are, to these attributes, the
+        same thing. If amplitude is your discriminator, this family will throw it away for you.</li>
+      <li><b>The matrix is what you are really choosing when you set the parameters.</b> Levels, clip and
+        window size are not cosmetic. They determine how sparse the matrix is, and every attribute in module
+        05 inherits that sparsity.</li>
+      <li><b>These attributes were built to be fed to a machine, not read by a person.</b> The AASPI
+        documentation is direct about it: the images are fuzzy and not very useful for human interpretation,
+        and their purpose is to be input to clustering — self-organizing maps, generative topographic
+        mapping, neural networks, random forests. Judging a GLCM volume by whether it looks good on a
+        section is judging it by the wrong criterion.</li>
+      <li><b>Parameter consistency matters more than parameter optimality.</b> Since the attributes go into
+        a classifier, what breaks the classifier is computing them with different settings on different
+        parts of the survey, not choosing 25 levels rather than 33.</li>
+      <li><b>The Hilbert transform is in there for a reason.</b> AASPI computes the matrix on the data and
+        on its Hilbert transform and adds them. That removes the dependence on where the analysis window
+        happens to sit on the wavelet — the same trick, and the same reason, as in the principal component
+        filter of module 01.</li>
+    </ul>
+  </section>
+
+  <!-- ============================== EXERCISES ============================ -->
+  <section class="tabpane" id="pe" role="tabpanel" hidden>
+    <div class="tryit" style="max-width:none">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Make the matrix collapse onto its diagonal.</b> Set the noise and the chaotic package to
+          zero, then put the analysis point in the conformable section above the chaotic package.
+          <details class="reveal"><summary>Hint</summary><span class="ans">Nearly all the weight lands on or
+            beside the diagonal, because neighbors along a dipping smooth reflector have almost the same
+            level. That is what a texture attribute means by "homogeneous", and it is why homogeneity and
+            coherence produce such similar-looking maps despite being computed in completely different
+            ways.</span></details></li>
+        <li><b>Starve the matrix.</b> In step 4, set the gray levels to 49 and the window radius to 2.
+          <details class="reveal"><summary>Hint</summary><span class="ans">Around one box in fifty is occupied.
+            There are 2401 of them at 49 levels, and a five-trace window three samples tall supplies only 76
+            pairs to fill them with. Any attribute computed from that matrix is mostly
+            reporting which boxes happened to get a pair, which changes from sample to sample for no
+            geological reason. Drop the levels to 5 with the same window and the occupancy rises severalfold; widen
+            the window back to 12 traces at 49 levels and it rises again, though not as far. Fewer levels on a small window is
+            not a compromise, it is the correct choice, and the two parameters have to be set
+            together.</span></details></li>
+        <li><b>See what a single direction misses.</b> In step 4, switch to "north only" and put the
+          analysis point on a steeply dipping flank.
+          <details class="reveal"><summary>Hint</summary><span class="ans">The vertical direction crosses
+            the wavelet, so it reports large level differences even on a perfectly clean reflector, and the
+            matrix spreads. East, along the reflector, does not. A single-direction matrix measures the
+            feature and its orientation mixed together, which is exactly what counting all four directions
+            and adding avoids.</span></details></li>
+        <li><b>Let one spike set the scale.</b> In step 5, compare the two matrices with the noise slider
+          around 40%.
+          <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
+            with, the largest sample in the window sits several standard deviations out, and the bulk of the
+            window spreads over roughly twice as many levels with the clip as without it — half the detail,
+            thrown away to make room for one sample. Set the bad samples slider to zero and the difference
+            disappears, because there is no longer an outlier to protect against. That is the whole
+            argument, and it is why the parameter is there at all.</span></details></li>
+        <li><b>Find the setting where clipping stops helping.</b> In step 5, drag the clip slider from
+          0.5σ up to 4σ and watch the levels-used curve.
+          <details class="reveal"><summary>Hint</summary><span class="ans">Very tight clipping pushes most
+            of the window onto the two end levels, which destroys the detail you were trying to measure.
+            Very loose clipping is the same as not clipping at all. The curve has a broad flat top, and
+            1.5σ sits on it — which is a more honest reason for the default than any derivation would
+            be.</span></details></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================= KEY POINTS ============================ -->
+  <section class="tabpane" id="pk" role="tabpanel" hidden>
+    <div class="takeaway" style="max-width:none">
+      <h3>The main points</h3>
+      <ul>
+        <li><b>Quantization throws the amplitudes away.</b> What survives is rank within the local window,
+          on a scale of 33 levels by default.</li>
+        <li><b>The clip stops one sample from setting the scale.</b> 1.5σ is the AASPI default and it keeps
+          most of a Gaussian inside the range.</li>
+        <li><b>The matrix counts neighboring pairs, not samples.</b> Box (i, j) holds how often a sample at
+          level i sat beside one at level j.</li>
+        <li><b>Four directions are counted and added.</b> That makes the result independent of how the
+          feature is oriented.</li>
+        <li><b>On the diagonal means smooth; spread means rough; a clump means uniform.</b> Those three
+          readings cover most of what the matrix ever says.</li>
+        <li><b>The matrix is nearly always sparse.</b> A thousand boxes and a few hundred pairs, which is
+          why levels and window size have to be chosen together.</li>
+        <li><b>Nothing here is displayed.</b> The matrix exists to be reduced to the numbers of module
+          05.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- =============================== METHOD ============================== -->
+  <section class="tabpane" id="pm" role="tabpanel" hidden>
+    <details class="notes" open>
+      <summary>Method, sources, and what has been simplified</summary>
+      <p>The model is the section used in module 03: conformable packages above and below a middle package
+        that can be made chaotic, with an optional normal fault and band-limited random noise. Dip comes
+        from the semblance scan of the first module set, and the analysis window is gathered along it with
+        linear interpolation.</p>
+      <p><b>Quantization</b> follows the AASPI description. The standard deviation of the window is
+        computed, and the range is set to plus and minus the clip factor times that standard deviation. The
+        amplitudes are then mapped linearly onto the integers 0 to L&minus;1, with zero amplitude at the
+        middle level. Anything outside the range is assigned the end level rather than discarded. <b>The
+        matrix</b> counts every neighboring pair in the chosen directions, adds each pair in both
+        orientations so that the result is symmetric, and divides by the total count.</p>
+      <p><b>Where this departs from AASPI.</b> Two dimensions rather than three, so the four directions are
+        the four in a section rather than the larger set available in a 3D window, and there is no crossline
+        window radius. AASPI computes the matrix on the data <em>and</em> on its Hilbert transform and adds
+        the two, weighting each one-sample-thick slice within the analysis window by its RMS amplitude.
+        The module computes the data matrix alone, which keeps the displays legible. Module 05 shows what
+        the Hilbert term changes. The vertical window here is three samples, matching the AASPI
+        default of one sample interval either side.</p>
+      <p>Every number quoted on this page is measured from the running page. The matrices at 33 levels are
+        computed at the analysis point only; the whole-section maps in module 05 use fewer levels for
+        speed, and that difference is stated there.</p>
+      <ul>
+        <li>AASPI, <em>Generating texture attributes: Program glcm3d</em>, University of Oklahoma — the
+          quantization, the 1.5σ clip, the 33-level default, and the RMS-weighted Hilbert term.</li>
+        <li>Haralick, R. M., K. Shanmugam, and I. Dinstein, 1973, Textural features for image
+          classification: <em>IEEE Transactions on Systems, Man, and Cybernetics</em>, SMC-3, 610–621.</li>
+        <li>Hall-Beyer, M., 2007, The GLCM tutorial, version 2.10 — the source of the "rough, silky, bumpy"
+          definition of texture that the AASPI documentation opens with.</li>
+        <li>Gao, D., 2011, Latest developments in seismic texture analysis for subsurface structure, facies,
+          and reservoir characterization: a review: <em>Geophysics</em>, 76, W1–W13.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="nextup" id="nextup" hidden>
+    <p class="eyebrow">Next up</p>
+    <h3><a href="textures.html">05 · The texture measures</a></h3>
+    <p>Eight numbers squeezed out of the matrix you just built — and a look at how few of them are really
+      saying different things.</p>
+    <a class="btn" href="textures.html">Open module 05 →</a>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
+
+  <div class="pager" id="pager" hidden>
+    <a class="btn ghost" href="disorder.html">← Module 03: disorder</a>
+    <a class="btn" href="textures.html">Next: the texture measures →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of Geosciences,
+        University of Oklahoma, with the
+        <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+      <p class="lic"><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather
+        Bedle and April Moreno-Ward is licensed under
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. You are
+        free to share this material in any medium or format and to adapt it &mdash; remix it, build on it,
+        translate it, teach from it, use parts of it in something of your own &mdash; for any purpose,
+        including commercially. Two conditions apply. <b>Attribution:</b> credit the source, link to the
+        license, and indicate whether you changed anything; do it in a way that does not suggest the
+        licensor endorses you. <b>ShareAlike:</b> if you remix or build on the material, you must
+        distribute what you make under this same license. You may not add legal terms or technical
+        measures that stop anyone else from doing what the license permits. Full legal text at
+        <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/legalcode">creativecommons.org/licenses/by-sa/4.0/legalcode</a>.</p>
+      <p class="lic">To cite: H. Bedle and A. Moreno-Ward, <i>More Geometric Attributes, and How They Actually Work</i>,
+        University of Oklahoma,
+        <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
+      <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
+        trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
+        count, so that we can show the university these are being used &mdash; no cookie and no
+        identifier, and nothing about what you did on the page.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/count.js"></script>
+<script src="../assets/popout.js"></script>
+<script src="../assets/seismic.js"></script>
+<script src="../assets/attributes.js"></script>
+<script src="../assets/extra.js"></script>
+<script src="../assets/lab.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!LAB.guard(['SEIS', 'ATTR', 'EXTRA', 'LAB'])) return;
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = LAB.clamp;
+  const CRIM = '#841617', SLATE = '#5C6670', TEAL = '#0B7285', INK = '#16191C';
+
+  const NX = 150, NT = 210, DT = 0.002;
+  const CHAOS_TOP = 0.36, CHAOS_BOT = 0.60;
+  const KHALF = 1;                       // vertical half-window, three samples
+  const DIRNAMES = ['east', 'northeast', 'north', 'northwest', 'all four'];
+
+  const DEF = {
+    noise: 15, spike: 20, chaos: 60, thr: 10, lev: 33, clip: 15, half: 6, dirs: 4,
+    px: 33, pt: 35, tab: 'p1',
+  };
+  let S = SEIS.readState(DEF);
+  const CAN_LINK = location.protocol !== 'file:';
+  const saveState = () => { if (CAN_LINK) { try { SEIS.writeState(S, DEF); } catch (e) { } } };
+
+  /* ============================ model and window ======================= */
+
+  let SEC, DIPG;
+
+  function recompute() {
+    SEC = LAB.buildSection({
+      nx: NX, nt: NT, dt: DT, freq: 30, fold: 22, foldWidth: 0.22,
+      throw: S.thr, faultAt: 0.62, seed: 21,
+      chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
+      noise: S.noise / 100, spike: S.spike / 100,
+    });
+    DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
+  }
+
+  const dipAt = (ix, it) => ATTR.sampleGrid(DIPG, DIPG.p, ix, it);
+
+  /* The window of amplitudes, gathered along dip. Returned row-major with the
+     trace as the fast axis, which is what coOccurrence expects. */
+  function windowAt(ix, it, half, kHalf) {
+    const nx = 2 * half + 1, ny = 2 * kHalf + 1;
+    const out = new Float64Array(nx * ny);
+    const p = dipAt(ix, it);
+    for (let k = -kHalf; k <= kHalf; k++) {
+      for (let j = -half; j <= half; j++) {
+        const x = clamp(ix + j, 0, NX - 1);
+        const tt = it + k + p * j;
+        const i0 = Math.floor(tt), fr = tt - i0;
+        const v0 = SEC.f[x * NT + clamp(i0, 0, NT - 1)];
+        const v1 = SEC.f[x * NT + clamp(i0 + 1, 0, NT - 1)];
+        out[(k + kHalf) * nx + (j + half)] = v0 * (1 - fr) + v1 * fr;
+      }
+    }
+    return { v: out, nx: nx, ny: ny };
+  }
+
+  const dirsFor = () => (S.dirs >= 4 ? EXTRA.GLCM_DIRS : [EXTRA.GLCM_DIRS[S.dirs]]);
+
+  function matrixAt(ix, it, opts) {
+    const o = opts || {};
+    const L = o.L || S.lev;
+    const half = o.half === undefined ? S.half : o.half;
+    const win = windowAt(ix, it, half, o.kHalf === undefined ? KHALF : o.kHalf);
+    const q = EXTRA.quantize(win.v, L, o.clip === undefined ? S.clip / 10 : o.clip);
+    const co = EXTRA.coOccurrence(q.levels, win.nx, win.ny, L, o.dirs || dirsFor(), true);
+    return { P: co.P, pairs: co.pairs, L: L, win: win, lev: q.levels, sigma: q.sigma };
+  }
+
+  /* The average number of levels between a sample and its neighbor, divided by
+     the full scale, so the answer does not change when the number of levels
+     does. Zero means every neighbor has the same level as its partner and the
+     whole matrix sits on the diagonal. This is the crudest summary of the
+     matrix there is - it is the dissimilarity measure of module 05, normalized
+     - and it already separates the three windows in step 3. */
+  function levelStep(m) {
+    let s = 0;
+    for (let i = 0; i < m.L; i++) {
+      for (let j = 0; j < m.L; j++) s += m.P[i * m.L + j] * Math.abs(i - j);
+    }
+    return s / (m.L - 1);
+  }
+
+  function occupied(m) {
+    let n = 0;
+    for (let k = 0; k < m.P.length; k++) if (m.P[k] > 0) n++;
+    return n;
+  }
+
+  function levelsUsed(lev) {
+    const seen = {};
+    let n = 0;
+    for (let i = 0; i < lev.length; i++) if (!seen[lev[i]]) { seen[lev[i]] = 1; n++; }
+    return n;
+  }
+
+  /* How many levels the ordinary data spreads across: the range between the
+     10th and 90th percentile of the levels in the window. Counting distinct
+     levels would not do, because a window of 39 samples cannot occupy many
+     levels however it is scaled; what the clip changes is how far apart the
+     bulk of the window is spread, and this measures that directly. */
+  function levelSpan(lev) {
+    const a = Array.from(lev).sort((x, y) => x - y);
+    return a[Math.floor(0.90 * (a.length - 1))] - a[Math.floor(0.10 * (a.length - 1))] + 1;
+  }
+
+  /* ============================== drawing ============================== */
+
+  const M = { l: 52, r: 12, t: 10, b: 34 };
+  const rect = (w, h, bar) => ({ x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b - (bar ? 26 : 0) });
+
+  function secPanel(canvasId, w, h, overlay) {
+    const el = $(canvasId);
+    if (!el) return null;
+    const ctx = SEIS.fitCanvas(el, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const R = rect(w, h, false);
+    SEIS.drawVarDensity(ctx, SEC.f, NX, NT, R, { cmap: SEIS.COLORMAPS.gray, clip: SEC.peak });
+    if (overlay) overlay(ctx, R);
+    SEIS.frame(ctx, R);
+    SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+    SEIS.axisLeft(ctx, R, 0, (NT - 1) * DT * 1000, 'time (ms)', (v) => String(Math.round(v)), { ticks: 4 });
+    return { ctx, R };
+  }
+
+  /* One matrix, drawn as a square image with a log-ish stretch so that the
+     sparse boxes are visible at all. */
+  function drawMatrix(canvasId, m, w, h, title, mark) {
+    const el = $(canvasId);
+    if (!el) return null;
+    const ctx = SEIS.fitCanvas(el, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const side = Math.min(w - M.l - M.r, h - M.t - M.b - 22);
+    const R = { x: M.l, y: M.t + 14, w: side, h: side };
+    let pmax = 1e-9;
+    for (let k = 0; k < m.P.length; k++) pmax = Math.max(pmax, m.P[k]);
+    const cell = side / m.L;
+    for (let i = 0; i < m.L; i++) {
+      for (let j = 0; j < m.L; j++) {
+        const p = m.P[i * m.L + j];
+        if (p <= 0) continue;
+        const t = Math.pow(p / pmax, 0.45);
+        const c = EXTRA.MAPS.matrix(t);
+        ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+        ctx.fillRect(R.x + j * cell, R.y + i * cell, Math.max(1, cell), Math.max(1, cell));
+      }
+    }
+    // the diagonal, so the eye has a reference
+    ctx.save();
+    ctx.strokeStyle = 'rgba(132,22,23,.35)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(R.x, R.y); ctx.lineTo(R.x + R.w, R.y + R.h); ctx.stroke();
+    ctx.restore();
+    if (mark) {
+      ctx.save();
+      ctx.strokeStyle = CRIM; ctx.lineWidth = 2;
+      ctx.strokeRect(R.x + mark[1] * cell - 1, R.y + mark[0] * cell - 1, cell + 2, cell + 2);
+      ctx.restore();
+    }
+    SEIS.frame(ctx, R);
+    SEIS.axisBottom(ctx, R, 0, m.L - 1, 'level j', (v) => String(Math.round(v)), { ticks: 3 });
+    SEIS.axisLeft(ctx, R, 0, m.L - 1, 'level i', (v) => String(Math.round(v)), { ticks: 3 });
+    if (title) SEIS.tag(ctx, R.x, M.t + 8, title, SLATE);
+    return { ctx, R, cell };
+  }
+
+  function windowOutlineOn(ctx, R, ix, it, half) {
+    LAB.windowOutline(ctx, R, NX, NT, ix, it, dipAt(ix, it), half, KHALF, CRIM);
+    const x = R.x + (ix / (NX - 1)) * R.w, y = R.y + (it / (NT - 1)) * R.h;
+    LAB.marker(ctx, x, y, CRIM, 4.5);
+  }
+
+  function drawHeader() {
+    const el = $('cSec');
+    if (!el) return;
+    const w = LAB.panelWidth(el, 320);
+    secPanel('cSec', w, Math.max(210, Math.round(w * 0.46)), (ctx, R) => {
+      const y0 = R.y + CHAOS_TOP * R.h, y1 = R.y + CHAOS_BOT * R.h;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(11,114,133,.7)'; ctx.lineWidth = 1.3; ctx.setLineDash([6, 4]);
+      ctx.strokeRect(R.x, y0, R.w, y1 - y0);
+      ctx.restore();
+      SEIS.tag(ctx, R.x + 6, y0 + 12, 'chaotic package', TEAL);
+      windowOutlineOn(ctx, R, S.px, S.pt, S.half);
+    });
+  }
+
+  /* Draw a small grid of values, either amplitudes or levels. */
+  function gridOfValues(canvasId, win, get, w, h, label, mark, colorOf) {
+    const el = $(canvasId);
+    if (!el) return null;
+    const ctx = SEIS.fitCanvas(el, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const cw = (w - 24) / win.nx, ch = Math.min(cw, (h - 44) / win.ny);
+    const x0 = 12, y0 = 26;
+    const showText = cw > 22 && ch > 16;
+    for (let k = 0; k < win.ny; k++) {
+      for (let j = 0; j < win.nx; j++) {
+        const c = colorOf(j, k);
+        ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+        ctx.fillRect(x0 + j * cw, y0 + k * ch, Math.max(1, cw - 1), Math.max(1, ch - 1));
+        if (showText) {
+          ctx.save();
+          ctx.font = '9px "IBM Plex Mono", monospace';
+          ctx.fillStyle = (c[0] + c[1] + c[2]) / 3 < 120 ? 'rgba(255,255,255,.85)' : 'rgba(22,25,28,.8)';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(get(j, k), x0 + j * cw + cw / 2, y0 + k * ch + ch / 2);
+          ctx.restore();
+        }
+      }
+    }
+    if (mark) {
+      ctx.save();
+      ctx.strokeStyle = CRIM; ctx.lineWidth = 2.2;
+      mark.forEach((m) => {
+        ctx.strokeRect(x0 + m[0] * cw - 1, y0 + m[1] * ch - 1, cw + 1, ch + 1);
+      });
+      if (mark.length === 2) {
+        ctx.beginPath();
+        ctx.moveTo(x0 + (mark[0][0] + 0.5) * cw, y0 + (mark[0][1] + 0.5) * ch);
+        ctx.lineTo(x0 + (mark[1][0] + 0.5) * cw, y0 + (mark[1][1] + 0.5) * ch);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ctx.save();
+    ctx.font = '11px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(label, x0, y0 - 7);
+    ctx.textBaseline = 'top';
+    ctx.fillText('trace \u2192 across, time \u2193 down, gathered along dip', x0, y0 + win.ny * ch + 8);
+    ctx.restore();
+    return ctx;
+  }
+
+  /* ------------------------------ step 1 ------------------------------- */
+
+  function draw1() {
+    const w = LAB.rowWidth('row1', 3), h = Math.max(215, Math.round(w * 0.95));
+    const m = matrixAt(S.px, S.pt);
+    const win = m.win;
+    let lim = 1e-9;
+    for (let i = 0; i < win.v.length; i++) lim = Math.max(lim, Math.abs(win.v[i]));
+
+    gridOfValues('c1a', win, (j, k) => win.v[k * win.nx + j].toFixed(2), w, h,
+      'amplitudes', null, (j, k) => SEIS.COLORMAPS.gray(win.v[k * win.nx + j] / lim));
+    gridOfValues('c1b', win, (j, k) => String(m.lev[k * win.nx + j]), w, h,
+      String(m.L) + ' levels, 0 to ' + (m.L - 1), null,
+      (j, k) => EXTRA.MAPS.matrix(m.lev[k * win.nx + j] / (m.L - 1)));
+
+    const el = $('c1c');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      const NB = 40;
+      const hist = new Float64Array(NB);
+      const edge = lim * 1.02;
+      for (let i = 0; i < win.v.length; i++) {
+        hist[clamp(Math.floor(((win.v[i] + edge) / (2 * edge)) * NB), 0, NB - 1)]++;
+      }
+      let hm = 1;
+      for (let i = 0; i < NB; i++) hm = Math.max(hm, hist[i]);
+      const cut = (S.clip / 10) * m.sigma;
+      const bw = R.w / NB;
+      for (let i = 0; i < NB; i++) {
+        const a = -edge + ((i + 0.5) / NB) * 2 * edge;
+        const bh = (hist[i] / hm) * R.h;
+        ctx.fillStyle = Math.abs(a) > cut ? CRIM : 'rgba(92,102,112,.5)';
+        ctx.fillRect(R.x + i * bw, R.y + R.h - bh, bw + 0.6, bh);
+      }
+      [-cut, cut].forEach((c) => {
+        const x = R.x + ((c + edge) / (2 * edge)) * R.w;
+        SEIS.dashedLine(ctx, x, R.y, x, R.y + R.h, INK, [4, 3], 1.6);
+      });
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, -edge, edge, 'amplitude', (v) => v.toFixed(2), { ticks: 3 });
+      SEIS.axisLeft(ctx, R, 0, 100, 'share of the window (%)', (v) => String(Math.round(v)),
+        { flip: true, ticks: 4 });
+      SEIS.tag(ctx, R.x + 6, R.y + 12, 'crimson is clipped onto an end level', CRIM);
+    }
+
+    let nClip = 0;
+    for (let i = 0; i < win.v.length; i++) if (Math.abs(win.v[i]) > (S.clip / 10) * m.sigma) nClip++;
+    LAB.put('s1a', win.nx + ' \u00d7 ' + win.ny + ' = ' + win.v.length);
+    LAB.put('s1b', m.sigma.toFixed(4));
+    LAB.put('s1c', ((S.clip / 10) * m.sigma).toFixed(4) + ' and above');
+    LAB.put('s1d', nClip + ' of ' + win.v.length
+      + '  (' + (100 * nClip / win.v.length).toFixed(0) + '%)');
+    LAB.put('s1e', levelsUsed(m.lev) + ' of ' + m.L);
+  }
+
+  /* ------------------------------ step 2 ------------------------------- */
+
+  let pairTick = 0;
+  function draw2() {
+    const w = LAB.rowWidth('row2', 2), h = Math.max(230, Math.round(w * 0.82));
+    const m = matrixAt(S.px, S.pt);
+    const win = m.win;
+    const dirs = dirsFor();
+
+    // pick one pair to highlight, cycling slowly so the tally is watchable
+    const d = dirs[pairTick % dirs.length];
+    const cells = [];
+    for (let k = 0; k < win.ny; k++) {
+      for (let j = 0; j < win.nx; j++) {
+        const J = j + d.dx, K = k + d.dy;
+        if (J < 0 || J >= win.nx || K < 0 || K >= win.ny) continue;
+        cells.push([j, k, J, K]);
+      }
+    }
+    const pick = cells.length ? cells[(pairTick * 7) % cells.length] : null;
+    let mark = null, cell = null;
+    if (pick) {
+      mark = [[pick[0], pick[1]], [pick[2], pick[3]]];
+      cell = [m.lev[pick[1] * win.nx + pick[0]], m.lev[pick[3] * win.nx + pick[2]]];
+    }
+
+    gridOfValues('c2a', win, (j, k) => String(m.lev[k * win.nx + j]), w, h,
+      'levels, and one ' + d.name + ' pair', mark,
+      (j, k) => EXTRA.MAPS.matrix(m.lev[k * win.nx + j] / (m.L - 1)));
+    drawMatrix('c2b', m, w, h,
+      cell ? 'this pair lands in box (' + cell[0] + ', ' + cell[1] + ')' : '', cell);
+
+    let busy = 0, bi = 0, bj = 0;
+    for (let i = 0; i < m.L; i++) {
+      for (let j = 0; j < m.L; j++) {
+        if (m.P[i * m.L + j] > busy) { busy = m.P[i * m.L + j]; bi = i; bj = j; }
+      }
+    }
+    LAB.put('s2a', m.pairs + '  (' + DIRNAMES[S.dirs] + ', each counted both ways)');
+    LAB.put('s2b', m.L + ' \u00d7 ' + m.L + ' = ' + (m.L * m.L));
+    LAB.put('s2c', occupied(m) + '  (' + (100 * occupied(m) / (m.L * m.L)).toFixed(1) + '%)');
+    LAB.put('s2d', '(' + bi + ', ' + bj + ') holds ' + (100 * busy).toFixed(1) + '% of the total');
+  }
+
+  /* ------------------------------ step 3 ------------------------------- */
+
+  /* The comparison windows of step 3. Quantization scales every window by its
+     own standard deviation, so a window sitting between two reflectors is
+     scaled by its own noise and reports the texture of that noise. The two
+     conformable windows are therefore snapped onto a reflector, which is where
+     you would put them on real data too. */
+  function onHorizon(ix, target) {
+    let best = null, bd = 1e9;
+    SEC.horizons.forEach((H) => {
+      const d = Math.abs(H.t[clamp(ix, 0, NX - 1)] - target);
+      if (d < bd) { bd = d; best = H; }
+    });
+    return clamp(Math.round(best.t[clamp(ix, 0, NX - 1)]), 6, NT - 7);
+  }
+
+  function samplePoints() {
+    const qx = Math.round(NX * 0.22);
+    // the fault window has to sit where the plane crosses the horizon it is
+    // being compared on, which is not the same trace at every depth
+    const ft = onHorizon(Math.round(SEC.faultXAt(NT * 0.20)), NT * 0.20);
+    const fx = clamp(S.thr > 0 ? Math.round(SEC.faultXAt(ft)) : Math.round(NX * 0.8),
+      S.half + 1, NX - S.half - 2);
+    return {
+      quiet: [qx, onHorizon(qx, NT * 0.20)],
+      chaos: [Math.round(NX * 0.30), Math.round((CHAOS_TOP + CHAOS_BOT) / 2 * NT)],
+      fault: [fx, onHorizon(fx, NT * 0.20)],
+    };
+  }
+
+  function draw3() {
+    const w = LAB.rowWidth('row3', 4), h = Math.max(200, Math.round(w * 1.15));
+    const P = samplePoints();
+    const mq = matrixAt(P.quiet[0], P.quiet[1]);
+    const mc = matrixAt(P.chaos[0], P.chaos[1]);
+    const mf = matrixAt(P.fault[0], P.fault[1]);
+    const mh = matrixAt(S.px, S.pt);
+    drawMatrix('c3a', mq, w, h, 'trace ' + P.quiet[0], null);
+    drawMatrix('c3b', mc, w, h, 'trace ' + P.chaos[0], null);
+    drawMatrix('c3c', mf, w, h, S.thr > 0 ? 'trace ' + P.fault[0] : 'no fault \u2014 raise the throw', null);
+    drawMatrix('c3d', mh, w, h, 'trace ' + S.px, null);
+    LAB.put('s3a', levelStep(mq).toFixed(3));
+    LAB.put('s3b', levelStep(mc).toFixed(3));
+    LAB.put('s3c', levelStep(mf).toFixed(3) + (S.thr === 0 ? '  (no fault in the model)' : ''));
+    LAB.put('s3d', levelStep(mh).toFixed(3));
+  }
+
+  /* ------------------------------ step 4 ------------------------------- */
+
+  function draw4() {
+    const w = LAB.rowWidth('row4', 2), h = Math.max(230, Math.round(w * 0.8));
+
+    // four matrices, one per direction, drawn into one canvas
+    const el = $('c4a');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const pad = 12;
+      const side = Math.min((w - 3 * pad) / 2, (h - 3 * pad - 18) / 2);
+      EXTRA.GLCM_DIRS.forEach((d, n) => {
+        const m = matrixAt(S.px, S.pt, { dirs: [d] });
+        const cx = pad + (n % 2) * (side + pad);
+        const cy = 18 + Math.floor(n / 2) * (side + pad + 12);
+        let pmax = 1e-9;
+        for (let k = 0; k < m.P.length; k++) pmax = Math.max(pmax, m.P[k]);
+        const cell = side / m.L;
+        for (let i = 0; i < m.L; i++) {
+          for (let j = 0; j < m.L; j++) {
+            const p = m.P[i * m.L + j];
+            if (p <= 0) continue;
+            const c = EXTRA.MAPS.matrix(Math.pow(p / pmax, 0.45));
+            ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+            ctx.fillRect(cx + j * cell, cy + i * cell, Math.max(1, cell), Math.max(1, cell));
+          }
+        }
+        ctx.save();
+        ctx.strokeStyle = 'rgba(132,22,23,.3)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + side, cy + side); ctx.stroke();
+        ctx.restore();
+        SEIS.frame(ctx, { x: cx, y: cy, w: side, h: side });
+        SEIS.tag(ctx, cx, cy - 4, d.name + '  \u00b7  level step ' + levelStep(m).toFixed(3),
+          S.dirs === n ? CRIM : SLATE);
+      });
+    }
+
+    // how full the matrix gets as the window grows
+    const el2 = $('c4b');
+    if (el2) {
+      const ctx = SEIS.fitCanvas(el2, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      const halves = [];
+      for (let hh = 2; hh <= 12; hh++) halves.push(hh);
+      const series = [
+        { L: 9, color: TEAL }, { L: 33, color: CRIM }, { L: 49, color: SLATE },
+      ];
+      series.forEach((se) => {
+        ctx.save(); ctx.strokeStyle = se.color; ctx.lineWidth = 2.2; ctx.beginPath();
+        halves.forEach((hh, i) => {
+          const m = matrixAt(S.px, S.pt, { half: hh, L: se.L });
+          const frac = occupied(m) / (se.L * se.L);
+          const x = R.x + (i / (halves.length - 1)) * R.w;
+          const y = R.y + R.h - clamp(frac, 0, 1) * R.h;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke(); ctx.restore();
+      });
+      const xh = R.x + ((S.half - 2) / 10) * R.w;
+      SEIS.dashedLine(ctx, xh, R.y, xh, R.y + R.h, INK, [4, 3], 1.4);
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 2, 12, 'window radius (traces)', (v) => String(Math.round(v)), { ticks: 6 });
+      SEIS.axisLeft(ctx, R, 0, 100, 'boxes occupied (%)', (v) => String(Math.round(v)),
+        { flip: true, ticks: 4 });
+      SEIS.tag(ctx, R.x + 8, R.y + 14, '9 levels', TEAL);
+      SEIS.tag(ctx, R.x + 8, R.y + 32, '33 levels', CRIM);
+      SEIS.tag(ctx, R.x + 8, R.y + 50, '49 levels', SLATE);
+    }
+
+    const m = matrixAt(S.px, S.pt);
+    const frac = occupied(m) / (m.L * m.L);
+    LAB.put('s4a', m.pairs);
+    LAB.put('s4b', (m.L * m.L));
+    LAB.put('s4c', (100 * frac).toFixed(1) + '%');
+    LAB.put('s4d', frac < 0.04
+      ? 'No \u2014 almost every box is empty, so the attributes are mostly reporting which pairs happened to occur'
+      : frac < 0.12 ? 'Marginally. Fewer levels or a wider window would give the attributes more to work with.'
+      : 'Reasonably \u2014 there are enough pairs for the shape of the matrix to mean something');
+  }
+
+  /* ------------------------------ step 5 ------------------------------- */
+
+  function draw5() {
+    const w = LAB.rowWidth('row5', 3), h = Math.max(215, Math.round(w * 1.05));
+    const mClip = matrixAt(S.px, S.pt);
+    // "no clip" means letting the largest sample define the top level, which is
+    // what a clip of many sigma amounts to
+    const win = mClip.win;
+    let lim = 1e-9;
+    for (let i = 0; i < win.v.length; i++) lim = Math.max(lim, Math.abs(win.v[i]));
+    const bigSigma = mClip.sigma > 1e-12 ? lim / mClip.sigma : 10;
+    const mRaw = matrixAt(S.px, S.pt, { clip: bigSigma });
+
+    drawMatrix('c5a', mClip, w, h, 'clipped at ' + (S.clip / 10).toFixed(1) + '\u03c3', null);
+    drawMatrix('c5b', mRaw, w, h, 'scaled by the largest sample', null);
+
+    const el = $('c5c');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      const clips = [];
+      for (let c = 0.5; c <= 4.01; c += 0.25) clips.push(c);
+      ctx.save(); ctx.strokeStyle = CRIM; ctx.lineWidth = 2.4; ctx.beginPath();
+      clips.forEach((c, i) => {
+        const m = matrixAt(S.px, S.pt, { clip: c });
+        const used = levelsUsed(m.lev) / m.L;
+        const x = R.x + ((c - 0.5) / 3.5) * R.w;
+        const y = R.y + R.h - clamp(used, 0, 1) * R.h;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke(); ctx.restore();
+      const xd = R.x + ((1.5 - 0.5) / 3.5) * R.w;
+      SEIS.dashedLine(ctx, xd, R.y, xd, R.y + R.h, SLATE, [5, 4], 1.5);
+      SEIS.tag(ctx, xd + 3, R.y + 14, 'AASPI default, 1.5\u03c3', SLATE);
+      const xh = R.x + ((S.clip / 10 - 0.5) / 3.5) * R.w;
+      SEIS.dashedLine(ctx, xh, R.y, xh, R.y + R.h, TEAL, [4, 3], 1.5);
+      SEIS.tag(ctx, xh + 3, R.y + 32, 'you are here', TEAL);
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0.5, 4, 'clip (standard deviations)', (v) => v.toFixed(1), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, 0, 100, 'levels used (%)', (v) => String(Math.round(v)),
+        { flip: true, ticks: 4 });
+    }
+
+    const uc = levelSpan(mClip.lev), ur = levelSpan(mRaw.lev);
+    LAB.put('s5e', bigSigma.toFixed(2) + ' standard deviations');
+    LAB.put('s5a', uc + ' of ' + mClip.L);
+    LAB.put('s5b', ur + ' of ' + mRaw.L);
+    LAB.put('s5c', occupied(mClip) + ' against ' + occupied(mRaw));
+    LAB.put('s5d', bigSigma <= S.clip / 10
+      ? 'Nothing \u2014 the clip is already set wider than the largest sample in this window, so it is not '
+        + 'clipping anything. Lower it, or raise the bad samples slider.'
+      : uc > ur * 1.4
+      ? 'A great deal \u2014 the middle of the window spreads over ' + uc
+        + ' levels with the clip and only ' + ur + ' without it, so the unclipped matrix is describing '
+        + 'one loud sample rather than the window'
+      : uc > ur ? 'A little \u2014 the largest sample here is not far enough out to do much damage'
+      : 'Nothing here \u2014 no sample in this window is a strong enough outlier to distort the scale. '
+        + 'Raise the bad samples slider and look again.');
+  }
+
+  /* ============================== plumbing ============================== */
+
+  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'pw', 'pe', 'pk', 'pm'];
+  const NAMES = {
+    p1: 'Amplitudes to levels', p2: 'Counting pairs', p3: 'Reading the matrix',
+    p4: 'Direction and window', p5: 'Why clip at 1.5 sigma',
+    pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
+  };
+
+  function labels() {
+    LAB.put('noiseV', S.noise + '%');
+    LAB.put('spikeV', S.spike + '%');
+    LAB.put('chaosV', S.chaos + '%');
+    LAB.put('thrV', S.thr + (S.thr === 1 ? ' sample' : ' samples'));
+    LAB.put('levV', String(S.lev));
+    LAB.put('clipV', (S.clip / 10).toFixed(1) + ' \u03c3');
+    LAB.put('halfV', S.half + (S.half === 1 ? ' trace' : ' traces'));
+    LAB.put('dirsV', DIRNAMES[S.dirs]);
+  }
+
+  function drawAll() {
+    labels();
+    const lab = document.querySelector('.labhead');
+    if ($('cSec') && (!lab || !lab.hidden)) drawHeader();
+    if (!$('p1').hidden) draw1();
+    if (!$('p2').hidden) draw2();
+    if (!$('p3').hidden) draw3();
+    if (!$('p4').hidden) draw4();
+    if (!$('p5').hidden) draw5();
+  }
+
+  let busyT = null;
+  function refresh() {
+    clearTimeout(busyT);
+    busyT = setTimeout(() => { recompute(); drawAll(); saveState(); }, 90);
+  }
+
+  const show = LAB.setupTabs({
+    panes: PANES, names: NAMES,
+    hideLabOn: ['pw', 'pe', 'pk', 'pm'],
+    onShow: (id) => { S.tab = id; drawAll(); saveState(); },
+  });
+
+  LAB.bindControls(S, refresh);
+
+  LAB.attachProbe('cSec', (x, y, r) => {
+    const R = { x: M.l, y: M.t, w: r.width - M.l - M.r, h: r.height - M.t - M.b };
+    S.px = clamp(Math.round(((x - R.x) / R.w) * (NX - 1)), S.half + 1, NX - S.half - 2);
+    S.pt = clamp(Math.round(((y - R.y) / R.h) * (NT - 1)), 8, NT - 9);
+    drawAll(); saveState();
+  });
+
+  // the pair highlight in step 2 advances on its own, so the tally is watchable
+  setInterval(() => {
+    pairTick++;
+    if (!$('p2').hidden) draw2();
+  }, 1400);
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 140); });
+
+  recompute();
+  show(PANES.indexOf(S.tab) >= 0 ? S.tab : 'p1');
+  if (document.fonts) document.fonts.ready.then(drawAll);
+})();
+</script>
+</body>
+</html>
