@@ -113,16 +113,19 @@
   <section class="tabpane" id="p1" role="tabpanel" hidden>
     <div class="plot-head" style="margin-bottom:14px">
       <h3><span class="stepno">1</span>Along the bed, or across it</h3>
-      <span class="hint">The same mean filter, pointed two different ways</span>
+      <span class="hint">The same mean filter, pointed two different ways &mdash; the filter selector is
+        inert here</span>
     </div>
     <p class="lede">A filter that averages neighboring traces has to decide where on those traces to read.
       Read at the same time sample on every trace and you are averaging horizontally, which is only correct
       where the reflector happens to be flat. Read at a time that shifts with the dip and you are averaging
       along the bed, which is correct everywhere.</p>
     <p class="lede">Both panels below use exactly the same mean filter, on the clean version of the model.
-      The noise sliders do nothing in this step on purpose. With no noise in the picture, anything the
-      filter removes is signal, and the only thing separating the two panels is which direction the window
-      points.</p>
+      Three of the header controls are therefore inert in this step, on purpose. The noise sliders do
+      nothing, because with no noise in the picture anything the filter removes is signal. The filter
+      selector does nothing either, because both panels run the mean whatever it says, so that the only
+      difference between them is which direction the window points. Every header control takes effect
+      again from step 2 onward, and step 3 is where the choice of filter becomes the subject.</p>
 
     <div class="sec-row" id="row1">
       <div class="panel-col">

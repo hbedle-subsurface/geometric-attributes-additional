@@ -687,25 +687,40 @@ details.notes p, details.notes li { font-size: 14px; color: var(--ink-soft); max
 }
 .tabhint b { color: var(--crimson); font-weight: 600; }
 
+/* The tab strip has to hold up to eleven tabs. It wraps rather than
+   scrolling, because a tab that has scrolled out of sight is a tab nobody
+   knows exists. Two things keep the wrap from looking like a mistake:
+   row-gap, so a second row sits clear of the first rather than jammed against
+   it, and the metrics below, which are tight enough that eleven tabs fit on
+   one line at an ordinary desktop width. The crimson rule is drawn under the
+   whole strip, so it lands beneath the last row wherever that falls. */
 .tabs {
-  display: flex; flex-wrap: wrap; gap: 3px;
+  display: flex; flex-wrap: wrap; gap: 4px 2px;
   border-bottom: 2px solid var(--crimson); margin: 0;
   position: sticky; top: 0; z-index: 29; background: var(--paper);
   padding-top: 14px;
 }
 .tabs button {
-  font-family: var(--body); font-size: 12.5px; padding: 9px 12px 8px;
+  font-family: var(--body); font-size: 12px; padding: 8px 9px 7px;
   background: var(--cream); color: var(--slate); cursor: pointer;
   border: 1px solid var(--rule); border-bottom: 0;
   border-top: 3px solid transparent;
   white-space: nowrap; position: relative; top: 1px;
+}
+/* Below about 1100px eleven tabs cannot fit however tight the metrics are,
+   so give up the numbering prefix rather than the tab. */
+@media (max-width: 1100px) {
+  .tabs button { font-size: 11.5px; padding: 7px 7px 6px; }
 }
 .tabs button:hover { color: var(--ink); background: #fff; }
 .tabs button[aria-selected="true"] {
   background: var(--panel); color: var(--crimson); font-weight: 600;
   border-top-color: var(--crimson); top: 0; padding-bottom: 10px;
 }
-.tabs .gap { flex: 1 0 14px; border: 0; background: none; pointer-events: none; }
+/* The spacer separating the numbered steps from the reference tabs. It gives
+   up its width first when the strip is tight, so it never costs a tab a place
+   on the line. */
+.tabs .gap { flex: 1 1 0; min-width: 0; border: 0; background: none; pointer-events: none; }
 
 .tabpane {
   background: var(--panel); border: 1px solid var(--rule); border-top: 0;

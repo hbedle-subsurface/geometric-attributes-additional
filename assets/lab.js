@@ -111,13 +111,25 @@ const LAB = (function () {
        the conversion has to go through the aspect ratio the section is drawn
        at rather than through samples and traces directly.
 
-       Sections here are drawn roughly twice as wide as they are tall, so one
-       trace of width covers about (nt/nx)/2 samples' worth of height on
-       screen. A plane at theta degrees runs 1/tan(theta) horizontally for
-       every 1 vertically, and that ratio is converted into traces per sample
-       below. The position is kept as a float: rounding it to a whole trace at
-       each depth is exactly what produces a staircase. */
-    const DRAW_ASPECT = 2.0;                 // section width / height, as drawn
+       A plane at theta degrees runs 1/tan(theta) horizontally for every 1
+       vertically, and that ratio is converted into traces per sample below.
+       The position is kept as a float: rounding it to a whole trace at each
+       depth is one way to produce a staircase.
+
+       DRAW_ASPECT has to match the panels where the fault is actually studied,
+       and getting it wrong is the other way to produce a staircase. It was set
+       to 2.0, which is the shape of the wide locator banner at the top of a
+       module. The step panels are two, three or four across and come out
+       roughly square or taller, around 0.9 by the time the axis margins are
+       taken off. A plane tuned for 2.0 and drawn at 0.9 appears at about 78
+       degrees rather than 65: near vertical, so nine reflectors offset by most
+       of their own spacing march sideways only about three traces apiece and
+       the eye reads a staircase rather than a plane. Tuned to the step panels
+       the same plane marches about six traces per reflector and reads
+       straight. The banner then shows it slightly shallower than stated, which
+       is the lesser error: the banner is a locator, the step panels are where
+       the fault is examined. */
+    const DRAW_ASPECT = 1.0;                 // shape of the step panels, as drawn
     const fx0 = c.faultAt * nx;              // where it crosses mid-section
     const theta = Math.max(20, Math.min(90, c.faultDipDeg)) * Math.PI / 180;
     // traces of horizontal run per sample of depth
@@ -661,13 +673,26 @@ const LAB = (function () {
 
   /** Wire every slider that carries data-key straight into a state object. */
   function bindControls(S, after) {
-    document.addEventListener('input', (ev) => {
+    /* Both events, and not one of them.
+
+       Range inputs and checkboxes fire 'input' as they move, which is what
+       gives a slider its live response. A <select> is the problem: the spec
+       has it firing 'input' as well as 'change', but Safari and older WebKit
+       fire only 'change'. Listening for 'input' alone leaves every method
+       chooser in this set dead in those browsers, and the failure is silent —
+       the menu changes, the panels do not. Listening for both costs a
+       duplicated call on the browsers that send both, which is harmless
+       because the handler is idempotent and the redraw behind it is
+       debounced. */
+    const onChange = (ev) => {
       const key = ev.target && ev.target.dataset && ev.target.dataset.key;
       if (!key) return;
       S[key] = ev.target.type === 'checkbox' ? (ev.target.checked ? 1 : 0)
                                              : parseFloat(ev.target.value);
       after();
-    });
+    };
+    document.addEventListener('input', onChange);
+    document.addEventListener('change', onChange);
     // put the saved state back into the widgets on load
     Object.keys(S).forEach((k) => {
       const el = document.querySelector('[data-key="' + k + '"]');
