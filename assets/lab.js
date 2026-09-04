@@ -70,6 +70,14 @@ const LAB = (function () {
      cfg fields, all optional:
        nx, nt, dt      geometry            (default 180 x 260, 2 ms)
        freq            wavelet, Hz         (default 30)
+       reflGap         average gap between reflectors, in samples (default
+                       14). This is the number that decides whether a fault
+                       reads as a plane or as a staircase; see THE REFLECTORS
+                       below
+       nRefl           a fixed reflector count, overriding reflGap
+       spacingJitter   0-0.6, how uneven the reflector spacing is
+       firstRefl       depth of the shallowest reflector, as a fraction of nt
+       lastRefl        depth of the deepest one
        fold            relief of the fold, in samples
        foldWidth       how wide the fold is, as a fraction of the section. A
                        narrow fold gives steep flanks without translating the
@@ -81,9 +89,8 @@ const LAB = (function () {
        faultDipDeg     dip of the fault plane as it will be DRAWN, in degrees
                        from horizontal. 90 is vertical; the default 65 is a
                        fairly ordinary normal fault. The plane is planar and
-                       its position is carried at sub-trace precision, so it
-                       does not come out as a staircase.
-       faultAt         trace index of the fault
+                       its position is carried at sub-trace precision. Whether
+                       it LOOKS planar is set by reflGap, not by the dip.
        chaos           0-1, how disordered the middle package is
        chaosTop/Bot    sample range of the chaotic package
        noise           0-1, random noise as a fraction of peak amplitude
@@ -95,6 +102,7 @@ const LAB = (function () {
   function buildSection(cfg) {
     const c = Object.assign({
       nx: 180, nt: 260, dt: 0.002, freq: 30,
+      reflGap: 14, nRefl: 0, spacingJitter: 0.22, firstRefl: 0.07, lastRefl: 0.94,
       fold: 16, foldWidth: 0.24, throw: 0, faultAt: 0.52, faultDipDeg: 65,
       chaos: 0, chaosTop: 0.34, chaosBot: 0.56,
       noise: 0, spike: 0, coherent: 0, seed: 7,
@@ -116,19 +124,22 @@ const LAB = (function () {
        The position is kept as a float: rounding it to a whole trace at each
        depth is one way to produce a staircase.
 
-       DRAW_ASPECT has to match the panels where the fault is actually studied,
-       and getting it wrong is the other way to produce a staircase. It was set
-       to 2.0, which is the shape of the wide locator banner at the top of a
-       module. The step panels are two, three or four across and come out
-       roughly square or taller, around 0.9 by the time the axis margins are
-       taken off. A plane tuned for 2.0 and drawn at 0.9 appears at about 78
-       degrees rather than 65: near vertical, so nine reflectors offset by most
-       of their own spacing march sideways only about three traces apiece and
-       the eye reads a staircase rather than a plane. Tuned to the step panels
-       the same plane marches about six traces per reflector and reads
-       straight. The banner then shows it slightly shallower than stated, which
-       is the lesser error: the banner is a locator, the step panels are where
-       the fault is examined. */
+       DRAW_ASPECT has to match the panels where the fault is actually studied.
+       The step panels are two, three or four across and come out roughly
+       square once the axis margins are taken off, so the plane is tuned to
+       1.0. The wide locator banner at the top of a module then shows the same
+       plane a little shallower than stated, which is the lesser error: the
+       banner is a locator, the step panels are where the fault is examined.
+
+       The plane itself is not what makes a fault read as a staircase. Nothing
+       on a section draws the plane; what a reader sees is the set of points
+       where reflectors terminate against it, and the eye joins those points
+       only if they are close enough together. The spacing between them is the
+       reflector spacing times the slope above. With reflectors two dozen
+       samples apart the terminations land seven or eight traces apart with a
+       flat segment of reflector between each pair, and the eye follows the
+       flat segments instead: stairs. The reflector series below is the fix,
+       not the dip. */
     const DRAW_ASPECT = 1.0;                 // shape of the step panels, as drawn
     const fx0 = c.faultAt * nx;              // where it crosses mid-section
     const theta = Math.max(20, Math.min(90, c.faultDipDeg)) * Math.PI / 180;
@@ -139,14 +150,69 @@ const LAB = (function () {
     const faultXAt = (z) => fx0 + faultSlope * (z - nt / 2);
     const fx = Math.round(fx0);
 
-    // --- the horizons ----------------------------------------------------
-    // Nine reflectors. The upper and lower packages are conformable; the
-    // middle package is the one the chaos slider attacks.
+    /* THE REFLECTORS
+
+       Spacing controls whether the fault reads as a plane, for the reason
+       given above, so it is set from a target gap rather than from a fixed
+       list. Reflectors are spread over the section between firstRefl and
+       lastRefl at an average of reflGap samples apart, and spacingJitter
+       varies the gaps so the section is a stratigraphic column rather than a
+       comb. An even comb has a second problem: every gap is the same, so a
+       throw close to one gap lines each reflector up with its neighbor's
+       position across the fault and the offset stops being readable.
+
+       Two limits bracket the useful spacing. Gaps much wider than the throw
+       put the terminations too far apart and bring the stairs back. Gaps
+       narrower than the throw let a reflector on the downthrown side line up
+       with the one above it, which is a cycle skip and reads as a mismatch
+       rather than an offset. Between them, terminations are dense enough to
+       join into a line and each offset is still less than one gap.
+
+       Positions are in samples and the section is dt seconds per sample, so
+       the default 14-sample gap is 28 ms at 2 ms sampling, against a 33 ms
+       Ricker period: reflectors interfere the way they do on real data
+       instead of standing alone. It also sets the ceiling on the throw
+       sliders, which are held at 10 samples in the modules for the
+       cycle-skip reason above. */
     const HZ = [];
-    // spaced as fractions of the section, so a module can choose any nt and
-    // still get nine reflectors inside the display rather than below it
-    const base = [0.10, 0.20, 0.29, 0.37, 0.45, 0.55, 0.65, 0.76, 0.87]
-      .map((u) => Math.round(u * nt));
+    /* The count follows from the gap rather than the other way round, so a
+       module that chooses a different nt gets reflectors the same distance
+       apart in time instead of the same number of them squeezed into a
+       shorter section. c.nRefl overrides it if a module needs a fixed count. */
+    const nRefl = Math.max(4, Math.round(
+      c.nRefl || (c.lastRefl - c.firstRefl) * nt / c.reflGap + 1));
+    const jit = clamp(c.spacingJitter, 0, 0.6);
+    // its own random stream, so changing the stratigraphy does not change the
+    // noise or spike patterns a module was built to show
+    const srnd = SEIS.mulberry32(c.seed + 3);
+    const gaps = [];
+    let gsum = 0;
+    for (let h = 0; h < nRefl - 1; h++) {
+      const g = 1 - jit + 2 * jit * srnd();
+      gaps.push(g); gsum += g;
+    }
+    const span = c.lastRefl - c.firstRefl;
+    const base = [];
+    let u = c.firstRefl;
+    for (let h = 0; h < nRefl; h++) {
+      base.push(Math.round(u * nt));
+      if (h < nRefl - 1) u += span * gaps[h] / gsum;
+    }
+    /* Polarity alternates. Reflection strength does not: a column of equal
+       reflectors is the other thing that makes an offset hard to read, since
+       every reflector across the fault looks like every other one. Alternating
+       polarity is kept because several modules seed a horizon tracker on a
+       peak and need one within a few samples of any depth. */
+    const RC = [];
+    for (let h = 0; h < base.length; h++) {
+      RC.push((h % 2 ? -1 : 1) * (0.45 + 0.55 * srnd()));
+    }
+    // the reflector nearest mid-section, for anything that wants one horizon
+    let chH = 0, chD = 1e9;
+    for (let h = 0; h < base.length; h++) {
+      const d = Math.abs(base[h] - nt / 2);
+      if (d < chD) { chD = d; chH = h; }
+    }
     for (let h = 0; h < base.length; h++) {
       const t = new Float32Array(nx);
       const inChaosPkg = base[h] >= c.chaosTop * nt && base[h] <= c.chaosBot * nt;
@@ -176,8 +242,7 @@ const LAB = (function () {
         }
         t[ix] = z;
       }
-      HZ.push({ t: t, rc: (h % 2 ? -1 : 1) * (0.55 + 0.45 * ((h * 7) % 5) / 4),
-                chaotic: inChaosPkg });
+      HZ.push({ t: t, rc: RC[h], chaotic: inChaosPkg });
     }
 
     // --- reflectivity, then the trace ------------------------------------
@@ -192,7 +257,7 @@ const LAB = (function () {
           r *= 1 - 0.75 * c.chaos * rnd();
         }
         // a channel: one horizon goes quiet over a band of traces
-        if (c.channel > 0 && h === 4) {
+        if (c.channel > 0 && h === chH) {
           const d = Math.abs(ix - chX);
           const inside = 1 / (1 + Math.exp((d - 13) / 2.2));
           r *= 1 - c.channel * inside;
