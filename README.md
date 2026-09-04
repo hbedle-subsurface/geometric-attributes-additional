@@ -80,19 +80,40 @@ traces rather than rectangles or ellipses of them, and the one map-view module
 works on a single picked surface rather than volumetrically. Every module says
 this in its own Method tab and names what specifically is lost.
 
+## Numbers in the exercise hints
+
+The hints describe what the readouts do rather than quoting them to four
+decimal places. A hint says one error is lower than both of its end members, or
+that a figure is several times another, or that a matrix is mostly empty — not
+that it reads 0.0528.
+
+The reason is maintenance. Change a default window, a noise seed or a model
+constant and every quoted decimal somewhere in the set becomes wrong, silently,
+with nothing to catch it. Relative statements survive that; exact ones do not.
+
+Exact figures are still used where the arithmetic guarantees them and no model
+constant can move them: the number of boxes in an L-level co-occurrence matrix,
+the number of pairs a window of a given size supplies, the norm of the disorder
+stencil, and the identity between the alpha-trimmed mean at its two end settings
+and the mean and the median. Those are properties of the definitions.
+
 ## License and citation
 
 *More Geometric Attributes, and How They Actually Work* © 2026 by Heather Bedle
-is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+and April Moreno-Ward is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 Share it and adapt it for any purpose, including commercially, provided you
 credit the source, link to the license, indicate any changes, and license what
 you build under the same terms. Full text in [`LICENSE`](LICENSE).
 
-To cite: H. Bedle, *More Geometric Attributes, and How They Actually Work*,
-University of Oklahoma,
+To cite: H. Bedle and A. Moreno-Ward, *More Geometric Attributes, and How They
+Actually Work*, University of Oklahoma,
 `hbedle-subsurface.github.io/geometric-attributes-additional`.
 
-Need to add SSRN working paper
+<!-- TODO before release: replace this block with the SSRN link once the
+     companion working paper is posted. Eight places carry it: this file, the
+     landing page, and the six module footers. -->
+A companion working paper describing the design of this set, its verification
+and its limitations is in preparation and will be linked here.
 
-Built for teaching by Heather Bedle, School of Geosciences, University of
-Oklahoma, with the AASPI consortium.
+Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of
+Geosciences, University of Oklahoma, with the AASPI consortium.

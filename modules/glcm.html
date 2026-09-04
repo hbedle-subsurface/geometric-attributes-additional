@@ -364,11 +364,12 @@
             coherence produce such similar-looking maps despite being computed in completely different
             ways.</span></details></li>
         <li><b>Starve the matrix.</b> In step 4, set the gray levels to 49 and the window radius to 2.
-          <details class="reveal"><summary>Hint</summary><span class="ans">2.0% of the boxes are occupied:
-            2401 of them and 76 pairs to fill them with. Any attribute computed from that matrix is mostly
+          <details class="reveal"><summary>Hint</summary><span class="ans">Around one box in fifty is occupied.
+            There are 2401 of them at 49 levels, and a five-trace window three samples tall supplies only 76
+            pairs to fill them with. Any attribute computed from that matrix is mostly
             reporting which boxes happened to get a pair, which changes from sample to sample for no
-            geological reason. Drop the levels to 5 with the same window and the figure goes to 16%; widen
-            the window back to 12 traces at 49 levels and it goes to 8.4%. Fewer levels on a small window is
+            geological reason. Drop the levels to 5 with the same window and the occupancy rises severalfold; widen
+            the window back to 12 traces at 49 levels and it rises again, though not as far. Fewer levels on a small window is
             not a compromise, it is the correct choice, and the two parameters have to be set
             together.</span></details></li>
         <li><b>See what a single direction misses.</b> In step 4, switch to "north only" and put the
@@ -381,8 +382,8 @@
         <li><b>Let one spike set the scale.</b> In step 5, compare the two matrices with the noise slider
           around 40%.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
-            with, the largest sample in the window sits about 3.4 standard deviations out, and the middle
-            80% of the window spreads over 8 levels with the clip against 4 without it — half the detail,
+            with, the largest sample in the window sits several standard deviations out, and the bulk of the
+            window spreads over roughly twice as many levels with the clip as without it — half the detail,
             thrown away to make room for one sample. Set the bad samples slider to zero and the difference
             disappears, because there is no longer an outlier to protect against. That is the whole
             argument, and it is why the parameter is there at all.</span></details></li>
@@ -473,10 +474,11 @@
 
   <footer>
     <div class="foot-grid">
-      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+      <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of Geosciences,
+        University of Oklahoma, with the
         <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
       <p class="lic"><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather
-        Bedle is licensed under
+        Bedle and April Moreno-Ward is licensed under
         <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. You are
         free to share this material in any medium or format and to adapt it &mdash; remix it, build on it,
         translate it, teach from it, use parts of it in something of your own &mdash; for any purpose,
@@ -486,13 +488,13 @@
         distribute what you make under this same license. You may not add legal terms or technical
         measures that stop anyone else from doing what the license permits. Full legal text at
         <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/legalcode">creativecommons.org/licenses/by-sa/4.0/legalcode</a>.</p>
-      <p class="lic">To cite: H. Bedle, <i>More Geometric Attributes, and How They Actually Work</i>,
+      <p class="lic">To cite: H. Bedle and A. Moreno-Ward, <i>More Geometric Attributes, and How They Actually Work</i>,
         University of Oklahoma,
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that I can show the university these are being used &mdash; no cookie, no account,
-        nothing about you.</p>
+        count, so that we can show the university these are being used &mdash; no cookie and no
+        identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>

@@ -5,7 +5,8 @@ everything needed — no other file has to be consulted.
 
 ## Context
 
-Heather Bedle (University of Oklahoma, AASPI) publishes several teaching sites
+Heather Bedle and April Moreno-Ward (University of Oklahoma, AASPI) publish several
+teaching sites
 from separate GitHub repositories, all served under one domain:
 
 ```
@@ -32,7 +33,7 @@ code. If the repository has no `assets/` folder, make one.
 ```js
 /* ===========================================================================
    count.js — page-view counting, and nothing else
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
 
    The same file is used unchanged by every teaching repository. They are all
    served from hbedle-subsurface.github.io, so one counting account covers all

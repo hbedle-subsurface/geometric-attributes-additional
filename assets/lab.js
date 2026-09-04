@@ -1,7 +1,7 @@
 /* ===========================================================================
    lab.js — the parts every module in this set needs
    "More Geometric Attributes, and How They Actually Work"
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
 
    Two kinds of thing live here.
 

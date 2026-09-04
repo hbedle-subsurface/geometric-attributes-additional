@@ -1,7 +1,7 @@
 /* ===========================================================================
    attributes.js — geometric attribute computation
    "How Geometric Attributes Actually Work"
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
 
    Companion to seismic.js, which supplies wavelets, convolution, color maps,
    the FFT and the canvas helpers. This file holds the attribute algorithms
@@ -284,8 +284,11 @@ const ATTR = (function () {
   // ms per trace -> ms per meter, given the bin spacing in that direction
   const perTraceToPerMetre = (msPerTrace, binM) => msPerTrace / binM;
 
-  // magnitude and azimuth of the time-dip gradient. Azimuth is degrees
-  // clockwise from the inline axis, pointing downdip.
+  // Magnitude and azimuth of the time-dip gradient. Azimuth is degrees
+  // counter-clockwise from the inline axis, pointing downdip: it is atan2 of
+  // the crossline component over the inline one, so with inline drawn to the
+  // right and crossline upward it increases the way a protractor does. Survey
+  // rotation and any conversion to a geographic azimuth happen elsewhere.
   function dipMagAzim(gx, gy) {
     const mag = Math.sqrt(gx * gx + gy * gy);
     let az = Math.atan2(gy, gx) * 180 / Math.PI;

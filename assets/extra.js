@@ -1,7 +1,7 @@
 /* ===========================================================================
    extra.js — the four additional AASPI programs
    "More Geometric Attributes, and How They Actually Work"
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
 
    Companion to seismic.js (wavelets, canvases, color maps) and attributes.js
    (semblance, dip scans, eigen-coherence). This file holds the algorithms that
@@ -287,14 +287,20 @@ const EXTRA = (function () {
      ======================================================================= */
 
   /**
-   * Scale a window of data to integer gray levels, following
+   * Scale a window of data to integer gray levels.
    *
-   *     dbar = CLIP( L / (1.5 sigma + eps) * d )
+   * Seismic amplitude is signed, so the scale is centered rather than run from
+   * zero upward: zero amplitude lands on the middle level, +1.5 sigma on the
+   * top level and -1.5 sigma on the bottom one.
+   *
+   *     level = CLIP( (L-1)/2 * [ 1 + d / (1.5 sigma + eps) ] )
    *
    * sigma is the RMS of the window, so the scaling is relative to how loud
    * this piece of data happens to be, and the clip at 1.5 standard deviations
-   * means the loudest few percent of samples all land in the top level rather
-   * than stretching the scale for everyone else.
+   * means the loudest few percent of samples all land in an end level rather
+   * than stretching the scale for everyone else. Samples past the clip are
+   * assigned the end level rather than discarded, so the pair count does not
+   * depend on how many outliers the window happens to hold.
    *
    * Returns Int32Array of levels in [0, L-1].
    */
@@ -405,6 +411,12 @@ const EXTRA = (function () {
         if (has) R += ph * (i - muH) * (j - muH);
       }
     }
+    /* Correlation is a ratio, so with the Hilbert term on it is pooled — the
+       summed cross term over the summed variance — rather than computed twice
+       and added the way the additive measures above are. Pooling is the
+       sensible reading of a normalized quantity, but it is a choice, and it is
+       the one place in this function where "compute both and add" does not
+       describe what happens. */
     R = V > EPS ? R / V : 0;
     return {
       contrast: C, dissimilarity: D, homogeneity: H,
@@ -446,8 +458,14 @@ const EXTRA = (function () {
 
          lambda_1 = [ (a+d) + ((a+d)^2 - 4(ad - bc))^(1/2) ] / 2
 
-     which lights up where dip and amplitude both change, and stays quiet where
-     only one of them does.
+     Read that carefully, because it is easy to state it backwards. The larger
+     eigenvalue of a 2x2 matrix with non-negative diagonal is never smaller
+     than the larger diagonal entry, so lambda_1 is high wherever EITHER
+     deviation is high, and highest where both are. It does not stay quiet when
+     only one of them fires, and no eigenvalue of a covariance matrix could.
+     What the merge buys is one map instead of two; what it costs is that a
+     bright anomaly no longer says which measurement produced it. That trade is
+     the subject of module 06 step 4.
      ======================================================================= */
 
   /** Unit normal to a reflector with inline dip p and crossline dip q. */
@@ -518,6 +536,20 @@ const EXTRA = (function () {
    * normalization constants that put the two very different quantities on a
    * common footing; the attribute is the larger eigenvalue of the 2x2 matrix.
    */
+  /* A note on the cross term, because it is not an ordinary covariance.
+
+     The diagonal entries a and d are mean SQUARED deviations, so they are
+     non-negative by construction, and the off-diagonal is built as the mean of
+     sqrt(|dn * dg|) rather than as a signed product of centered variables. It
+     therefore cannot go negative and cannot report anti-correlation. What it
+     measures is whether the two deviations are large at the same samples, not
+     whether they move together with a sign.
+
+     The consequence to know when reading the map: lambda_1 >= max(a, d)
+     always, so the attribute cannot be quieter than its louder input. That is
+     the behavior the module describes and the behavior AASPI describes. If you
+     are comparing absolute values against a production nonparallelism volume,
+     check this construction against the program documentation first. */
   function dipEnergyCovariance(p, q, e, gx, gy, Rn, Rg) {
     const J = p.length;
     const dd = dipDeviation(p, q, e);

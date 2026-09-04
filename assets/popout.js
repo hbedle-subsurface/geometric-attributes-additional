@@ -1,6 +1,6 @@
 /* ===========================================================================
    popout.js — open the exercises in a second window, and nothing else
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
 
    The same file is used unchanged by every teaching repository.
 
@@ -20,8 +20,8 @@
    button does not appear and the exercises tab works exactly as before —
    which is why no module carries a local fallback for it.
 
-   License: free to use for teaching, demonstration and non-commercial study
-   with credit. No republishing or redistribution without permission.
+   License: CC BY-SA 4.0. Free to use, adapt and share with credit; any
+   adaptation must be released under the same license.
    =========================================================================== */
 
 (function () {
@@ -96,11 +96,17 @@
       '</body>\n</html>';
   }
 
-  // The pane's contents, minus the button that opened this window.
+  /* The pane's contents, minus anything that only works in the parent window.
+     The pop-out is a copy of the text, so every control in it is dead: the
+     button that opened this window, and the step navigation the module adds
+     to the foot of each pane at load time. Leaving them in gives the student
+     buttons that do nothing, which reads as broken rather than as static. */
   function paneContents(pane) {
     var clone = pane.cloneNode(true);
-    var btn = clone.querySelector('.po-open');
-    if (btn) btn.parentNode.removeChild(btn);
+    var dead = clone.querySelectorAll('.po-open, .stepnav');
+    for (var i = 0; i < dead.length; i++) {
+      if (dead[i].parentNode) dead[i].parentNode.removeChild(dead[i]);
+    }
     return clone.innerHTML;
   }
 

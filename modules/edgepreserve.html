@@ -353,9 +353,9 @@
         <li><b>Measure the smearing.</b> In step 1, set the window radius to 6 and read the two fault-width
           numbers.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
-            with, the coherence minimum on the fault goes from 0.556 to 0.942 and the flank steepness from
-            0.180 to 0.021 per trace. Read that again: the plain filter has put back nearly nine tenths of
-            the drop that told you a fault was there. Widening the window makes it worse. Both numbers move
+            with, the coherence minimum on the fault climbs most of the way back toward 1 and the flank
+            steepness falls by most of an order of magnitude. Read that again: the plain filter has put back
+            the better part of the drop that told you a fault was there. Widening the window makes it worse. Both numbers move
             the same way — the anomaly ends up shallower <em>and</em> softer, so after filtering you would
             place the fault less precisely and believe in it less. Now go to step 5 and switch the
             preservation on at the same radius.</span></details></li>
@@ -378,16 +378,18 @@
         <li><b>Find out which method does more.</b> In step 5, compare the four error numbers, then raise
           the noise to 60% and compare again.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings the
-            fault coherence reads 0.942 with no preservation, 0.929 with Kuwahara, 0.928 with the weighting
-            and 0.910 with both — so both together preserve the most, and neither alone gets there. The two
+            fault coherence is highest with no preservation, lower with either the Kuwahara search or the
+            weighting alone, and lowest with both — so both together preserve the most of the anomaly, and
+            neither alone gets there. The separations are small; what matters is the order, and it
+            holds. The two
             work differently, which is why they add: the weighting protects the fault by declining to filter
             it, so the noise on the fault survives too; the Kuwahara search protects it while still
             filtering, by reading from one side. Raise the noise and the ranking on overall error will
             invert, because at that point the noise you left on the fault costs more than the fault you
             saved.</span></details></li>
         <li><b>Take the fault away.</b> Set the throw to zero and look at step 5 again.
-          <details class="reveal"><summary>Hint</summary><span class="ans">The errors read 0.0117, 0.0132,
-            0.0123 and 0.0134 — the plain filter is now the best of the four, by about 15%. With no edge to
+          <details class="reveal"><summary>Hint</summary><span class="ans">The plain filter is now the best of
+            the four, by something like a tenth. With no edge to
             preserve, edge preservation can only cost you: the other three are declining to filter, or
             filtering off-center, in places where there was nothing to protect. That is the honest limit of
             the technique. It is insurance, the premium is real, and you buy it because you cannot know in
@@ -487,10 +489,11 @@
 
   <footer>
     <div class="foot-grid">
-      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+      <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of Geosciences,
+        University of Oklahoma, with the
         <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
       <p class="lic"><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather
-        Bedle is licensed under
+        Bedle and April Moreno-Ward is licensed under
         <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. You are
         free to share this material in any medium or format and to adapt it &mdash; remix it, build on it,
         translate it, teach from it, use parts of it in something of your own &mdash; for any purpose,
@@ -500,13 +503,13 @@
         distribute what you make under this same license. You may not add legal terms or technical
         measures that stop anyone else from doing what the license permits. Full legal text at
         <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/legalcode">creativecommons.org/licenses/by-sa/4.0/legalcode</a>.</p>
-      <p class="lic">To cite: H. Bedle, <i>More Geometric Attributes, and How They Actually Work</i>,
+      <p class="lic">To cite: H. Bedle and A. Moreno-Ward, <i>More Geometric Attributes, and How They Actually Work</i>,
         University of Oklahoma,
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that I can show the university these are being used &mdash; no cookie, no account,
-        nothing about you.</p>
+        count, so that we can show the university these are being used &mdash; no cookie and no
+        identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>

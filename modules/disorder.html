@@ -353,17 +353,18 @@
           trace and then up to 15, watching the contrast figure.
           <details class="reveal"><summary>Hint</summary><span class="ans">At 1 trace there is almost
             nothing to take a standard deviation over, so the panel is the raw speckle and the separation is
-            close to the raw volume's. It improves quickly over the first few window lengths — most of the
-            gain is in by about 7 traces — and then flattens: going from 11 to 15 buys very little. Meanwhile
+            close to the raw volume's. It improves quickly over the first few window lengths, with most of the
+            gain in by the middle of the slider's range, and then flattens: the last few traces buy very
+            little. Meanwhile
             the cost keeps accruing, because a wider window puts the boundary of the chaotic package in more
             places at once and the edges of the anomaly blur outward. Stop where the curve
             flattens rather than where the number is highest.</span></details></li>
         <li><b>Separate the two attributes.</b> In step 4, set the fault throw to maximum and every noise
           slider to zero, then reverse it.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
-            with, coherence falls 16% at the fault and 23% in the chaotic package — it reacts to both, and
-            almost equally. Disorder rises 23% at the fault and 133% in the chaotic package, so it reacts to
-            the chaos about six times as strongly. Neither attribute is blind to either feature; what
+            with, coherence falls by roughly the same amount at the fault as it does in the chaotic package
+            — it reacts to both, and almost equally. Disorder responds to the chaotic package several times
+            more strongly than it does to the fault. Neither attribute is blind to either feature; what
             separates them is which one they reserve their response for, and that is enough to make them
             answer different questions. Note also what happens when you take the chaos away entirely: with
             clean data the background disorder is so close to zero that any response at all looks enormous
@@ -462,10 +463,11 @@
 
   <footer>
     <div class="foot-grid">
-      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+      <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of Geosciences,
+        University of Oklahoma, with the
         <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
       <p class="lic"><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather
-        Bedle is licensed under
+        Bedle and April Moreno-Ward is licensed under
         <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. You are
         free to share this material in any medium or format and to adapt it &mdash; remix it, build on it,
         translate it, teach from it, use parts of it in something of your own &mdash; for any purpose,
@@ -475,13 +477,13 @@
         distribute what you make under this same license. You may not add legal terms or technical
         measures that stop anyone else from doing what the license permits. Full legal text at
         <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/legalcode">creativecommons.org/licenses/by-sa/4.0/legalcode</a>.</p>
-      <p class="lic">To cite: H. Bedle, <i>More Geometric Attributes, and How They Actually Work</i>,
+      <p class="lic">To cite: H. Bedle and A. Moreno-Ward, <i>More Geometric Attributes, and How They Actually Work</i>,
         University of Oklahoma,
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that I can show the university these are being used &mdash; no cookie, no account,
-        nothing about you.</p>
+        count, so that we can show the university these are being used &mdash; no cookie and no
+        identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>

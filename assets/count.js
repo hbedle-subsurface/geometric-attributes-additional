@@ -1,6 +1,6 @@
 /* ===========================================================================
    count.js — page-view counting, and nothing else
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
 
    The same file is used unchanged by every teaching repository. They are all
    served from hbedle-subsurface.github.io, so one counting account covers all
