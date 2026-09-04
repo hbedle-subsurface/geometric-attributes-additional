@@ -160,9 +160,8 @@
       entropy S = &minus; &Sigma; P<sub>ij</sub> ln P<sub>ij</sub></p>
     <p class="lede"><b>Energy here has nothing to do with amplitude.</b> The name is inherited from signal
       processing and it is actively misleading on seismic data. It is large when the weight is concentrated
-      in a few boxes, which happens when the window is monotonous — and the AASPI documentation makes the
-      point sharply: if every voxel in the window is the same, even if that value is zero, the energy is
-      high. A dead trace scores maximum energy.</p>
+      in a few boxes, which happens when the window is monotonous. The AASPI documentation makes the point
+      sharply: if every voxel in the window is the same, even if that value is zero, the energy is high. A dead trace scores maximum energy.</p>
     <p class="lede"><b>Entropy is its opposite in behavior</b>, large when the weight is spread evenly over
       many boxes. The two are so closely anti-correlated that computing both is nearly always redundant.
       Entropy is the one AASPI recommends, alongside homogeneity.</p>
@@ -201,9 +200,9 @@
       mean &nbsp;&nbsp;&nbsp;&nbsp;&mu; = &Sigma; j P<sub>ij</sub><br>
       variance V = &Sigma; P<sub>ij</sub> (i &minus; &mu;)<sup>2</sup><br>
       correlation R = (1/V) &Sigma; P<sub>ij</sub> (i &minus; &mu;)(j &minus; &mu;)</p>
-    <p class="lede"><b>Mean</b> is the average gray level in the window. Since the levels came from
-      quantizing the window against its own standard deviation, this is close to a constant everywhere and
-      AASPI says plainly that it has little value in either interpretation or machine learning.</p>
+    <p class="lede"><b>Mean</b> is the average gray level in the window. The levels came from quantizing the
+      window against its own standard deviation, so this is close to a constant everywhere. AASPI says
+      plainly that it has little value in either interpretation or machine learning.</p>
     <p class="lede"><b>Variance</b> is the spread of levels, and the AASPI documentation states the
       consequence directly: it reproduces semblance-based similarity, up to a scaling and a change of sign,
       and adds almost nothing to it. The panel below checks that claim against the semblance coherence of
@@ -211,9 +210,9 @@
       same lateral window as the texture measures, so that the comparison is about the two attributes and
       not about two different window sizes.</p>
     <p class="lede"><b>Correlation</b> is the one whose everyday meaning does not transfer. On a photograph
-      it measures whether neighboring pixels resemble each other. On seismic data, as the documentation
-      notes, it does the opposite of what you would expect: where amplitudes in the window are all close to
-      the mean the correlation is low, and where they differ it is high.</p>
+      it measures whether neighboring pixels resemble each other. On seismic data it does the opposite
+      of what you would expect, as the documentation notes. Where amplitudes in the window are all close to
+      the mean the correlation is low. Where they differ it is high.</p>
 
     <div class="sec-row" id="row3">
       <div class="panel-col">
@@ -259,8 +258,8 @@
     <p class="lede" style="margin-top:12px">The AASPI documentation is blunt about what these images are
       for: in general the output attributes are somewhat fuzzy and not very useful for human
       interpretation, and their role is to be input to clustering. Compare any of these panels with the
-      coherence of the first module set and the point makes itself — but a self-organizing map does not need
-      a crisp picture, it needs several measurements that disagree with each other in a consistent way.</p>
+      coherence of the first module set and the point makes itself. But a self-organizing map does not need
+      a crisp picture. It needs several measurements that disagree with each other in a consistent way.</p>
 
     <div class="stats">
       <div class="stat"><span>Attribute shown</span><b id="s4a">—</b></div>
@@ -297,7 +296,7 @@
     <p class="lede" style="margin-top:12px">The second panel takes the eight measures across the whole
       section and asks how many independent directions the cloud of points really has. If two or three
       components account for nearly all of the variance, then eight attributes carry two or three
-      attributes' worth of information — which does not make the other five useless, but does mean that
+      attributes' worth of information. That does not make the other five useless. It does mean that
       feeding all eight to a classifier is not feeding it eight things.</p>
 
     <div class="stats">
@@ -316,8 +315,8 @@
     </div>
     <p class="lede">Everything so far has been on a vertical section, which is the honest place to learn the
       arithmetic and the wrong place to use it. A texture attribute computed on a section is largely
-      measuring the pattern the <em>wavelet</em> makes: the strongest thing in any vertical window is the
-      peak-trough-peak of the wavelet itself, and that is why the Hilbert term of step 2 has to exist.</p>
+      measuring the pattern the <em>wavelet</em> makes. The strongest thing in any vertical window is the
+      peak-trough-peak of the wavelet itself, which is why the Hilbert term of step 2 has to exist.</p>
     <p class="lede">Sliced along a horizon, the same attribute is measuring the pattern the
       <em>geology</em> makes. Amplitude changes laterally because the rock changes laterally, and the
       texture of that change is the facies. This is how a GLCM volume normally gets looked at, and it is why
@@ -354,7 +353,7 @@
       makes the anisotropy visible rather than theoretical. The channel is banded across its axis and smooth
       along it, so a north-only matrix and an east-only matrix disagree about it by a large factor while
       they agree almost exactly on the background. Summing all four directions, which is what AASPI does,
-      buys an answer that does not depend on how the channel happens to be oriented — and gives up the
+      buys an answer that does not depend on how the channel happens to be oriented. It also gives up the
       ability to tell you that it is oriented at all.</span></p>
   </section>
 
@@ -479,8 +478,8 @@
   <section class="tabpane" id="pm" role="tabpanel" hidden>
     <details class="notes" open>
       <summary>Method, sources, and what has been simplified</summary>
-      <p>The co-occurrence matrices are built exactly as in module 04: the window is gathered along
-        structural dip, quantized against its own standard deviation with a 1.5σ clip, and all four
+      <p>The co-occurrence matrices are built exactly as in module 04. The window is gathered along
+        structural dip and quantized against its own standard deviation with a 1.5σ clip, and all four
         directions are counted with each pair added both ways round. The eight measures are then computed
         from those matrices with the formulas printed in steps 1 to 3, which are the forms given in the
         <span class="k">glcm3d</span> documentation.</p>
@@ -491,22 +490,22 @@
         applied here, and the difference it makes is small on a section with no strong amplitude
         gradient.</p>
       <p><b>Where this departs from AASPI.</b> Two dimensions rather than three. The maps use fewer gray
-        levels than the 33-level default — the slider tops out at 17 — because a map requires a matrix at
-        every sample and a sparse matrix produces a noisy map; the single-point matrices in module 04 use
-        the full 33. That is a real effect and not only a speed compromise: it is the same sparsity argument
+        levels than the 33-level default, and the slider tops out at 17. A map requires a matrix at every
+        sample, and a sparse matrix produces a noisy map. The single-point matrices in module 04 use the
+        full 33. That is a real effect and not only a speed compromise: it is the same sparsity argument
         module 04 makes, seen from the other side. AASPI computes fifteen measures in total, including
         Gao's randomness; the eight here are the ones the GUI offers as output volumes.</p>
       <p><b>The map view in step 6</b> is a synthetic amplitude extraction rather than a slice through a
-        computed volume: ng by ng bins carrying four facies, each given a texture rather than only a
+        computed volume. It is ng by ng bins carrying four facies, each given a texture rather than only a
         brightness, since a texture attribute cannot see brightness. The background varies slowly, the
         chaotic body is fine random speckle, the channel is banded across its axis and smooth along it, and
         the fault is a narrow dim lineament. The measures are computed on it exactly as they are on the
-        section, with a square window and the same four directions — which in map view are the four compass
+        section, with a square window and the same four directions. In map view those are the four compass
         directions, the sense Haralick originally defined them in. The window there is capped at 8 bins
         radius and the maps are computed every other bin, for speed.</p>
       <p>The redundancy analysis in step 5 standardizes each measure to zero mean and unit variance before
-        computing the correlation matrix and its eigenvalues, because the eight have wildly different units
-        and an unstandardized analysis would simply rank them by magnitude.</p>
+        computing the correlation matrix and its eigenvalues. The eight have wildly different units, and an
+        unstandardized analysis would simply rank them by magnitude.</p>
       <p>Every number quoted on this page is measured from the running page.</p>
       <ul>
         <li>AASPI, <em>Generating texture attributes: Program glcm3d</em>, University of Oklahoma — the
@@ -530,7 +529,7 @@
     <p class="eyebrow">Next up</p>
     <h3><a href="nonparallel.html">06 · Nonparallelism</a></h3>
     <p>The last of the four programs asks a question the others cannot: not whether the reflectors are
-      continuous or rough, but whether they are parallel to each other — which is what separates a chaotic
+      continuous or rough, but whether they are parallel to each other. That is what separates a chaotic
       package from a conformable one even when both are perfectly coherent.</p>
     <a class="btn" href="nonparallel.html">Open module 06 →</a>
     <a class="btn ghost" href="../index.html">All modules</a>

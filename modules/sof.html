@@ -27,7 +27,7 @@
     <h1>Filtering along structure: cleaning the data without flattening it</h1>
     <p class="sub">Averaging suppresses random noise. Averaging in the wrong direction also suppresses the
       reflectors. This module builds a noisy section, lets you run five different filters over it, and shows
-      what each one keeps and what it throws away — starting with the one decision that matters more than
+      what each one keeps and what it throws away. It starts with the one decision that matters more than
       the choice of filter: which direction to average in.</p>
   </div>
 
@@ -120,7 +120,7 @@
       where the reflector happens to be flat. Read at a time that shifts with the dip and you are averaging
       along the bed, which is correct everywhere.</p>
     <p class="lede">Both panels below use exactly the same mean filter, on the clean version of the model.
-      The noise sliders do nothing in this step on purpose: with no noise in the picture, anything the
+      The noise sliders do nothing in this step on purpose. With no noise in the picture, anything the
       filter removes is signal, and the only thing separating the two panels is which direction the window
       points.</p>
 
@@ -136,8 +136,8 @@
     </div>
 
     <p class="lede" style="margin-top:12px">On the flat part of the section the two are almost identical.
-      Wherever the beds dip — the flanks of the fold, and everything below the fault — the horizontal filter
-      is averaging across the wavelet instead of along it, so it cancels part of the reflection. That is not
+      Wherever the beds dip, on the flanks of the fold and everywhere below the fault, the horizontal
+      filter is averaging across the wavelet instead of along it, so it cancels part of the reflection. That is not
       noise suppression. That is throwing away signal, and the steeper the dip the more of it goes.</p>
 
     <div class="stats">
@@ -146,9 +146,8 @@
       <div class="stat"><span>Steepest dip away from the fault</span><b id="s1c">—</b></div>
       <div class="stat wide"><span>What this means</span><b id="s1d">—</b></div>
     </div>
-    <p class="legend prose"><span>Signal loss is the drop in RMS amplitude, measured only over the parts of
-      the section where the beds dip by more than about half a sample per trace, against the same region
-      before filtering. A number near zero means the filter left the reflection alone. Raise the fault
+    <p class="legend prose"><span>Signal loss is the drop in RMS amplitude against the same region before
+      filtering. It is measured only where the beds dip by more than about half a sample per trace. A number near zero means the filter left the reflection alone. Raise the fault
       throw to give it something steep to work with.</span></p>
   </section>
 
@@ -247,7 +246,7 @@
       <span class="hint">The only one that uses the whole 3D window</span>
     </div>
     <p class="lede">The four filters in step 3 look at one value per trace. This one looks at the whole
-      window — every trace, every sample in the vertical half-window — and asks a different question: what
+      window, every trace and every sample in the vertical half-window. It asks a different question. What
       single waveform, scaled differently on each trace, best explains all of them at once?</p>
     <p class="lede">That waveform is the first eigenvector of the covariance matrix between the traces. Each
       trace is then rebuilt as its own projection onto it. Anything the traces share survives; anything only
@@ -352,9 +351,9 @@
       <div class="stat"><span>Operations per output sample</span><b id="s6c">—</b></div>
       <div class="stat key wide"><span>What the taper buys</span><b id="s6d">—</b></div>
     </div>
-    <p class="lede" style="margin-top:12px">One further point that only matters on genuinely noisy data: if
-      the dip estimate was made on the unfiltered volume, it is itself noisy, and a second pass steered by a
-      bad dip field will smear along the wrong direction. AASPI's advice is to send the filtered volume back
+    <p class="lede" style="margin-top:12px">One further point matters only on genuinely noisy data. If the
+      dip estimate was made on the unfiltered volume then it is itself noisy, and a second pass steered by
+      a bad dip field will smear along the wrong direction. AASPI's advice is to send the filtered volume back
       through <span class="k">dip3d</span> before the next pass, so the dips improve along with the data.</p>
   </section>
 
@@ -470,16 +469,16 @@
         mean discards &alpha;(J&minus;1) values from each end of the sorted window and averages the rest, so
         &alpha; = 0 gives the mean and &alpha; = 0.5 gives the median. LUM replaces the center value only if
         it falls outside the trimmed range. The principal component filter builds the covariance matrix
-        between traces, takes its first eigenvector, and reconstructs each trace as its projection onto that
-        eigenvector; the Hilbert-transform term in the covariance is included, which is what makes the
+        between traces, takes its first eigenvector, and reconstructs each trace as its projection onto
+        that eigenvector. The Hilbert-transform term in the covariance is included, which is what makes the
         result insensitive to where the window sits on the wavelet.</p>
       <p><b>Where this departs from AASPI, and why.</b> This is a 2D section, so the window is a line of
         traces rather than a rectangle or ellipse of them, and there is no crossline dip. The first
         eigenvector is found by power iteration rather than by a full eigen-decomposition, which is enough
-        when only the dominant one is needed. The edge-preservation parameters that make production
-        structure-oriented filtering usable — the Kuwahara window search and the similarity thresholds
-        s<sub>low</sub>, s<sub>high</sub> and s<sub>center</sub> — are deliberately absent here so that
-        module 02 can introduce them against the damage they repair.</p>
+        when only the dominant one is needed. Three parameters make production structure-oriented filtering
+        usable: the Kuwahara window search and the similarity thresholds s<sub>low</sub>,
+        s<sub>high</sub> and s<sub>center</sub>. They are deliberately absent here, so that module 02 can
+        introduce them against the damage they repair.</p>
       <p>The cascading demonstration in step 6 uses the mean filter, because the effective-weight argument
         is exact for a linear filter and only approximate for the others.</p>
       <ul>

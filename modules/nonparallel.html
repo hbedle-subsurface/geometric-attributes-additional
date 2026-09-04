@@ -157,8 +157,8 @@
       &sigma;<sub>n</sub> = { &Sigma; e<sub>j</sub> &Sigma;<sub>k</sub> (n<sub>kj</sub> &minus;
         &mu;<sub>k</sub>)<sup>2</sup> / &Sigma; e<sub>j</sub> }<sup>1/2</sup></p>
     <p class="lede">The weights <i>e<sub>j</sub></i> are the energy, or RMS amplitude, at each point. That
-      weighting matters more than it looks: a dip estimate made where the reflection is weak is mostly
-      measuring noise, and without the weights those bad estimates would count as heavily as the good ones.
+      weighting matters more than it looks. A dip estimate made where the reflection is weak is mostly
+      measuring noise. Without the weights, those bad estimates would count as heavily as the good ones.
       Switch the weighting off in the header and watch the map get noisier where the amplitudes are
       low.</p>
 
@@ -193,16 +193,16 @@
       <span class="hint">The same statistic, applied to amplitude</span>
     </div>
     <p class="lede">The second attribute changes what is measured and keeps the arithmetic. Instead of the
-      dip vectors, it takes the lateral gradient of energy — how fast reflection strength is changing, and
-      in which direction — rotates it into the plane of the reflector, and measures how much that gradient
-      varies across the window.</p>
+      dip vectors it takes the lateral gradient of energy: how fast reflection strength is changing, and in
+      which direction. That gradient is rotated into the plane of the reflector. The attribute is then how
+      much it varies across the window.</p>
     <p class="lede">The rotation matters. An energy gradient measured on a steeply dipping reflector is
       partly an artifact of the dip: you are sampling the reflector obliquely. Dividing by
       (1 + p<sup>2</sup>)<sup>1/2</sup> removes that, so what is left is amplitude variation along the bed
       rather than variation caused by geometry.</p>
     <p class="lede">This one lights up boundaries rather than interiors. The edge of a salt body is where
-      reflection strength changes fastest, so that is where the gradient deviation peaks — and the middle of
-      the body, where the amplitudes are uniformly poor, can be quiet.</p>
+      reflection strength changes fastest, so that is where the gradient deviation peaks. The middle of the
+      body, where the amplitudes are uniformly poor, can be quiet.</p>
 
     <div class="sec-row" id="row3">
       <div class="panel-col">
@@ -235,9 +235,9 @@
       <span class="hint">A 2×2 matrix and its larger eigenvalue</span>
     </div>
     <p class="lede">The third attribute asks whether the two deviations vary together. The two are
-      normalized onto a common footing, arranged as a 2×2 covariance matrix, and the attribute is its larger
-      eigenvalue — the same device as the energy-ratio coherence of the first module set, applied to a much
-      smaller matrix.</p>
+      normalized onto a common footing and arranged as a 2×2 covariance matrix. The attribute is its larger
+      eigenvalue. That is the same device as the energy-ratio coherence of the first module set, applied to
+      a much smaller matrix.</p>
     <p class="lede">Because an eigenvalue responds to either input, this attribute lights up where dip is
       chaotic, where energy is changing fast, and most strongly where both happen at once. The AASPI
       documentation puts it plainly: the covariance expresses both the chaotic and the high-energy features,
@@ -293,7 +293,7 @@
     </div>
 
     <p class="lede" style="margin-top:12px">The channel is the interesting row. It is a dimming with no
-      structural expression whatsoever — the reflector runs straight through it — so the dip deviation has
+      structural expression whatsoever: the reflector runs straight through it. So the dip deviation has
       nothing to report, and only the attributes that look at amplitude find it. If you were mapping
       channels with dip deviation alone you would miss it entirely, and nothing in the map would tell you
       that you had.</p>
@@ -305,8 +305,8 @@
       <div class="stat key wide"><span>Dip deviation's response to the channel</span><b id="s5d">—</b></div>
     </div>
     <p class="legend prose"><span>Response is the mean attribute value over a feature minus the background
-      mean, divided by the spread of the attribute across the map, so that three attributes with different
-      units can be ranked against each other. Above about 0.3 the feature is visible on the map; below about
+      mean, divided by the spread of the attribute across the map. Scaling it that way is what lets three
+      attributes with different units be ranked against each other. Above about 0.3 the feature is visible on the map; below about
       0.1 the attribute cannot see it at all. Compare down a column to ask what one attribute finds; compare
       across a row to choose which attribute to compute.</span></p>
   </section>
@@ -416,27 +416,27 @@
   <section class="tabpane" id="pm" role="tabpanel" hidden>
     <details class="notes" open>
       <summary>Method, sources, and what has been simplified</summary>
-      <p>The model is a picked horizon in map view: a dome with regional dip and a gentle roll, a
-        sinuous normal fault, a circular chaotic body whose relief is scrambled by three superposed
-        patterns, and a sinuous channel that dims the reflection strength without touching the structure.
+      <p>The model is a picked horizon in map view. It carries four features on a regional dip: a dome with a
+        gentle roll, a sinuous normal fault, a circular chaotic body whose relief is scrambled by three
+        superposed patterns, and a sinuous channel. The channel dims the reflection strength without
+        touching the structure.
         Every point carries a label saying which of those it belongs to, which is what lets the response
         figures on the page be measured rather than judged by eye.</p>
       <p>Dip components <i>p</i> and <i>q</i> are central differences of the surface in meters per meter,
         and the energy is the square of the reflection strength with its own central-difference gradients.
         The three attributes are computed exactly as printed on the page: the energy-weighted scatter of the
         unit normals; the scatter of the dip-rotated energy gradient; and the larger eigenvalue of the 2×2
-        covariance matrix of the two, each normalized by its own median before being combined so that
-        neither dominates by virtue of its units.</p>
+        covariance matrix of the two. Before that third one combines them, each is normalized by its own
+        median, so that neither dominates by virtue of its units.</p>
       <p><b>Where this departs from AASPI.</b> The attribute is computed on one picked surface rather than
         volumetrically, so there is no vertical component to the analysis window and no vertical dip
-        variation; AASPI computes it in a 3D window along structural dip, and its analysis window defaults
+        variation. AASPI computes it in a 3D window along structural dip, and its analysis window defaults
         to double the one used in <span class="k">dip3d</span>. The dip components here come from
         differentiating a known surface rather than from a semblance scan, which makes them cleaner than
-        real ones — the noise slider adds scatter back to compensate, and the effect it has on the
-        speckliness of the result is the honest part of that trade. The normalization constants inside the
-        covariance are medians of the two deviations over the map; AASPI's are set differently, and the
-        choice affects the balance between the two contributions but not the character of the
-        result.</p>
+        real ones. The noise slider adds scatter back to compensate. What that scatter does to the
+        speckliness of the result is the honest part of the trade. The normalization constants inside the
+        covariance are medians of the two deviations over the map. AASPI's are set differently. The choice
+        affects the balance between the two contributions but not the character of the result.</p>
       <ul>
         <li>AASPI, <em>Measuring chaotic vs. conformal reflectors: Program nonparallelism</em>, University of
           Oklahoma — the three attributes, the Great South Basin and Gulf of Mexico examples, and the

@@ -172,8 +172,8 @@
 
     <p class="lede" style="margin-top:12px">Drag the analysis point onto the fault and watch the winner jump
       to one side. Drag it into the middle of a conformable package and the scores flatten out, because
-      every candidate window sees the same well-behaved data — which is the situation that
-      s<sub>center</sub> exists to handle, in step 4.</p>
+      every candidate window sees the same well-behaved data. That is the situation s<sub>center</sub>
+      exists to handle, in step 4.</p>
 
     <div class="stats">
       <div class="stat"><span>Candidate windows</span><b id="s2a">—</b></div>
@@ -232,13 +232,13 @@
     </div>
     <p class="lede">Most interpreters are surprised to learn how many processing parameters are chosen by
       eye rather than derived. These three are among them. The AASPI documentation describes the procedure
-      honestly: display coherence with a color bar, raise the lower limit until the real geologic edges are
-      the only things left at the bottom of the scale, raise the upper limit until the acquisition footprint
-      stops being visible, and read the two numbers off the color bar.</p>
+      honestly. Display coherence with a color bar. Raise the lower limit until the real geologic edges are
+      the only things left at the bottom of the scale, and raise the upper limit until the acquisition
+      footprint stops being visible. Then read the two numbers off the color bar.</p>
     <p class="lede">The histogram below is the same decision in one picture. The bulk of any coherence
       volume is a tall peak near one — that is the ordinary, conformable data, which is most of the
       section. The edges live in the thin tail on the left. s<sub>low</sub> and s<sub>high</sub> go in the
-      gap between the tail and the peak, and the honest reason for choosing a particular pair of values is
+      gap between the tail and the peak. The honest reason for choosing one pair of values over another is
       that the pictures on either side of them look right.</p>
 
     <div class="sec-row" id="row4">
@@ -255,7 +255,7 @@
 
     <p class="lede" style="margin-top:12px">s<sub>center</sub> is a different kind of parameter. It is not
       about edges at all — it is a brake on the Kuwahara search. Where coherence is already high there is no
-      edge to avoid, so letting the window wander off center serves no purpose and does real harm: the
+      edge to avoid, so letting the window wander off center serves no purpose and does real harm. The
       filter starts choosing a slightly different offset at every point, and the image acquires a blocky,
       patchy look in exactly the places you expected it to be smooth. Above s<sub>center</sub>, AASPI stops
       searching and uses the centered window.</p>
@@ -430,15 +430,15 @@
       <p>The model is the section of module 01 with a normal fault and band-limited random noise, built
         twice from the same seed so that a clean version exists to measure against. Dip comes from the
         semblance scan and is then median-filtered on its own grid, which is the short version of AASPI's
-        <span class="k">filter_dip_components</span>; without that step the dip estimate at the fault is
-        contaminated by the fault itself and the Kuwahara search reads from the wrong place. Coherence is
+        <span class="k">filter_dip_components</span>. Without that step the dip estimate at the fault is
+        contaminated by the fault itself, and the Kuwahara search reads from the wrong place. Coherence is
         the energy-ratio estimate of the first module set, computed along the filtered dip on the unfiltered
         section.</p>
       <p><b>The Kuwahara search.</b> Candidate windows are the 2J+1 lateral offsets that still contain the
-        analysis point, following the AASPI description for the mean, alpha-trimmed and LUM filters, which
-        act on the dipping plane and therefore only need lateral shifts. Each candidate is scored by the
-        semblance of the data it contains and the highest-scoring one wins, which is Marfurt's (2006)
-        variant; Luo et al.'s original scores by smallest standard deviation instead, and picks the same
+        analysis point. That follows the AASPI description for the mean, alpha-trimmed and LUM filters,
+        which act on the dipping plane and therefore only need lateral shifts. Each candidate is scored by
+        the semblance of the data it contains and the highest-scoring one wins, which is Marfurt's (2006)
+        variant. Luo et al.'s original scores by smallest standard deviation instead, and picks the same
         window nearly all the time. Where the coherence at the analysis point exceeds s<sub>center</sub>,
         the search is skipped and the centered window used, exactly as the documentation specifies.</p>
       <p><b>The weighting.</b> w = 0 below s<sub>low</sub>, w = 1 above s<sub>high</sub>, and
@@ -452,9 +452,9 @@
         component filters. The coherence volume is computed once on the unfiltered data rather than
         iterated, which is the simplification the "Why it matters" tab argues is the most consequential
         one.</p>
-      <p>The fault-width statistic is measured on the running page: coherence is extracted along a
-        horizontal line through the middle of the section, and the width is the number of traces whose
-        value falls below the halfway point between the fault minimum and the background median.</p>
+      <p>The fault-width statistic is measured on the running page. Coherence is extracted along a
+        horizontal line through the middle of the section. The width is the number of traces whose value
+        falls below the halfway point between the fault minimum and the background median.</p>
       <ul>
         <li>AASPI, <em>Structure-oriented filtering of poststack data: Program sof3d</em>, University of
           Oklahoma — the edge-preservation parameters, and the procedure for choosing them by eye.</li>

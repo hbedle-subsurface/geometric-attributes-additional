@@ -27,8 +27,8 @@
     <p class="eyebrow">Module 04 &nbsp;·&nbsp; Program glcm3d</p>
     <h1>The co-occurrence matrix: throwing the amplitudes away on purpose</h1>
     <p class="sub">Texture attributes begin with a step none of the others take. The amplitudes are
-      discarded and replaced by their rank on a scale of 33 levels, and then even the levels are discarded
-      in favor of a tally: how often does a sample at level <i>i</i> sit next to a sample at level <i>j</i>?
+      discarded and replaced by their rank on a scale of 33 levels. Then even the levels are discarded in
+      favor of a tally: how often does a sample at level <i>i</i> sit next to a sample at level <i>j</i>?
       That tally is a 33 by 33 table, and every texture attribute in the next module is one number squeezed
       out of it. This module builds the table.</p>
   </div>
@@ -156,9 +156,9 @@
       direction, read off the two levels <i>i</i> and <i>j</i>, and add one to the box at row <i>i</i>,
       column <i>j</i> of a table. Repeat for every sample and every direction. Divide the finished table by
       the total count so it sums to one, and that table is the gray-level co-occurrence matrix.</p>
-    <p class="lede">The matrix is symmetric because each pair is counted both ways round, and it is almost
-      entirely empty: on a 33-level matrix there are 1089 boxes and a small window has only a few hundred
-      pairs to put in them. Where those pairs land is the whole message.</p>
+    <p class="lede">The matrix is symmetric, because each pair is counted both ways round. It is also almost
+      entirely empty. A 33-level matrix has 1089 boxes, and a small window has only a few hundred pairs to
+      put in them. Where those pairs land is the whole message.</p>
 
     <div class="sec-row" id="row2">
       <div class="panel-col">
@@ -200,8 +200,8 @@
     </ul>
     <p class="lede">The three windows below are taken from different parts of the same section, and the
       fourth follows wherever you put the analysis point. The first and third are snapped onto a reflector
-      on purpose: quantization scales each window by its own standard deviation, so a window sitting in the
-      quiet gap between two reflectors is scaled by its own noise and reports the texture of that noise
+      on purpose. Quantization scales each window by its own standard deviation. So a window sitting in the
+      quiet gap between two reflectors is scaled by its own noise, and reports the texture of that noise
       rather than of the geology. That is not a quirk of the display — it is how these attributes behave,
       and it is worth knowing before you interpret a texture volume.</p>
 
@@ -231,9 +231,9 @@
       <div class="stat key"><span>Mean level step, where you are</span><b id="s3d">—</b></div>
     </div>
     <p class="legend prose"><span>The mean level step is the average distance between a sample's level and
-      its neighbor's, divided by the full scale, so it runs from 0 for a matrix entirely on the diagonal to
-      1 for one entirely in the corners. It is the crudest possible summary of the matrix, and it already
-      separates the three windows — which is a fair warning that the eight measures of the next module are
+      its neighbor's, divided by the full scale. It runs from 0 for a matrix entirely on the diagonal to 1
+      for one entirely in the corners. That is the crudest possible summary the matrix admits, and it
+      already separates the three windows — a fair warning that the eight measures of the next module are
       not eight independent pieces of information.</span></p>
   </section>
 
@@ -248,9 +248,9 @@
       sensitive to features that run one way — which is useful if you know the orientation you care about,
       and misleading if you do not. AASPI counts all four and adds them, so the answer does not depend on
       how the survey happens to be oriented.</p>
-    <p class="lede">Window size trades detail for reliability in the usual way, but with an extra twist that
-      matters here: a 33 by 33 matrix has 1089 boxes, and a window of 13 traces by 3 samples supplies only a
-      few hundred pairs. Most boxes are empty not because that combination cannot happen but because there
+    <p class="lede">Window size trades detail for reliability in the usual way, with one extra twist that
+      matters here. A 33 by 33 matrix has 1089 boxes, and a window of 13 traces by 3 samples supplies only
+      a few hundred pairs. Most boxes are empty not because that combination cannot happen but because there
       were not enough pairs to find out. Attributes computed on a sparse matrix are noisy, and entropy in
       particular is badly biased by it.</p>
 
@@ -345,7 +345,7 @@
         a classifier, what breaks the classifier is computing them with different settings on different
         parts of the survey, not choosing 25 levels rather than 33.</li>
       <li><b>The Hilbert transform is in there for a reason.</b> AASPI computes the matrix on the data and
-        on its Hilbert transform and adds them, which removes the dependence on where the analysis window
+        on its Hilbert transform and adds them. That removes the dependence on where the analysis window
         happens to sit on the wavelet — the same trick, and the same reason, as in the principal component
         filter of module 01.</li>
     </ul>
@@ -429,18 +429,18 @@
         that can be made chaotic, with an optional normal fault and band-limited random noise. Dip comes
         from the semblance scan of the first module set, and the analysis window is gathered along it with
         linear interpolation.</p>
-      <p><b>Quantization</b> follows the AASPI description: the standard deviation of the window is
-        computed, the range is set to plus and minus the clip factor times that standard deviation, and the
-        amplitudes are mapped linearly onto the integers 0 to L&minus;1 with zero amplitude at the middle
-        level. Anything outside the range is assigned the end level rather than discarded. <b>The
+      <p><b>Quantization</b> follows the AASPI description. The standard deviation of the window is
+        computed, and the range is set to plus and minus the clip factor times that standard deviation. The
+        amplitudes are then mapped linearly onto the integers 0 to L&minus;1, with zero amplitude at the
+        middle level. Anything outside the range is assigned the end level rather than discarded. <b>The
         matrix</b> counts every neighboring pair in the chosen directions, adds each pair in both
         orientations so that the result is symmetric, and divides by the total count.</p>
       <p><b>Where this departs from AASPI.</b> Two dimensions rather than three, so the four directions are
         the four in a section rather than the larger set available in a 3D window, and there is no crossline
         window radius. AASPI computes the matrix on the data <em>and</em> on its Hilbert transform and adds
-        the two, weighted by the RMS amplitude of each one-sample-thick slice within the analysis window;
-        the module computes the data matrix alone, which keeps the displays legible, and module 05 shows
-        what the Hilbert term changes. The vertical window here is three samples, matching the AASPI
+        the two, weighting each one-sample-thick slice within the analysis window by its RMS amplitude.
+        The module computes the data matrix alone, which keeps the displays legible. Module 05 shows what
+        the Hilbert term changes. The vertical window here is three samples, matching the AASPI
         default of one sample interval either side.</p>
       <p>Every number quoted on this page is measured from the running page. The matrices at 33 levels are
         computed at the analysis point only; the whole-section maps in module 05 use fewer levels for

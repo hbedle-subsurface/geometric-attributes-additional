@@ -100,9 +100,9 @@
     </div>
     <p class="lede">Take a small cube of data around the analysis point, gathered along the local dip, and
       multiply it point by point against a fixed set of 27 weights. That is the entire operator. The weights
-      are the pattern <b>1, &minus;2, 1</b> applied in all three directions, which is the standard recipe for
-      a second difference — the thing that measures how much a set of values <em>bends</em> rather than how
-      big they are or how fast they change.</p>
+      are the pattern <b>1, &minus;2, 1</b> applied in all three directions. That is the standard recipe for
+      a second difference, which measures how much a set of values <em>bends</em> rather than how big they
+      are or how fast they change.</p>
     <p class="lede">A second difference is zero on anything smooth. Feed it a flat surface and it returns
       zero; feed it a straight ramp and it still returns zero, because a ramp does not bend. Feed it
       something that goes up, down, up from one sample to the next and it returns a large number. That is
@@ -227,9 +227,9 @@
     <p class="lede">Neither attribute is silent at either feature, so the question worth asking is not
       whether each responds but which it responds to <em>more</em>. Coherence moves by roughly the same
       amount at the fault as it does in the chaotic package: it is a discontinuity detector and both are
-      discontinuities. Disorder moves several times further in the chaotic package than at the fault,
-      because the traces on either side of a fault are perfectly smooth — they are just at different times,
-      and a second difference has much less to say about that than about data that genuinely bends.</p>
+      discontinuities. Disorder moves several times further in the chaotic package than at the fault.
+      The traces on either side of a fault are perfectly smooth; they are just at different times. A second
+      difference has much less to say about that than about data that genuinely bends.</p>
     <p class="lede">That preference is the design, and it is what makes the attribute useful for the job in
       step 5. If you are asking which parts of a horizon you can trust, a fault is not the answer you want:
       your pick against a fault may be one of the best on the survey. What you want is the attribute that
@@ -258,8 +258,8 @@
       <div class="stat key wide"><span>What each attribute prefers</span><b id="s4e">—</b></div>
     </div>
     <p class="legend prose"><span>Coherence and disorder share neither units nor sense, so each is measured
-      against itself: the figures are how far the attribute moves at that feature as a percentage of its own
-      level in the quiet part of the section. An attribute that detects something moves a long way; one that
+      against itself. The figures are how far the attribute moves at that feature, as a percentage of its
+      own level in the quiet part of the section. An attribute that detects something moves a long way; one that
       ignores it barely moves at all.</span></p>
   </section>
 
@@ -416,22 +416,22 @@
         because they are separate problems and the attribute responds to them differently.</p>
       <p>Dip is the semblance scan of the first module set. The operator is gathered along that dip with
         linear interpolation, and the disorder at each sample is computed exactly as
-        |L&middot;e| / (‖L‖‖e‖ + &epsilon;) with L the 27-point stencil. The stencil is separable — it is
-        the outer product of [1, &minus;2, 1] with itself three times — which is why ‖L‖ works out to
+        |L&middot;e| / (‖L‖‖e‖ + &epsilon;) with L the 27-point stencil. The stencil is separable: it is
+        the outer product of [1, &minus;2, 1] with itself three times. That is why ‖L‖ works out to
         6<sup>3/2</sup> = 14.697, the figure quoted in step 1. The <span class="k">stat3d</span> stage is
         the standard deviation of the raw disorder over a window along dip, whose length is the slider.</p>
       <p><b>Where this departs from AASPI.</b> Two dimensions rather than three, so the operator is the
         nine-point 2D form of the same separable stencil rather than the full 27-point one, and there is no
-        crossline direction; the arithmetic and the behavior are identical, and step 1 draws all three planes
-        of the true 3D operator so that what is being simplified is visible. AASPI offers rectangular and
+        crossline direction. The arithmetic and the behavior are identical. Step 1 draws all three planes
+        of the true 3D operator, so that what is being simplified is visible. AASPI offers rectangular and
         elliptical analysis windows and a choice of window size for the <span class="k">stat3d</span> stage;
         here the window is a fixed-height strip whose width is the slider. The horizon tracker in step 5 is
-        a simple peak-follower rather than a production autopicker, which makes it fail earlier than a good
-        one would — the relationship it is used to demonstrate is unaffected.</p>
+        a simple peak-follower rather than a production autopicker, so it fails earlier than a good one
+        would. The relationship it is used to demonstrate is unaffected.</p>
       <p>The comparison in step 4 uses the energy-ratio coherence of the first module set. Both attributes
-        there are scaled by their own range across the section before the responses are compared, because
-        coherence and disorder have neither the same units nor the same sense, and quoting them against each
-        other unscaled would be meaningless.</p>
+        there are scaled by their own range across the section before the responses are compared. Coherence
+        and disorder have neither the same units nor the same sense, so quoting them against each other
+        unscaled would be meaningless.</p>
       <ul>
         <li>AASPI, <em>Computing volumetric estimates of the signal-to-noise ratio: Program disorder</em>,
           University of Oklahoma — the workflow, the two-stage computation, and the Gulf of Mexico and
