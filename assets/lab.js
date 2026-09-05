@@ -78,6 +78,11 @@ const LAB = (function () {
        spacingJitter   0-0.6, how uneven the reflector spacing is
        firstRefl       depth of the shallowest reflector, as a fraction of nt
        lastRefl        depth of the deepest one
+
+     Each horizon returned in `horizons` carries t, a depth in samples at every
+     trace, and cut, a flag marking the traces where the fault has removed that
+     reflector. t still holds a depth there - the depth of the plane - so
+     anything snapping a window to the nearest horizon still gets an answer.
        fold            relief of the fold, in samples
        foldWidth       how wide the fold is, as a fraction of the section. A
                        narrow fold gives steep flanks without translating the
@@ -138,8 +143,10 @@ const LAB = (function () {
        reflector spacing times the slope above. With reflectors two dozen
        samples apart the terminations land seven or eight traces apart with a
        flat segment of reflector between each pair, and the eye follows the
-       flat segments instead: stairs. The reflector series below is the fix,
-       not the dip. */
+       flat segments instead: stairs. Two things below fix that, and neither
+       is the dip: reflectors close enough together that the terminations join
+       into a line, and a block rule that puts each termination on the plane
+       instead of up-dip of it. */
     const DRAW_ASPECT = 1.0;                 // shape of the step panels, as drawn
     const fx0 = c.faultAt * nx;              // where it crosses mid-section
     const theta = Math.max(20, Math.min(90, c.faultDipDeg)) * Math.PI / 180;
@@ -148,6 +155,12 @@ const LAB = (function () {
     // the plane dips toward increasing trace, so the hanging wall on the right
     // is the side that drops - an ordinary normal fault
     const faultXAt = (z) => fx0 + faultSlope * (z - nt / 2);
+    /* The same plane read the other way: the depth at which it crosses a given
+       trace. The plane runs down toward increasing trace, so a point is on the
+       right-hand side of it exactly when it is shallower than this. The
+       right-hand side is the hanging wall, and the hanging wall is what
+       drops. */
+    const tCross = (ix) => nt / 2 + (ix - fx0) / faultSlope;
     const fx = Math.round(fx0);
 
     /* THE REFLECTORS
@@ -215,6 +228,8 @@ const LAB = (function () {
     }
     for (let h = 0; h < base.length; h++) {
       const t = new Float32Array(nx);
+      // 1 where the fault has removed this reflector from this trace
+      const cut = new Uint8Array(nx);
       const inChaosPkg = base[h] >= c.chaosTop * nt && base[h] <= c.chaosBot * nt;
       for (let ix = 0; ix < nx; ix++) {
         const u = ix / (nx - 1);
@@ -225,13 +240,23 @@ const LAB = (function () {
           - c.fold * grow * Math.exp(-Math.pow((u - 0.42) / c.foldWidth, 2))
           + 10 * grow * (u - 0.5);
         if (c.throw) {
-          /* Which side of the plane this point sits on, decided at the
-             undisplaced depth. The transition is spread over about one trace
-             rather than snapped to the nearest one, so the boundary lands
-             between traces where it should and the plane reads as straight
-             instead of stepped. */
-          const d = ix - faultXAt(z);
-          z += c.throw * clamp(d / 1.0 + 0.5, 0, 1);
+          /* The hanging wall moves as a rigid body, so a reflector belongs to
+             it only if its position AFTER the throw is still on the hanging-
+             wall side of the plane, and to the footwall only if its position
+             BEFORE the throw is already on the other side. A reflector that
+             fails both tests is not in either block: the fault has cut it out.
+
+             That missing interval is what keeps the fault trace straight, and
+             leaving it out is what bent it. Deciding the side at the
+             undisplaced depth alone puts every hanging-wall termination
+             up-dip of where the plane actually is by throw times the slope,
+             so the terminations zigzag across the plane instead of lying on
+             it. A normal fault omits section; this is that omission. */
+          const tc = tCross(ix);
+          const moved = z + c.throw;
+          if (moved < tc) z = moved;             // dropped with the hanging wall
+          else if (z <= tc) { cut[ix] = 1; z = tc; }   // cut out by the fault
+          // else: footwall, and it stayed where it was
         }
         if (inChaosPkg && c.chaos > 0) {
           // reflectors in a chaotic package wander: three wavelengths of
@@ -242,7 +267,7 @@ const LAB = (function () {
         }
         t[ix] = z;
       }
-      HZ.push({ t: t, rc: RC[h], chaotic: inChaosPkg });
+      HZ.push({ t: t, cut: cut, rc: RC[h], chaotic: inChaosPkg });
     }
 
     // --- reflectivity, then the trace ------------------------------------
@@ -262,6 +287,7 @@ const LAB = (function () {
           const inside = 1 / (1 + Math.exp((d - 13) / 2.2));
           r *= 1 - c.channel * inside;
         }
+        if (HZ[h].cut[ix]) continue;   // the interval the fault removed
         spikes.push({ t: HZ[h].t[ix] * c.dt, r: r });
       }
       f.set(SEIS.traceFromSpikes(spikes, 0, c.dt, nt, wav), ix * nt);
@@ -306,6 +332,8 @@ const LAB = (function () {
       // and where it crosses any given sample, for anything that should not
       // pretend a dipping plane sits at one trace
       faultXAt: faultXAt,
+      // and the reverse, the depth at which it crosses a given trace
+      tCross: tCross,
       faultSlope: faultSlope,
     };
   }
@@ -768,6 +796,120 @@ const LAB = (function () {
   }
 
   /** Drag anywhere on a canvas to move the analysis point. */
+  /* =======================================================================
+     PHYSICAL UNITS
+
+     Every attribute in this set is defined by a window, and the size a window
+     should be is a physical question rather than a question about arrays. Six
+     traces means nothing on its own; six traces at a 12.5 m bin is 75 m of
+     ground, and whether that is the right answer depends on how big the
+     feature being looked for is. The models are built in samples and traces
+     because that is what the arithmetic needs, so the conversion has to be
+     carried somewhere, and carrying it here keeps every module quoting the
+     same numbers.
+
+     Two constants do the work. The interval velocity converts two-way time to
+     thickness, halving it on the way because seismic time is two-way. The bin
+     spacing converts traces to distance along the line.
+     ======================================================================= */
+
+  function physics(cfg) {
+    const c = Object.assign({ dt: 0.002, v: 2800, bin: 12.5, freq: 30 }, cfg || {});
+    const U = () => SEIS.UNITS[c.units || 'm'];
+    const P = {
+      dt: c.dt, v: c.v, bin: c.bin, freq: c.freq,
+      // a count of samples, as two-way time in ms
+      ms: (n) => n * c.dt * 1000,
+      // the same count as a thickness of rock
+      thick: (n) => n * c.dt * c.v / 2,
+      // a count of traces, as distance along the line
+      across: (n) => n * c.bin,
+      // dominant wavelength, and the two resolution numbers that follow it
+      lambda: () => c.v / c.freq,
+      quarter: () => c.v / c.freq / 4,
+      eighth: () => c.v / c.freq / 8,
+      // a quarter wavelength expressed back in samples, which is the number a
+      // throw slider has to be read against
+      quarterSamples: () => (1 / c.freq) / 4 / c.dt,
+      setUnits: (u) => { c.units = u; },
+      // trace spacing is a survey parameter, so a module that lets a reader
+      // change it has to be able to change it here too
+      setBin: (b) => { c.bin = b; P.bin = b; },
+      unitLabel: () => U().lab,
+      // format a length, converting to the display unit
+      len: (m, d) => (m * U().len).toFixed(d === undefined ? 0 : d) + ' ' + U().lab,
+      vel: () => Math.round(c.v * U().vel) + ' ' + U().vlab,
+    };
+    return P;
+  }
+
+  /* =======================================================================
+     THE UTILITY BAR
+
+     Four things every module should offer and none of them did: a link that
+     reproduces the exact setup on screen, the section as a PNG, a way back to
+     the defaults, and a way to redraw the geology without changing any
+     setting. The last one matters most. A student who measures a separation
+     between two attributes on one model has measured it on one model; the
+     reroll is what turns that into a claim about the attributes rather than
+     about seed 21.
+     ======================================================================= */
+
+  function utilityBar(opts) {
+    const o = opts || {};
+    const host = $(o.into || 'utilbar');
+    if (!host) return;
+    const mk = (id, label, ghost) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn small' + (ghost === false ? '' : ' ghost');
+      b.id = id; b.textContent = label;
+      host.appendChild(b);
+      return b;
+    };
+    if (o.onReroll) {
+      mk('rerollBtn', o.rerollLabel || 'New stratigraphy', false)
+        .addEventListener('click', o.onReroll);
+    }
+    if (location.protocol !== 'file:') {
+      mk('copyBtn', 'Copy link to this setup')
+        .addEventListener('click', function () { SEIS.copyLink(this); });
+    }
+    if (o.canvas) {
+      mk('pngBtn', 'Save the section as PNG')
+        .addEventListener('click', () => SEIS.savePNG($(o.canvas), o.pngName || 'section'));
+    }
+    if (o.onReset) {
+      mk('resetBtn', 'Reset').addEventListener('click', o.onReset);
+    }
+    if (o.onUnits) {
+      const wrap = document.createElement('div');
+      wrap.className = 'ctl';
+      wrap.innerHTML = '<label for="unitsSel">Units</label>'
+        + '<select id="unitsSel"><option value="m">Meters</option>'
+        + '<option value="ft">Feet</option></select>';
+      host.appendChild(wrap);
+      const sel = wrap.querySelector('select');
+      sel.value = o.units || 'm';
+      sel.addEventListener('change', () => o.onUnits(sel.value));
+    }
+  }
+
+  /** Reset a state object to its defaults, clear the URL, and redraw. */
+  function resetState(S, DEF, after) {
+    Object.keys(DEF).forEach((k) => { S[k] = DEF[k]; });
+    try {
+      history.replaceState(null, '', location.pathname);
+    } catch (e) { /* file:// */ }
+    Object.keys(S).forEach((k) => {
+      const el = document.querySelector('[data-key="' + k + '"]');
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = !!S[k];
+      else el.value = S[k];
+    });
+    after();
+  }
+
   function attachProbe(canvasId, toGrid) {
     const c = $(canvasId);
     if (!c) return;
@@ -795,5 +937,6 @@ const LAB = (function () {
     gatherTraces, gatherPlane,
     panelWidth, rowWidth, imageInto, colorbar, squareMap, gridToXY, marker,
     windowOutline, setupTabs, bindControls, attachProbe, put, clamp,
+    physics, utilityBar, resetState,
   };
 })();
