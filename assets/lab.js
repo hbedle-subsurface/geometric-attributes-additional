@@ -381,65 +381,167 @@ const LAB = (function () {
      disagree about.
      ======================================================================= */
 
+  /* =======================================================================
+     A MAP-VIEW SLICE
+
+     Four facies on one amplitude extraction: conformable background, a chaotic
+     body, a channel, and a fault lineament. The point of the map is that the
+     four are close to the same brightness, so amplitude alone will not
+     separate them and something has to be said about their texture instead.
+
+     Everything here is built out of correlated random fields rather than out
+     of white noise, and that is not decoration. Uncorrelated noise has the
+     same statistics at every lag, so a body made of it is not a facies, it is
+     the noise slider drawn inside a circle. Real chaotic intervals are made of
+     blocks and clasts at some size, and the thing that separates a chaotic
+     facies from noisy data on real seismic is that the chaos has a scale and
+     the noise does not. A model in which the two are identical cannot teach
+     the distinction that matters most.
+     ======================================================================= */
+
+  /* Value noise: random numbers on a coarse lattice, smoothly interpolated
+     between. cell is the lattice spacing in bins, so it sets the size of the
+     features. Two or three of these at different cell sizes give a field that
+     looks like rock rather than like static. */
+  function valueField(rnd, ng, cell) {
+    const nc = Math.ceil(ng / cell) + 3;
+    const g = new Float32Array(nc * nc);
+    for (let i = 0; i < nc * nc; i++) g[i] = rnd() * 2 - 1;
+    return { nc: nc, cell: cell, g: g };
+  }
+
+  function fieldAt(V, x, y) {
+    const fx = x / V.cell + 1, fy = y / V.cell + 1;
+    const i0 = Math.floor(fx), j0 = Math.floor(fy);
+    // smoothstep, so the interpolation has no visible lattice creases
+    const ex = fx - i0, ey = fy - j0;
+    const tx = ex * ex * (3 - 2 * ex), ty = ey * ey * (3 - 2 * ey);
+    const at = (i, j) => V.g[clamp(j, 0, V.nc - 1) * V.nc + clamp(i, 0, V.nc - 1)];
+    const a = at(i0, j0) * (1 - tx) + at(i0 + 1, j0) * tx;
+    const b = at(i0, j0 + 1) * (1 - tx) + at(i0 + 1, j0 + 1) * tx;
+    return a * (1 - ty) + b * ty;
+  }
+
   function buildSlice(cfg) {
     const c = Object.assign({
       ng: 72, bin: 25, seed: 5, noise: 0.10,
-      chaosR: 0.17, chaos: 1, channel: 1, fault: 1,
+      chaosR: 0.19, chaos: 1, channel: 1, fault: 1,
     }, cfg || {});
     const ng = c.ng, N = ng * ng;
     const rnd = SEIS.mulberry32(c.seed);
     const a = new Float32Array(N);
     const facies = new Uint8Array(N);
 
-    const bcx = ng * 0.64, bcy = ng * 0.66;      // the chaotic body
+    // background fabric, two scales; chaotic interior; and a field used only
+    // to make the outline of the chaotic body irregular
+    const Vb1 = valueField(rnd, ng, 7.0);
+    const Vb2 = valueField(rnd, ng, 3.2);
+    const Vb3 = valueField(rnd, ng, 1.5);
+    const Vc1 = valueField(rnd, ng, 3.6);
+    const Vc2 = valueField(rnd, ng, 1.8);
+    const Vr = valueField(rnd, ng, 5.0);
+    const Vk = valueField(rnd, ng, 4.0);      // irregularity in the channel bars
+
+    const bcx = ng * 0.64, bcy = ng * 0.66;   // the chaotic body
+    const faultXAtY = (y) => ng * 0.86 + 4 * Math.sin(y * 0.10);
+    const SLIP = 3.2;                          // bins of apparent offset
+
+    /* Conformable background: a long-wavelength structural component with a
+       shorter-wavelength depositional fabric on top of it. The fabric is what
+       stops the background from being perfectly predictable, which it was in
+       an earlier version of this model and which made every anomaly separable
+       by construction. */
+    function background(x, y) {
+      const u = x / (ng - 1), v = y / (ng - 1);
+      return 0.55
+        + 0.09 * Math.sin(2 * Math.PI * 1.15 * u + 0.6)
+        + 0.06 * Math.cos(2 * Math.PI * 0.85 * v - 0.3)
+        + 0.035 * Math.sin(2 * Math.PI * 0.6 * (u + v))
+        + 0.055 * fieldAt(Vb1, x, y)
+        + 0.042 * fieldAt(Vb2, x, y)
+        + 0.125 * fieldAt(Vb3, x, y);
+    }
+
     for (let iy = 0; iy < ng; iy++) {
       for (let ix = 0; ix < ng; ix++) {
         const i = iy * ng + ix;
-        const u = ix / (ng - 1), v = iy / (ng - 1);
 
-        // conformable background: low wavenumber, so neighbors agree
-        let amp = 0.55
-          + 0.13 * Math.sin(2 * Math.PI * 1.15 * u + 0.6)
-          + 0.09 * Math.cos(2 * Math.PI * 0.85 * v - 0.3)
-          + 0.05 * Math.sin(2 * Math.PI * 0.6 * (u + v));
+        /* The fault first, because it moves the rock. A fault on a horizon
+           slice juxtaposes one part of the section against another, so the
+           amplitude pattern on the far side is displaced rather than merely
+           dimmed. Sampling the background at a shifted position on one side
+           is that displacement. Dimming alone, which is what this model used
+           to do, makes a fault a dark line drawn over an undisturbed map. */
+        const fx = faultXAtY(iy);
+        const shifted = c.fault > 0 && ix > fx;
+        let amp = background(ix, shifted ? iy + SLIP : iy);
 
-        // a channel running roughly east-west, banded across its axis
+        // a channel, meandering, with accretion banding across its axis
         if (c.channel > 0) {
-          const cy = ng * (0.26 + 0.085 * Math.sin(u * 6.5));
-          const d = Math.abs(iy - cy) / (ng * 0.055);
-          if (d < 1) {
+          const u = ix / (ng - 1);
+          const cy = ng * (0.26 + 0.035 * Math.sin(u * 6.5) + 0.012 * Math.sin(u * 15.7 + 1.1));
+          const halfW = ng * 0.060 * (1 + 0.22 * Math.sin(u * 9.1 + 0.4));
+          const d = (iy - cy) / halfW;
+          if (Math.abs(d) < 1) {
             facies[i] = 2;
-            // bright, with bars across the channel: fast variation in y,
-            // slow in x, which is what makes it anisotropic
-            amp = 0.72 + 0.24 * c.channel * Math.sin(iy * 2.3 + ix * 0.05)
-                       + 0.05 * Math.sin(ix * 0.17);
+            /* Bars are set by distance across the axis, sheared along it so
+               they sit oblique rather than square, and spaced irregularly.
+               The spacing is about four bins, which at 25 m is a hundred
+               metres and is a plausible size for accretion sets. An earlier
+               version banded the channel at a period of under three bins,
+               close to the sampling limit of the grid, which gave a directional
+               contrast ratio near seven. That number was a property of the
+               sinusoid rather than of the channel. With bars at a realistic
+               spacing and a sinuous outline the ratio is closer to two, and
+               most of what remains comes from the margins of the channel
+               rather than from the bars inside it. */
+            const phase = d * 2.2 + (ix / (ng - 1)) * 4.0 + 0.55 * fieldAt(Vk, ix, iy);
+            const bar = Math.sin(phase * Math.PI);
+            // gradational margins, so the edge is not a cliff
+            const taper = Math.min(1, (1 - Math.abs(d)) * 3.2);
+            const fill = 0.76 + 0.17 * c.channel * bar + 0.04 * Math.sin(ix * 0.17);
+            amp = amp * (1 - taper) + taper * fill;
           }
         }
 
-        // the chaotic body: fine speckle, no organization at all
+        // the chaotic body: correlated at the scale of a block, with a ragged
+        // outline and a few brighter clasts in it
         if (c.chaosR > 0) {
-          const r = Math.hypot(ix - bcx, iy - bcy) / (c.chaosR * ng);
+          const th = Math.atan2(iy - bcy, ix - bcx);
+          const wobble = 1 + 0.20 * fieldAt(Vr, ix, iy) + 0.07 * Math.sin(th * 3.1);
+          const r = Math.hypot(ix - bcx, iy - bcy) / (c.chaosR * ng * wobble);
           if (r < 1) {
             facies[i] = 1;
-            const edge = Math.min(1, (1 - r) * 4);   // soften the rim slightly
-            amp = amp * (1 - edge) + edge * (0.50 + 0.42 * c.chaos * (rnd() * 2 - 1));
+            const edge = Math.min(1, (1 - r) * 4);
+            let ch = 0.52
+              + 0.26 * fieldAt(Vc1, ix, iy)
+              + 0.20 * fieldAt(Vc2, ix, iy);
+            // clasts: a few small bright blocks, which is what makes a
+            // chaotic interval chaotic rather than merely noisy
+            const k = fieldAt(Vc2, ix + 31, iy + 17);
+            if (k > 0.55) ch += 0.20;
+            amp = amp * (1 - edge) + edge * (0.5 + (ch - 0.5) * c.chaos);
           }
         }
 
-        // a fault: a narrow dim lineament running roughly north-south
-        if (c.fault > 0) {
-          const fx = ng * 0.86 + 4 * Math.sin(iy * 0.10);
-          if (Math.abs(ix - fx) < 1.1) { facies[i] = 3; amp *= 1 - 0.6 * c.fault; }
+        // the lineament itself: poor data along the plane
+        if (c.fault > 0 && Math.abs(ix - fx) < 1.1) {
+          facies[i] = 3;
+          amp *= 1 - 0.6 * c.fault;
         }
 
         a[i] = amp;
       }
     }
+
+    /* Acquisition noise, added last and uncorrelated, which is the whole
+       difference between it and the chaotic body above. */
     if (c.noise > 0) {
       for (let i = 0; i < N; i++) a[i] += c.noise * 0.30 * (rnd() * 2 - 1);
     }
     return { ng: ng, bin: c.bin, a: a, facies: facies };
   }
+
 
   /* =======================================================================
      THE HORIZON MODEL
