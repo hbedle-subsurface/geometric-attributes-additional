@@ -48,8 +48,8 @@
               <input type="range" data-key="noise" id="noise" min="0" max="60" step="4" value="12">
             </div>
             <div class="ctl">
-              <label for="thr">Fault throw <span class="val" id="thrV">14 samples</span></label>
-              <input type="range" data-key="thr" id="thr" min="0" max="20" step="1" value="14">
+              <label for="thr">Fault throw <span class="val" id="thrV">10 samples</span></label>
+              <input type="range" data-key="thr" id="thr" min="0" max="10" step="1" value="10">
             </div>
             <div class="ctl">
               <label for="half">Window radius <span class="val" id="halfV">3 traces</span></label>
@@ -533,7 +533,7 @@
   const MODES = ['none', 'Kuwahara windows', 'coherence weighting', 'both'];
 
   const DEF = {
-    noise: 12, thr: 14, half: 3, mode: 3, slow: 40, shigh: 55, scen: 90,
+    noise: 12, thr: 10, half: 3, mode: 3, slow: 40, shigh: 55, scen: 90,
     px: 66, pt: 70, tab: 'p1',
   };
   let S = SEIS.readState(DEF);
