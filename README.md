@@ -1,8 +1,9 @@
 # More Geometric Attributes, and How They Actually Work
 
-Interactive teaching modules on four further AASPI geometric attribute
-programs, built for the School of Geosciences at the University of Oklahoma
-with the [AASPI](https://www.ou.edu/mcee/labs/aaspi) consortium.
+Six interactive modules on four AASPI geometric attribute programs, written for
+undergraduate geology and geophysics students at the School of Geosciences,
+University of Oklahoma, with the [AASPI](https://www.ou.edu/mcee/labs/aaspi)
+consortium.
 
 Live at **https://hbedle-subsurface.github.io/geometric-attributes-additional/**
 
@@ -13,13 +14,35 @@ programs that sit alongside those: the filtering that usually runs before them,
 and three attributes that measure things coherence and curvature were never
 built to see.
 
-Every module builds a small synthetic model in the browser, computes a real
-attribute on it, and lets the reader change the parameters that are normally
-left at their defaults. There is no server and no build step. Nothing that
-happens inside a module leaves the browser; the only thing recorded is that a
-page was opened (see *Page-view counting* below).
-
 ---
+
+## What a student does here
+
+An attribute is normally met as a volume that already exists. Someone else ran
+the program, someone else chose the window, and the map either shows the fault
+or it does not. These modules invert that. Each one builds a small synthetic
+model in the browser, computes a real attribute on it, and hands over the
+parameters that are usually left at their defaults — the window size, the number
+of gray levels, the clip, the dip steering, the amount of noise.
+
+The model is synthetic on purpose. Because the answer is known, a reader can see
+what an attribute does to a feature that is definitely there, and what it does
+to one that is not. A reroll button rebuilds the stratigraphy at the same
+settings, which is how a reader checks whether a separation they just found is a
+property of the attribute or of one particular random seed.
+
+Every module is a sequence of numbered steps, each with its own panels and
+readouts, followed by four reference tabs:
+
+- **Why it matters** — where the attribute earns its place on real data.
+- **Exercises** — tasks with a stated purpose and a hint, worked on the page.
+- **Key points** — what to carry away.
+- **Method** — the equations as implemented, the sources, and a plain statement
+  of where this simplifies or departs from a production volume.
+
+No installation, no account, no login. A module page opens from a link and runs.
+It works on a phone, though a laptop is easier for the panels that sit side by
+side.
 
 ## The modules
 
@@ -32,80 +55,73 @@ page was opened (see *Page-view counting* below).
 | 05 | `modules/textures.html` | `glcm3d` | The eight Haralick measures, how few of them are independent, and how they read on a horizon slice |
 | 06 | `modules/nonparallel.html` | `nonparallelism` | Deviation of vector dip, deviation of energy gradient, and their covariance |
 
-01 and 02 are a pair, and so are 04 and 05 — the second of each opens by
-undoing a problem the first one leaves behind. Everything from 02 onward
-assumes a dip field and a coherence volume exist, which the first module set
-covers. Each module links to the next and to the previous one at the foot of
-its reference tabs, so the set can be walked through without returning to the
-index.
+## Using these in a course
 
-**Shareable links.** Every slider and toggle is written into the querystring as
-it moves, so the address bar always holds the current configuration of the
-module. Copying it from the address bar hands someone the exact setup, which is
-the intended way to distribute a worked example. There is no copy button; the
-URL is the feature.
+**Order and prerequisites.** 01 and 02 are a pair, and so are 04 and 05 — the
+second of each opens by undoing a problem the first one leaves behind, so
+assigning one without the other leaves a reader with half an argument. 03 and 06
+stand alone and can be dropped into a week on fault and facies interpretation
+without the others. Everything from 02 onward assumes a dip field and a
+coherence volume exist, which the first module set covers; a class that has not
+met dip and coherence should start there.
 
-## Page-view counting
+**Time.** A module is roughly a lab period if the exercises are worked, and
+fifteen or twenty minutes if the steps are read through without them. Each
+module links to the next and to the previous at the foot of its reference tabs,
+so a set can be walked without returning to the index.
 
-`assets/count.js` records that a page was opened, and nothing about what happened
-on it. What it sends, once per page load: the page path, the page title, the
-referrer, the screen size, and the browser's user-agent string. It is loaded
-by every page — `assets/count.js` from the root, `../assets/count.js` from
-`modules/` — as the first script at the foot of the body. `ADD-COUNTING.md`
-carries the full procedure and is identical to the copy in the other
-repositories.
+**Handing out a worked example.** Every slider and toggle is written into the
+querystring as it moves, so the address bar always holds the current
+configuration. Copy it and you have handed someone the exact setup — a fault
+throw, a window size and a clip that make a particular point. That is the
+intended way to distribute a problem, to put a starting state in a lab handout,
+or to ask a class to explain what they are looking at. There is no copy button;
+the address bar is where the state lives.
 
-Counts go to GoatCounter under the account code `hbedle`, shared with the other
-teaching repositories served from `hbedle-subsurface.github.io`; the path
-distinguishes them, so every module gets its own row at
-https://hbedle.goatcounter.com. No cookie is set and no identifier is stored.
+**Reading a task while working the controls.** The exercises pop out into a
+separate window, so a student can keep the task in view rather than tabbing back
+and forth to it.
 
-The script does not count `file://`, `localhost` or `127.0.0.1`, and honors Do
-Not Track. If it fails to load the page carries on unchanged. **Do not modify
-those guards, do not add event tracking** — counting page loads is a visitor
-log, counting slider moves is watching someone work, and it would contradict
-what the site tells people it does — and do not add a second analytics tool.
+**What the exercises are asking for.** They are written to be worked, not looked
+up. Each states why it is worth doing, and the hints describe what should happen
+rather than quoting a number: one error lower than both of its end members, a
+figure several times another, a matrix mostly empty. A student who reports a
+reading that contradicts the hint has either found a real disagreement or
+misread a control, and both are worth the conversation.
 
-## Sources
+## What is simplified, and what that costs
 
-The definitions follow the AASPI program documentation for `sof3d`,
-`disorder`, `glcm3d` and `nonparallelism`, together with the published
-literature — Kuwahara et al. (1976), Fehmers and Höcker (2003), Luo et al.
-(2002), Marfurt (2006), Haralick et al. (1973), Barnes (2000), Al-Dossary et
-al. (2014), Gao (2011), Qi et al. (2014). Every module's **Method** tab lists
-its own sources and states plainly where the implementation simplifies or
-departs from a production volume.
+The definitions follow the AASPI program documentation for `sof3d`, `disorder`,
+`glcm3d` and `nonparallelism`, together with the published literature — Kuwahara
+et al. (1976), Fehmers and Höcker (2003), Luo et al. (2002), Marfurt (2006),
+Haralick et al. (1973), Barnes (2000), Al-Dossary et al. (2014), Gao (2011), Qi
+et al. (2014). Every module's **Method** tab lists its own sources.
 
-The largest departure, and it is the same one in all six: these are two
-dimensional. There is no crossline direction, so analysis windows are lines of
-traces rather than rectangles or ellipses of them, and the one map-view module
-works on a single picked surface rather than volumetrically. Every module says
-this in its own Method tab and names what specifically is lost.
+The largest departure is the same one in all six: these are two dimensional.
+There is no crossline direction, so analysis windows are lines of traces rather
+than rectangles or ellipses of them, and the one map-view module works on a
+single picked surface rather than volumetrically. Every module says this in its
+own Method tab and names what specifically is lost, so a student who moves on to
+a production volume knows which of these numbers will not carry across.
 
-## Numbers in the exercise hints
+Two implementation choices in particular differ from a common reading of the
+documentation, and are flagged in the Method tabs: the texture quantization
+scale is an RMS taken about zero amplitude rather than a standard deviation
+about the window mean, and the nonparallelism cross term is built from a
+magnitude, so it cannot report anti-correlation.
 
-The hints describe what the readouts do rather than quoting them to four
-decimal places. A hint says one error is lower than both of its end members, or
-that a figure is several times another, or that a matrix is mostly empty — not
-that it reads 0.0528.
-
-The reason is maintenance. Change a default window, a noise seed or a model
-constant and every quoted decimal somewhere in the set becomes wrong, silently,
-with nothing to catch it. Relative statements survive that; exact ones do not.
-
-Exact figures are still used where the arithmetic guarantees them and no model
-constant can move them: the number of boxes in an L-level co-occurrence matrix,
-the number of pairs a window of a given size supplies, the norm of the disorder
-stencil, and the identity between the alpha-trimmed mean at its two end settings
-and the mean and the median. Those are properties of the definitions.
-
-## License and citation
+## Citing and reusing
 
 *More Geometric Attributes, and How They Actually Work* © 2026 by Heather Bedle
 and April Moreno-Ward is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 Share it and adapt it for any purpose, including commercially, provided you
 credit the source, link to the license, indicate any changes, and license what
 you build under the same terms. Full text in [`LICENSE`](LICENSE).
+
+Instructors are welcome to assign these directly, translate them, cut them into
+a course pack, or take a single step out of a module and put it in a lecture.
+Nothing needs to be asked for. The ShareAlike condition is there so that what
+gets built on top stays as available as this is.
 
 To cite: H. Bedle and A. Moreno-Ward, *More Geometric Attributes, and How They
 Actually Work*, University of Oklahoma,
@@ -118,5 +134,53 @@ Actually Work*, University of Oklahoma,
 A companion working paper describing the design of this set, its verification
 and its limitations is in preparation and will be linked here.
 
-Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of
-Geosciences, University of Oklahoma, with the AASPI consortium.
+---
+
+## Notes for whoever maintains this
+
+There is no server, no build step and no package manifest. A module page opens
+directly from disk or is served as a static file, and it runs.
+
+**Files.** One landing page, six module pages, six shared JavaScript files and
+one stylesheet. `count.js`, `popout.js`, `seismic.js` and `attributes.js` are
+held in common with the companion sets and are identical across the
+repositories — fix a bug in one and copy it to the others. `extra.js` and
+`lab.js` are specific to this set.
+
+**Page-view counting.** `assets/count.js` records that a page was opened and
+nothing about what happened on it: page path, page title, referrer, screen size
+and user-agent string, once per load. Counts go to GoatCounter under the account
+code `hbedle`, shared with the other teaching repositories served from
+`hbedle-subsurface.github.io`; the path distinguishes them, so every module gets
+its own row at https://hbedle.goatcounter.com. No cookie is set and no
+identifier is stored. `ADD-COUNTING.md` carries the full procedure and is
+identical to the copy in the other repositories.
+
+The script skips `file://`, `localhost` and `127.0.0.1`, and honors Do Not
+Track. If it fails to load the page carries on unchanged. **Do not modify those
+guards, do not add event tracking, and do not add a second analytics tool.**
+Counting page loads is a visitor log; counting slider moves is watching someone
+work, and it would contradict what the site tells people it does.
+
+**Numbers in the exercise hints.** Relative statements rather than quoted
+decimals, for a maintenance reason: change a default window, a noise seed or a
+model constant and every quoted decimal somewhere in the set becomes wrong,
+silently, with nothing to catch it. Exact figures are used only where the
+arithmetic guarantees them and no model constant can move them — the number of
+boxes in an L-level co-occurrence matrix, the number of entries a window of a
+given size supplies, the norm of the disorder stencil, and the identity between
+the alpha-trimmed mean at its two end settings and the mean and the median.
+
+**Recomputation.** Each module gates its expensive work behind a small staging
+helper. A stage is given the list of values the work inside it reads, and runs
+only when one of them has changed. List one value too many and a needless
+recompute happens; list one too few and a panel goes on answering an older
+question with nothing on screen to show it. The second failure is the dangerous
+one, and it has happened once — see the verification section of the working
+paper.
+
+**Boilerplate.** The full license text, the counting note and the AASPI
+acknowledgment live once, in the About section of the landing page. Module
+footers carry a short version and link to it. Putting the long form back under
+every module places two hundred words between the reader and the next module,
+six times over.
