@@ -110,6 +110,7 @@
     <button role="tab" data-tab="p4" aria-selected="false">4 · Eight maps</button>
     <button role="tab" data-tab="p5" aria-selected="false">5 · How many are independent</button>
     <button role="tab" data-tab="p6" aria-selected="false">6 · In map view</button>
+    <button role="tab" data-tab="pb" aria-selected="false">7 · Blind test</button>
     <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
     <span class="gap"></span>
     <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
@@ -334,9 +335,14 @@
       texture of that change is the facies. This is how a GLCM volume normally gets looked at, and it is why
       the AASPI examples are horizon and stratal slices rather than lines.</p>
     <p class="lede">The map below is an amplitude extraction with four things on it: conformable background,
-      a chaotic body, a channel with bars across its axis, and a fault lineament. All four are around the
-      same brightness on purpose. An amplitude map struggles to separate them; the texture measures do not,
-      because they are not looking at brightness.</p>
+      a chaotic body, a meandering channel with accretion banding across its axis, and a fault lineament.
+      All four are around the same brightness on purpose. An amplitude map struggles to separate them; the
+      texture measures do not, because they are not looking at brightness.</p>
+    <p class="lede">The background is not smooth. It carries a depositional fabric of its own, at a scale of
+      a few bins, and the chaotic body is built from a field with a scale rather than from uncorrelated
+      speckle. That distinction is the one that matters most on real data: a chaotic facies has a size to
+      it, and acquisition noise does not, which is what separates a genuine anomaly from a noisy patch of
+      section. The noise slider adds the second kind, so the two can be compared directly.</p>
 
     <div class="sec-row" id="row6">
       <div class="panel-col">
@@ -362,11 +368,66 @@
       <div class="stat key wide"><span>Channel contrast, north against east</span><b id="s6e">—</b></div>
     </div>
     <p class="legend prose"><span>In map view the four directions are the four compass directions, which
-      makes the anisotropy visible rather than theoretical. The channel is banded across its axis and smooth
-      along it, so a north-only matrix and an east-only matrix disagree about it by a large factor while
-      they agree almost exactly on the background. Summing all four directions, which is what AASPI does,
-      buys an answer that does not depend on how the channel happens to be oriented. It also gives up the
-      ability to tell you that it is oriented at all.</span></p>
+      makes the anisotropy visible rather than theoretical. A north-only matrix and an east-only matrix
+      agree almost exactly on the background and disagree on the channel, which is banded across its axis
+      and smooth along it. The size of that disagreement is worth reading carefully, because it is smaller
+      than most people expect: roughly two to one, not ten to one. A channel on a real horizon slice is
+      only modestly anisotropic at a one-bin lag, and most of what shows up comes from its margins rather
+      than from the bars inside it. The fault lineament, at about one to two the other way, is the more
+      strongly directional feature on this map. Summing all four directions, which is what AASPI does, buys
+      an answer that does not depend on how a feature happens to be oriented, and gives up the ability to
+      tell you that it is oriented at all. Ratios of this size are also the reason azimuth scanning exists:
+      four compass directions at unit offset is a blunt instrument for measuring orientation.</span></p>
+  </section>
+
+
+  <!-- ============================== BLIND TEST =========================== -->
+  <section class="tabpane" id="pb" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">7</span>A blind test</h3>
+      <span class="hint">Name the facies from the texture alone</span>
+    </div>
+    <p class="lede">Steps 1 to 6 show the map first and the measure second. An interpreter meets them the
+      other way round: a texture volume arrives, an anomaly is on it, and the question is what kind of
+      thing is making it.</p>
+    <p class="lede">Below is one texture measure computed on a map you have not seen, with the features
+      moved, the noise randomized, and the measure itself chosen at random from the eight. A point is
+      marked on it. Say what is there. One of the four answers is always right, so guessing scores a
+      quarter and anything above that is you rather than luck.</p>
+
+    <div class="sec-row" id="rowb">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> <span id="bWhich">a texture measure</span>
+          <span class="note">the marked point is the question</span></p>
+        <canvas id="cb1" aria-label="A texture attribute map from a hidden model, with one point marked"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The amplitude it came from
+          <span class="note" id="bNote">hidden until you answer</span></p>
+        <canvas id="cb2" aria-label="The amplitude extraction behind the blind test, shown after the answer is revealed"></canvas>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small" id="bNew" type="button">New case</button>
+      <button class="btn ghost small" id="bA0" type="button">Conformable background</button>
+      <button class="btn ghost small" id="bA1" type="button">Chaotic body</button>
+      <button class="btn ghost small" id="bA2" type="button">Channel</button>
+      <button class="btn ghost small" id="bA3" type="button">Fault</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Your answer</span><b id="sb1">&mdash;</b></div>
+      <div class="stat"><span>What is there</span><b id="sb2">&mdash;</b></div>
+      <div class="stat"><span>Noise in this case</span><b id="sb5">&mdash;</b></div>
+      <div class="stat key wide"><span>Correct</span><b id="sb4">0 / 0</b></div>
+    </div>
+
+    <p class="legend prose"><span>Some measures carry the answer and some do not, which is the point of
+      drawing the measure at random. Energy and homogeneity separate a chaotic body from background easily.
+      Correlation and the two mean-like measures often do not, and on those the honest answer is that the
+      map does not say. Getting a run of them wrong on the same measure is worth more than getting a run
+      right on a good one.</span></p>
   </section>
 
   <!-- ============================ WHY IT MATTERS ========================= -->
@@ -638,7 +699,7 @@
   const DEF = {
     noise: 15, chaos: 60, thr: 10, attr: 4, half: 6, lev: 9, hilb: 1,
     px: 30, pt: 32, tab: 'p1',
-    seed: 21, units: 'm',
+    seed: 21, units: 'm', cvd: 'standard',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -695,7 +756,14 @@
     return { m: EXTRA.haralick(P, L, PH), P: P, PH: PH, L: L };
   }
 
+  const stage = LAB.stager();
+
   function recompute() {
+    /* Only rebuild when something the model depends on has moved. Dragging
+       the analysis point, switching tabs or changing units used to pay for
+       a full rebuild. List one value too many here and a needless recompute
+       happens; list one too few and a stale field stays on screen. */
+    if (!stage('model', [S.thr, S.seed, S.chaos, S.noise], () => {})) return;
     SEC = LAB.buildSection({
       nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 20, foldWidth: 0.22,
       throw: S.thr, faultAt: 0.62, seed: S.seed,
@@ -1320,7 +1388,7 @@
 
   /* ============================== plumbing ============================== */
 
-  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'pw', 'pe', 'pk', 'pm'];
+  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'pb', 'pw', 'pe', 'pk', 'pm'];
   const NAMES = {
     p1: 'One question, three weights', p2: 'Orderliness', p3: 'The statistics',
     p4: 'Eight maps', p5: 'How many are independent', p6: 'In map view',
@@ -1358,6 +1426,140 @@
     LAB.put('levV', String(S.lev));
   }
 
+
+  /* ============================= blind test ============================
+     A different question from the one in the disorder module. There the
+     reader is asked whether something is present; here they are asked what
+     kind of thing it is, from a measure chosen at random. Both are worth
+     doing, and the second is closer to what a texture volume is used for.
+
+     Guessing scores a quarter, so the score means something without needing
+     empty cases the way a present-or-absent test does. */
+
+  const FACIES = ['conformable background', 'chaotic body', 'channel', 'fault'];
+  const B = { slice: null, map: null, key: '', pt: [0, 0], truth: 0,
+              answer: -1, revealed: false, asked: 0, right: 0, noise: 0 };
+
+  function newBlindCase() {
+    const rnd = SEIS.mulberry32((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+    B.noise = 0.06 + 0.16 * rnd();
+    B.slice = LAB.buildSlice({
+      ng: NGM, bin: BINM, seed: Math.floor(rnd() * 90000) + 100,
+      noise: B.noise, chaos: 0.7 + 0.5 * rnd(),
+      chaosAt: [0.30 + 0.44 * rnd(), 0.30 + 0.44 * rnd()],
+      channelAt: 0.18 + 0.14 * rnd(), faultAt: 0.16 + 0.70 * rnd(),
+    });
+    B.key = KEYS[Math.floor(rnd() * KEYS.length)];
+    // a point that is clear of the edges, and of the window that will read it
+    const h = mHalf() + 1;
+    let px = 0, py = 0, tries = 0;
+    do {
+      px = h + Math.floor(rnd() * (NGM - 2 * h));
+      py = h + Math.floor(rnd() * (NGM - 2 * h));
+      tries++;
+      // ask about a named facies more often than background, or most cases
+      // would be background and the test would be dull
+    } while (tries < 60 && B.slice.facies[py * NGM + px] === 0 && rnd() > 0.25);
+    B.pt = [px, py];
+    B.truth = B.slice.facies[py * NGM + px];
+    B.map = blindMap();
+    B.answer = -1; B.revealed = false;
+    drawBlind();
+  }
+
+  /* The measure over the whole map, on the blind model. Decimated the same way
+     the step-6 maps are, because at full resolution this is thousands of
+     co-occurrence matrices and the page would stall. */
+  function blindMap() {
+    const g = Math.floor(NGM / SDEC);
+    const out = new Float64Array(g * g);
+    for (let b = 0; b < g; b++) {
+      for (let a = 0; a < g; a++) {
+        out[b * g + a] = blindMeasure(a * SDEC, b * SDEC)[B.key];
+      }
+    }
+    return { g: g, v: out };
+  }
+
+  function blindMeasure(ix, iy) {
+    const h = mHalf(), n = 2 * h + 1;
+    const v = new Float64Array(n * n);
+    for (let j = -h; j <= h; j++) {
+      for (let i = -h; i <= h; i++) {
+        v[(j + h) * n + (i + h)] =
+          B.slice.a[clamp(iy + j, 0, NGM - 1) * NGM + clamp(ix + i, 0, NGM - 1)];
+      }
+    }
+    const q = EXTRA.quantize(v, S.lev, 1.5);
+    const P = EXTRA.coOccurrence(q.levels, n, n, S.lev, EXTRA.GLCM_DIRS, true).P;
+    return EXTRA.haralick(P, S.lev, null);
+  }
+
+  function drawBlind() {
+    if (!B.slice) return;
+    const w = LAB.rowWidth('rowb', 2), h = Math.max(240, Math.round(w * 0.92));
+    const mark = (ctx, R) => {
+      const q = LAB.gridToXY(R, NGM, B.pt[0], B.pt[1]);
+      const x = q.x, y = q.y;
+      ctx.save();
+      ctx.strokeStyle = CRIM; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - 13, y); ctx.lineTo(x - 9, y);
+      ctx.moveTo(x + 9, y); ctx.lineTo(x + 13, y); ctx.stroke();
+      ctx.restore();
+    };
+
+    let lo = Infinity, hi = -Infinity;
+    for (const v of B.map.v) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    const span = (hi - lo) || 1;
+    LAB.squareMap('cb1', w, h, B.map.g, BINM * SDEC,
+      (a, b) => clamp((B.map.v[b * B.map.g + a] - lo) / span, 0, 1),
+      EXTRA.MAPS.texture,
+      { overlay: mark, bar: (ctx, R) => LAB.colorbar(ctx, R, EXTRA.MAPS.texture,
+          lo.toFixed(2), hi.toFixed(2), B.revealed ? B.key : 'a texture measure', 40) });
+
+    const el = $('cb2');
+    if (el) {
+      if (B.revealed) {
+        let alo = Infinity, ahi = -Infinity;
+        for (const v of B.slice.a) { if (v < alo) alo = v; if (v > ahi) ahi = v; }
+        const aspan = (ahi - alo) || 1;
+        LAB.squareMap('cb2', w, h, NGM, BINM,
+          (a, b) => clamp((B.slice.a[b * NGM + a] - alo) / aspan, 0, 1),
+          SEIS.COLORMAPS.gray,
+          { overlay: mark, bar: (ctx, R) => LAB.colorbar(ctx, R, SEIS.COLORMAPS.gray,
+              'dim', 'bright', 'amplitude extraction', 40) });
+      } else {
+        const ctx = SEIS.fitCanvas(el, w, h);
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+        ctx.fillStyle = '#EEF1F2'; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = SLATE; ctx.textAlign = 'center';
+        ctx.font = '13px ui-monospace, Menlo, monospace';
+        ctx.fillText('hidden', w / 2, h / 2);
+        ctx.restore();
+      }
+    }
+
+    LAB.put('bWhich', B.revealed ? B.key : 'a texture measure, not yet named');
+    LAB.put('sb1', B.answer < 0 ? 'nothing chosen yet' : FACIES[B.answer]);
+    LAB.put('sb2', B.revealed ? FACIES[B.truth] : 'hidden');
+    LAB.put('sb5', B.revealed ? Math.round(B.noise * 100) + '% random noise' : '\u2014');
+    LAB.put('sb4', B.right + ' / ' + B.asked);
+    LAB.put('bNote', B.revealed ? 'the map behind the measure' : 'hidden until you answer');
+  }
+
+  function bindBlind() {
+    const on = (id, fn) => { const e = $(id); if (e) e.addEventListener('click', fn); };
+    on('bNew', () => newBlindCase());
+    [0, 1, 2, 3].forEach((k) => on('bA' + k, () => {
+      if (!B.slice || B.revealed) return;
+      B.answer = k; B.revealed = true; B.asked++;
+      if (k === B.truth) B.right++;
+      drawBlind();
+    }));
+  }
+
   function drawAll() {
     labels();
     const lab = document.querySelector('.labhead');
@@ -1368,6 +1570,7 @@
     if (!$('p4').hidden) draw4();
     if (!$('p5').hidden) draw5();
     if (!$('p6').hidden) draw6();
+    if (!$('pb').hidden) { if (!B.slice) newBlindCase(); else drawBlind(); }
   }
 
   let busyT = null;
@@ -1378,17 +1581,22 @@
 
   const show = LAB.setupTabs({
     panes: PANES, names: NAMES,
-    hideLabOn: ['pw', 'pe', 'pk', 'pm'],
+    hideLabOn: ['pb', 'pw', 'pe', 'pk', 'pm'],
     onShow: (id) => { S.tab = id; drawAll(); saveState(); },
   });
 
+  bindBlind();
   LAB.bindControls(S, refresh);
+
+  EXTRA.setColorVision(S.cvd);
 
   LAB.utilityBar({
     canvas: 'cSec', pngName: 'textures-section', units: S.units,
     // a fresh stratigraphy at the same settings: the check on whether a
     // separation just measured is a property of the attribute or of one model
     onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    colorVision: S.cvd,
+    onColorVision: (v) => { S.cvd = v; EXTRA.setColorVision(v); drawAll(); saveState(); },
     onUnits: (u) => { S.units = u; labels(); saveState(); },
     onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
   });

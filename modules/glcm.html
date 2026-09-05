@@ -612,7 +612,7 @@
   const DEF = {
     noise: 15, spike: 20, chaos: 60, thr: 10, lev: 33, clip: 15, half: 6, dirs: 4,
     px: 33, pt: 35, tab: 'p1', bin: 12.5,
-    seed: 21, units: 'm',
+    seed: 21, units: 'm', cvd: 'standard',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -622,26 +622,33 @@
 
   let SEC, DIPG;
 
+  const stage = LAB.stager();
+
   function recompute() {
+    /* The survey geometry has to be settled before anything is built, and it
+       is cheap, so it runs every time. A coarse survey puts few traces on the
+       line, and the window radius is counted in traces, so at 50 m spacing the
+       widest window would reach past both ends of the section. Cap it rather
+       than let it wrap: a window that does not fit is a real limit of a coarse
+       survey. The analysis point is stored as a trace and has to come back
+       inside the line whenever the line gains or loses traces. */
     NX = Math.max(32, Math.round(WIDTH_M / S.bin));
     P.setBin(S.bin);
-    /* A coarse survey puts few traces on the line, and the window radius is
-       counted in traces, so at 50 m spacing the widest window would reach past
-       both ends of the section. Cap it rather than let it wrap: a window that
-       does not fit is a real limit of a coarse survey and should be visible as
-       one. The analysis point is stored as a trace and has to come back inside
-       the line whenever the line gains or loses traces. */
     const maxHalf = Math.max(2, Math.floor((NX - 6) / 2));
     if (S.half > maxHalf) S.half = maxHalf;
     S.px = clamp(S.px, S.half + 1, NX - S.half - 2);
-    SEC = LAB.buildSection({
-      nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 22, foldWidth: 0.22,
-      throw: S.thr, faultAt: 0.62, seed: S.seed,
-      chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
-      noise: S.noise / 100, spike: S.spike / 100,
+
+    stage('model', [S.bin, S.thr, S.seed, S.chaos, S.noise, S.spike], () => {
+      SEC = LAB.buildSection({
+        nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 22, foldWidth: 0.22,
+        throw: S.thr, faultAt: 0.62, seed: S.seed,
+        chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
+        noise: S.noise / 100, spike: S.spike / 100,
+      });
+      DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
     });
-    DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
   }
+
 
   const dipAt = (ix, it) => ATTR.sampleGrid(DIPG, DIPG.p, ix, it);
 
@@ -1216,11 +1223,15 @@
 
   LAB.bindControls(S, refresh);
 
+  EXTRA.setColorVision(S.cvd);
+
   LAB.utilityBar({
     canvas: 'cSec', pngName: 'glcm-section', units: S.units,
     // a fresh stratigraphy at the same settings: the check on whether a
     // separation just measured is a property of the attribute or of one model
     onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    colorVision: S.cvd,
+    onColorVision: (v) => { S.cvd = v; EXTRA.setColorVision(v); drawAll(); saveState(); },
     onUnits: (u) => { S.units = u; labels(); saveState(); },
     onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
   });

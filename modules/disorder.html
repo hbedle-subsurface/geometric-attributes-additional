@@ -624,7 +624,7 @@
   const DEF = {
     noise: 10, coh: 20, chaos: 80, thr: 10, smooth: 7, steer: 1,
     px: 40, pt: 105, tab: 'p1',
-    seed: 21, units: 'm',
+    seed: 21, units: 'm', cvd: 'standard',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -634,17 +634,28 @@
 
   let SEC, DIPG, RAWD, STATD, COH;
 
+  const stage = LAB.stager();
+
   function recompute() {
-    SEC = LAB.buildSection({
-      nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 22, foldWidth: 0.22,
-      throw: S.thr, faultAt: 0.62, seed: S.seed,
-      chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
-      noise: S.noise / 100, coherent: S.coh / 100,
+    // the section, the dips and coherence: everything that depends on the data
+    stage('model', [S.thr, S.seed, S.chaos, S.noise, S.coh, P.bin], () => {
+      SEC = LAB.buildSection({
+        nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 22, foldWidth: 0.22,
+        throw: S.thr, faultAt: 0.62, seed: S.seed,
+        chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
+        noise: S.noise / 100, coherent: S.coh / 100,
+      });
+      DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
+      COH = ATTR.cohField(SEC.f, NX, NT, { half: 2, kHalf: 5, decX: 1, decT: 2, grid: DIPG });
     });
-    DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
-    RAWD = rawDisorder();
-    STATD = statStage(RAWD, S.smooth);
-    COH = ATTR.cohField(SEC.f, NX, NT, { half: 2, kHalf: 5, decX: 1, decT: 2, grid: DIPG });
+    // the first stage of the operator, which also depends on the steering
+    stage('raw', [S.thr, S.seed, S.chaos, S.noise, S.coh, S.steer], () => {
+      RAWD = rawDisorder();
+    });
+    // and the second stage on its own, so the smoothing slider is cheap
+    stage('stat', [S.thr, S.seed, S.chaos, S.noise, S.coh, S.steer, S.smooth], () => {
+      STATD = statStage(RAWD, S.smooth);
+    });
   }
 
   const dipAt = (ix, it) => (S.steer ? ATTR.sampleGrid(DIPG, DIPG.p, ix, it) : 0);
@@ -1490,11 +1501,15 @@
   bindBlind();
   LAB.bindControls(S, refresh);
 
+  EXTRA.setColorVision(S.cvd);
+
   LAB.utilityBar({
     canvas: 'cSec', pngName: 'disorder-section', units: S.units,
     // a fresh stratigraphy at the same settings: the check on whether a
     // separation just measured is a property of the attribute or of one model
     onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    colorVision: S.cvd,
+    onColorVision: (v) => { S.cvd = v; EXTRA.setColorVision(v); drawAll(); saveState(); },
     onUnits: (u) => { S.units = u; labels(); saveState(); },
     onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
   });

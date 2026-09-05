@@ -594,6 +594,34 @@ const EXTRA = (function () {
     };
   }
 
+  /* Two versions of each diverging map. The default set is the one these
+     modules were designed around: quiet green through to alarming red, which
+     is how a confidence map is read at a glance and which most readers find
+     immediate. It is also the set that fails for red-green color blindness.
+     Simulating deuteranopia and protanopia on the green-to-red ramp shows why:
+     its lightness is not monotonic, dark at the green end, bright in the middle
+     and dark again at the red end, so the quiet end and the alarming end land
+     at similar lightness and similar hue and the map stops being ordered.
+
+     The alternative set keeps the same job and changes the axis. Sequential
+     maps run dark blue to bright yellow, which is monotonic in lightness, so
+     the order survives whatever the reader's color vision is doing. Diverging
+     maps run blue to orange rather than blue to red, because the blue-yellow
+     axis is the one that stays intact.
+
+     Neither is forced on anyone. setColorVision swaps them in place, so every
+     panel and every colorbar follows without a single call site changing. */
+  const MAPS_ALT = {
+    confidence: ramp([
+      [24, 34, 78], [36, 72, 120], [74, 110, 132],
+      [124, 148, 140], [186, 188, 130], [248, 232, 110],
+    ]),
+    chaos: ramp([
+      [20, 52, 110], [64, 110, 170], [150, 190, 220], [246, 244, 238],
+      [240, 196, 120], [206, 140, 44], [122, 74, 10],
+    ]),
+  };
+
   const MAPS = {
     // disorder and other "how bad is it" measures: quiet is green, bad is red,
     // which is how a confidence map is read at a glance
@@ -619,6 +647,15 @@ const EXTRA = (function () {
     ]),
   };
 
+  const MAPS_STD = Object.assign({}, MAPS);
+
+  /** 'standard' or 'cvd'. Mutates MAPS in place; nothing else has to know. */
+  function setColorVision(mode) {
+    Object.keys(MAPS_STD).forEach((k) => {
+      MAPS[k] = (mode === 'cvd' && MAPS_ALT[k]) ? MAPS_ALT[k] : MAPS_STD[k];
+    });
+  }
+
   /* --------------------------------------------------------------------- */
 
   return {
@@ -631,7 +668,7 @@ const EXTRA = (function () {
     // nonparallelism
     unitNormal, dipDeviation, gradientDeviation, dipEnergyCovariance,
     // display
-    MAPS, ramp,
+    MAPS, MAPS_ALT, MAPS_STD, setColorVision, ramp,
   };
 })();
 

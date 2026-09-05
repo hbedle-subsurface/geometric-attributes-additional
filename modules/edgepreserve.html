@@ -591,7 +591,7 @@
   const DEF = {
     noise: 12, thr: 10, half: 3, mode: 3, slow: 40, shigh: 55, scen: 90,
     px: 66, pt: 70, tab: 'p1',
-    seed: 12, units: 'm',
+    seed: 12, units: 'm', cvd: 'standard',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -720,7 +720,14 @@
     return { width: n, min: lo, steep: steep, background: bg, line: line, at: at };
   }
 
+  const stage = LAB.stager();
+
   function recompute() {
+    /* Only rebuild when something the model depends on has moved. Dragging
+       the analysis point, switching tabs or changing units used to pay for
+       a full rebuild. List one value too many here and a needless recompute
+       happens; list one too few and a stale field stays on screen. */
+    if (!stage('model', [S.thr, S.seed, S.noise, S.half, S.mode, S.slow, S.shigh, S.scen], () => {})) return;
     CLEAN = LAB.buildSection(cfg(false));
     SEC = LAB.buildSection(cfg(true));
     DIPG = ATTR.dipField(SEC.f, NX, NT, { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
@@ -1118,11 +1125,15 @@
 
   LAB.bindControls(S, refresh);
 
+  EXTRA.setColorVision(S.cvd);
+
   LAB.utilityBar({
     canvas: 'cSec', pngName: 'edgepreserve-section', units: S.units,
     // a fresh stratigraphy at the same settings: the check on whether a
     // separation just measured is a property of the attribute or of one model
     onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    colorVision: S.cvd,
+    onColorVision: (v) => { S.cvd = v; EXTRA.setColorVision(v); drawAll(); saveState(); },
     onUnits: (u) => { S.units = u; labels(); saveState(); },
     onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
   });

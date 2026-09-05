@@ -442,6 +442,9 @@ const LAB = (function () {
     const c = Object.assign({
       ng: 72, bin: 25, seed: 5, noise: 0.10,
       chaosR: 0.19, chaos: 1, channel: 1, fault: 1,
+      // where each feature sits, as fractions of the grid, so a caller that
+      // wants an unmemorable map can move them
+      chaosAt: [0.64, 0.66], channelAt: 0.26, faultAt: 0.86,
     }, cfg || {});
     const ng = c.ng, N = ng * ng;
     const rnd = SEIS.mulberry32(c.seed);
@@ -458,8 +461,8 @@ const LAB = (function () {
     const Vr = valueField(rnd, ng, 5.0);
     const Vk = valueField(rnd, ng, 4.0);      // irregularity in the channel bars
 
-    const bcx = ng * 0.64, bcy = ng * 0.66;   // the chaotic body
-    const faultXAtY = (y) => ng * 0.86 + 4 * Math.sin(y * 0.10);
+    const bcx = ng * c.chaosAt[0], bcy = ng * c.chaosAt[1];   // the chaotic body
+    const faultXAtY = (y) => ng * c.faultAt + 4 * Math.sin(y * 0.10);
     const SLIP = 3.2;                          // bins of apparent offset
 
     /* Conformable background: a long-wavelength structural component with a
@@ -495,7 +498,7 @@ const LAB = (function () {
         // a channel, meandering, with accretion banding across its axis
         if (c.channel > 0) {
           const u = ix / (ng - 1);
-          const cy = ng * (0.26 + 0.035 * Math.sin(u * 6.5) + 0.012 * Math.sin(u * 15.7 + 1.1));
+          const cy = ng * (c.channelAt + 0.035 * Math.sin(u * 6.5) + 0.012 * Math.sin(u * 15.7 + 1.1));
           const halfW = ng * 0.060 * (1 + 0.22 * Math.sin(u * 9.1 + 0.4));
           const d = (iy - cy) / halfW;
           if (Math.abs(d) < 1) {
@@ -1051,6 +1054,17 @@ const LAB = (function () {
     if (o.onReset) {
       mk('resetBtn', 'Reset').addEventListener('click', o.onReset);
     }
+    if (o.onColorVision) {
+      const cv = document.createElement('div');
+      cv.className = 'ctl';
+      cv.innerHTML = '<label for="cvdSel">Color scales</label>'
+        + '<select id="cvdSel"><option value="standard">Standard</option>'
+        + '<option value="cvd">Color-vision safe</option></select>';
+      host.appendChild(cv);
+      const sel = cv.querySelector('select');
+      sel.value = o.colorVision || 'standard';
+      sel.addEventListener('change', () => o.onColorVision(sel.value));
+    }
     if (o.onUnits) {
       const wrap = document.createElement('div');
       wrap.className = 'ctl';
@@ -1077,6 +1091,34 @@ const LAB = (function () {
       else el.value = S[k];
     });
     after();
+  }
+
+  /* =======================================================================
+     ONLY REBUILD WHAT CHANGED
+
+     Every module used to rebuild its whole model on every control event. In
+     the disorder module that is 217 ms to build the section, 1205 ms for the
+     dip field, 197 ms for coherence and 79 ms for the raw operator: about 1.7
+     seconds on a desktop, and several times that on a phone. Most controls do
+     not touch most of that. Dragging the analysis point changes nothing about
+     the model at all, and the smoothing length changes only the last stage.
+
+     stage() runs a piece of work only when the values it depends on have
+     changed since the last time. The dependency list is given at the call
+     site, next to the work, so it stays honest as the code moves. Listing one
+     value too many costs a recompute that was not needed; listing one too few
+     leaves a stale field on screen, so when in doubt, list it.
+     ======================================================================= */
+
+  function stager() {
+    const seen = {};
+    return function stage(name, deps, work) {
+      const sig = JSON.stringify(deps);
+      if (seen[name] === sig) return false;
+      seen[name] = sig;
+      work();
+      return true;
+    };
   }
 
   function attachProbe(canvasId, toGrid) {
@@ -1106,6 +1148,6 @@ const LAB = (function () {
     gatherTraces, gatherPlane,
     panelWidth, rowWidth, imageInto, colorbar, squareMap, gridToXY, marker,
     windowOutline, setupTabs, bindControls, attachProbe, put, clamp,
-    physics, utilityBar, resetState,
+    physics, utilityBar, resetState, stager,
   };
 })();
