@@ -35,7 +35,7 @@
   <div class="labhead">
     <div class="labgrid">
       <div>
-        <p class="cap">The seismic line <span>&mdash; drag anywhere on it to move the analysis point</span></p>
+        <p class="cap">The seismic line, filtered as the Method selector says <span>&mdash; drag anywhere on it to move the analysis point</span></p>
         <canvas id="cSec" aria-label="Vertical seismic section through a faulted model"></canvas>
       </div>
       <div>
@@ -798,13 +798,30 @@
         + '\u00b0 as drawn  \u00b7  ' + P.exaggeration(R, NX, NT).toFixed(1) + '\u00d7 vertical');
   }
 
+  /* The header shows the result of whichever edge preservation the Method
+     selector is set to, not the raw section.
+
+     The selector used to change nothing at all. current() was defined and
+     never called: step 1 draws the plain filter by definition, step 5 draws
+     all four side by side, and no other panel consulted it, so moving the
+     control updated its own label and stopped there. Putting the chosen
+     result in the header gives the selector the job the reader assumes it
+     has, and it is the right place for it - the header is the panel that is
+     visible while the thresholds are being moved, which is exactly when a
+     reader wants to see what the current combination does to the fault. */
   function drawHeader() {
     const el = $('cSec');
     if (!el) return;
     const w = LAB.panelWidth(el, 320);
-    secPanel('cSec', SEC.f, w, Math.max(200, Math.round(w * 0.44)), {
+    secPanel('cSec', current(), w, Math.max(200, Math.round(w * 0.44)), {
       overlay: (ctx, R) => {
         LAB.windowOutline(ctx, R, NX, NT, S.px, S.pt, dipAt(S.px, S.pt), S.half, 1, CRIM);
+        // the plane, so the reader can see what the preservation is protecting
+        if (S.thr > 0) {
+          const X = (x) => R.x + (x / (NX - 1)) * R.w, Y = (t) => R.y + (t / (NT - 1)) * R.h;
+          SEIS.dashedLine(ctx, X(SEC.faultXAt(0)), Y(0),
+                               X(SEC.faultXAt(NT - 1)), Y(NT - 1), 'rgba(22,25,28,.28)', [6, 5], 1.2);
+        }
         markOn(ctx, R);
       },
     });
