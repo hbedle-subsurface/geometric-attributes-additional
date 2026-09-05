@@ -84,6 +84,12 @@
               <label for="wt" style="display:inline">Weight the dips by energy</label>
             </div>
           </div>
+          <div class="ctl-col">
+            <h2>Scale, and this setup</h2>
+            <div class="ctl"><label>Bin spacing <span class="val" id="pBin">&mdash;</span></label></div>
+            <div class="ctl"><label>Analysis window <span class="val" id="pWin">&mdash;</span></label></div>
+            <div id="utilbar"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -345,7 +351,7 @@
     <div class="tryit" style="max-width:none">
       <h3>Try this</h3>
       <ol>
-        <li><b>Confirm it ignores dip itself.</b> In step 1, move the analysis point from the flat part of
+        <li><b>Confirm it ignores dip itself.</b> <em>Why bother: the attribute rests on separating how steep the dip is from how much the dip varies, and this is that separation.</em> In step 1, move the analysis point from the flat part of
           the map onto the flank of the dome and watch σ<sub>dip</sub>.
           <details class="reveal"><summary>Hint</summary><span class="ans">On the flat background the dip and
             &sigma;<sub>dip</sub> are both a couple of degrees, which is where the module opens.
@@ -355,13 +361,13 @@
             &sigma;<sub>dip</sub> jumps past 8&deg;. Steep and parallel reads low; gently dipping and
             disordered reads high. Anyone who reads this attribute as a dip magnitude map will get it
             exactly backwards on a monocline.</span></details></li>
-        <li><b>Turn the energy weighting off.</b> Uncheck it in the header, then look at step 2 over the
+        <li><b>Turn the energy weighting off.</b> <em>Why bother: the weighting is on by default and changes what the attribute reports over dim areas, which is where mistakes get made.</em> Uncheck it in the header, then look at step 2 over the
           channel.
           <details class="reveal"><summary>Hint</summary><span class="ans">The dimmed channel starts
             producing dip-deviation anomalies it should not have, because the dips picked on a weak
             reflection are unreliable and, unweighted, they count as much as the good ones. The weighting is
             what stops the attribute from mapping the quality of its own input.</span></details></li>
-        <li><b>Find the feature dip deviation cannot see.</b> In step 5, read the channel row.
+        <li><b>Find the feature dip deviation cannot see.</b> <em>Why bother: knowing where an attribute is blind is worth more than knowing where it is strong.</em> In step 5, read the channel row.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings dip
             deviation barely registers on the channel while the gradient deviation reads several times
             as much &mdash; not a large number in absolute terms, but a clear separation, and the channel is visible on one map and not on
@@ -370,14 +376,14 @@
             This is the clearest case in the module for computing both. Neither attribute is more sensitive
             than the other; they are sensitive to different things, and no amount of tuning turns one into
             the other.</span></details></li>
-        <li><b>Make the covariance redundant.</b> In step 4, turn the channel dimming to zero.
+        <li><b>Make the covariance redundant.</b> <em>Why bother: two attributes that agree everywhere are one attribute wearing two names.</em> In step 4, turn the channel dimming to zero.
           <details class="reveal"><summary>Hint</summary><span class="ans">With the only pure-amplitude
             feature gone, the two deviations start agreeing, because everything that remains changes dip and
             amplitude together. The covariance is then a more expensive way of computing what either one
             already told you. Put the channel back and they separate again. That is what the correlation
             figure in that step is for — it tells you whether the third attribute is earning its
             place on <em>your</em> data.</span></details></li>
-        <li><b>Buy resolution and sell it back.</b> Set the window radius to 1, then to 7, watching step 2.
+        <li><b>Buy resolution and sell it back.</b> <em>Why bother: window size trades detail against stability, and here the trade can be read in meters.</em> Set the window radius to 1, then to 7, watching step 2.
           <details class="reveal"><summary>Hint</summary><span class="ans">At radius 1 the map is
             speckled — a handful of dip estimates is not enough for a standard deviation to mean much, and
             this is the salt-and-pepper pattern the AASPI documentation warns about. At radius 7 the
@@ -437,6 +443,21 @@
         speckliness of the result is the honest part of the trade. The normalization constants inside the
         covariance are medians of the two deviations over the map. AASPI's are set differently. The choice
         affects the balance between the two contributions but not the character of the result.</p>
+            <p><b>Where the meters come from.</b> This model is built on 25 m bins from the start, so the bin
+        spacing is part of the geometry rather than a display convention, and window radii convert to
+        distance without any further assumption. There is no velocity here because there is no time axis:
+        a horizon slice has already had its time dimension collapsed.</p>
+      <p><b>The panels are not the same kind of picture.</b> The map shows amplitude extracted along a
+        pick. Deviation of vector dip is an angle-like spread with the units of dip. The covariance term
+        is a product of two deviations and has neither the units of the first nor a sense in which large
+        is simply worse. Colors that look alike across the panels are not measuring alike, and the
+        crossplot is included because it is the display in which that is hardest to forget.</p>
+      <p><b>What the model leaves out.</b> The horizon is a picked surface with no pick errors in it
+        beyond the noise slider, and pick error is the dominant source of apparent nonparallelism on real
+        horizon slices. Nothing here reproduces an autotracker jumping a cycle, which puts a step into the
+        surface that these attributes will report as a genuine structural feature. The salt body has a
+        clean edge, and real salt flanks are imaged badly enough that the attribute is often reading the
+        failure of the migration rather than the geometry of the flank.</p>
       <ul>
         <li>AASPI, <em>Measuring chaotic vs. conformal reflectors: Program nonparallelism</em>, University of
           Oklahoma — the three attributes, the Great South Basin and Gulf of Mexico examples, and the
@@ -514,6 +535,12 @@
   const OCHRE = '#7A5C10';
 
   const NG = 88, BIN = 25;
+
+  /* This module works on a horizon slice rather than a section, so the scale
+     that matters is lateral. The bin spacing turns a window radius counted in
+     bins into a footprint on the ground, which is the form in which the
+     question "is this window bigger than the feature?" can be answered. */
+  const P = LAB.physics({ bin: BIN });
   const ATTRNAMES = ['dip deviation', 'gradient deviation', 'covariance'];
   const FACIES = ['background', 'chaotic body', 'channel', 'fault'];
   const FCOLOR = [SLATE, CRIM, TEAL, OCHRE];
@@ -521,6 +548,7 @@
   const DEF = {
     salt: 18, chaos: 70, chan: 60, thr: 18, attr: 0, half: 3, noise: 10, wt: 1,
     px: 22, py: 22, tab: 'p1',
+    seed: 11, units: 'm',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -532,7 +560,7 @@
 
   function recompute() {
     H = LAB.buildHorizon({
-      ng: NG, bin: BIN, fold: 60, seed: 11,
+      ng: NG, bin: BIN, fold: 60, seed: S.seed,
       saltR: S.salt / 100, chaos: S.chaos / 100,
       channel: S.chan / 100, throwM: S.thr, noise: S.noise / 100,
     });
@@ -1034,7 +1062,15 @@
     pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
   };
 
+  function scaleLabels() {
+    P.setUnits(S.units);
+    LAB.put('pBin', P.len(P.bin));
+    LAB.put('pWin', (2 * S.half + 1) + ' bins across, '
+      + P.len(P.across(2 * S.half + 1)));
+  }
+
   function labels() {
+    scaleLabels();
     LAB.put('saltV', S.salt === 0 ? 'none' : 'radius ' + (S.salt / 100).toFixed(2));
     LAB.put('chaosV', S.chaos + '%');
     LAB.put('chanV', S.chan === 0 ? 'none' : S.chan + '%');
@@ -1068,6 +1104,13 @@
   });
 
   LAB.bindControls(S, refresh);
+
+  LAB.utilityBar({
+    canvas: 'cMap', pngName: 'nonparallel-map', units: S.units,
+    onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    onUnits: (u) => { S.units = u; labels(); saveState(); },
+    onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
+  });
 
   LAB.attachProbe('cMap', (x, y, r) => {
     const M = { l: 52, r: 14, t: 10, b: 34 };

@@ -72,6 +72,16 @@
               <label for="steer" style="display:inline">Compute along structural dip</label>
             </div>
           </div>
+          <div class="ctl-col">
+            <h2>Scale, and this setup</h2>
+            <div class="ctl"><label>Interval velocity, for scale <span class="val" id="pVel">&mdash;</span></label></div>
+            <div class="ctl"><label>Trace spacing <span class="val" id="pBin">&mdash;</span></label></div>
+            <div class="ctl"><label>Wavelength &lambda; = V / f <span class="val" id="pLam">&mdash;</span></label></div>
+            <div class="ctl"><label>&lambda;/4, the resolution limit <span class="val" id="pQ">&mdash;</span></label></div>
+            <div class="ctl"><label>Smoothing window <span class="val" id="pWin">&mdash;</span></label></div>
+            <div class="ctl"><label>Throw, against &lambda; <span class="val" id="pThr">&mdash;</span></label></div>
+            <div id="utilbar"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -85,6 +95,7 @@
     <button role="tab" data-tab="p3" aria-selected="false">3 · The two-stage recipe</button>
     <button role="tab" data-tab="p4" aria-selected="false">4 · Against coherence</button>
     <button role="tab" data-tab="p5" aria-selected="false">5 · Confidence in a pick</button>
+    <button role="tab" data-tab="pb" aria-selected="false">6 · Blind test</button>
     <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
     <span class="gap"></span>
     <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
@@ -225,11 +236,14 @@
       trouble, so it is tempting to assume they are the same measurement with the sign flipped. Put a fault
       in front of them and the difference is immediate.</p>
     <p class="lede">Neither attribute is silent at either feature, so the question worth asking is not
-      whether each responds but which it responds to <em>more</em>. Coherence moves by roughly the same
-      amount at the fault as it does in the chaotic package: it is a discontinuity detector and both are
-      discontinuities. Disorder moves several times further in the chaotic package than at the fault.
-      The traces on either side of a fault are perfectly smooth; they are just at different times. A second
-      difference has much less to say about that than about data that genuinely bends.</p>
+      whether each responds but which it responds to <em>more</em>. Coherence responds to both and stays
+      within a factor of two of itself across the two: its fault response is more than half its response to
+      the chaotic package. It is a discontinuity detector and both features are discontinuities. Disorder
+      is not evenhanded in the same way, and moves several times further in the chaotic package than it
+      does at the fault. The traces on either side of a fault are smooth; they are the same waveform at two
+      different times. A second difference has much less to say about that than about data that genuinely
+      bends. The two numbers under the panels are measured live, so the comparison can be checked at any
+      setting rather than taken on trust here.</p>
     <p class="lede">That preference is the design, and it is what makes the attribute useful for the job in
       step 5. If you are asking which parts of a horizon you can trust, a fault is not the answer you want:
       your pick against a fault may be one of the best on the survey. What you want is the attribute that
@@ -303,6 +317,53 @@
     </div>
   </section>
 
+
+  <!-- ============================== BLIND TEST =========================== -->
+  <section class="tabpane" id="pb" role="tabpanel" hidden>
+    <div class="plot-head" style="margin-bottom:14px">
+      <h3><span class="stepno">6</span>A blind test</h3>
+      <span class="hint">The part that tells you about yourself</span>
+    </div>
+    <p class="lede">Everything up to here has shown you the model and then the attribute computed from it.
+      That is the wrong way round. On real data the attribute arrives first, and the geology it is supposed
+      to be showing is the thing you are trying to work out.</p>
+    <p class="lede">Below is a disorder map from a section you have not seen, with the model hidden and the
+      settings randomized. Click on the map where you think the top of a chaotic package is. If you think
+      there is no chaotic package in this one, say so &mdash; roughly a third of the cases do not contain
+      one, and calling those correctly is the harder half of the test.</p>
+
+    <div class="sec-row" id="rowb">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Disorder <span class="note">click to mark the top of the package</span></p>
+        <canvas id="cb1" aria-label="Disorder map from a hidden model, for the blind test"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The section it came from
+          <span class="note" id="bNote">hidden until you commit</span></p>
+        <canvas id="cb2" aria-label="The seismic section behind the blind test, shown after the answer is revealed"></canvas>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small" id="bNew" type="button">New case</button>
+      <button class="btn ghost small" id="bNone" type="button">There is no chaotic package</button>
+      <button class="btn ghost small" id="bReveal" type="button">Commit and reveal</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><span>Your call</span><b id="sb1">&mdash;</b></div>
+      <div class="stat"><span>The truth</span><b id="sb2">&mdash;</b></div>
+      <div class="stat key"><span>Verdict</span><b id="sb3">&mdash;</b></div>
+      <div class="stat key wide"><span>Called correctly</span><b id="sb4">0 / 0</b></div>
+    </div>
+
+    <p class="legend prose"><span>A call counts as correct if the marked time lands inside the package, or
+      if you said there was none and there was none. Noise raises disorder everywhere, and a case with high
+      noise and no chaotic package is the one that catches people: the map is not blank, it is uniformly
+      busy, and a uniformly busy map is what background looks like rather than what an anomaly looks
+      like.</span></p>
+  </section>
+
   <!-- ============================ WHY IT MATTERS ========================= -->
   <section class="tabpane" id="pw" role="tabpanel" hidden>
     <p class="lede">Every map an interpreter hands over carries an implied claim that it is equally reliable
@@ -332,7 +393,7 @@
     <div class="tryit" style="max-width:none">
       <h3>Try this</h3>
       <ol>
-        <li><b>Confirm the operator ignores a dipping reflector.</b> Put every noise slider to zero, leave
+        <li><b>Confirm the operator ignores a dipping reflector.</b> <em>Why bother: an attribute that fired on structure would be useless on structured data, which is most data.</em> Put every noise slider to zero, leave
           the fault throw where it is, and read the disorder in step 1 while dragging the analysis point
           along a strong reflector.
           <details class="reveal"><summary>Hint</summary><span class="ans">It stays small everywhere on the
@@ -342,14 +403,14 @@
             wavelet, the samples inside it go up and down, and the operator reports that as
             disorder. The attribute would then be mapping structure, not data
             quality.</span></details></li>
-        <li><b>Watch the normalization work.</b> In step 2, compare the raw operator output with the
+        <li><b>Watch the normalization work.</b> <em>Why bother: the normalization is what makes the number comparable between a bright interval and a dim one.</em> In step 2, compare the raw operator output with the
           disorder at the same point.
           <details class="reveal"><summary>Hint</summary><span class="ans">Amplifying the data ten times
             multiplies the raw number by ten and leaves the disorder unchanged to every decimal place shown.
             That invariance is the whole reason for dividing by ‖e‖, and it is what lets you compare
             disorder between a bright shallow section and a dim deep one — or between two surveys — without
             first balancing their amplitudes.</span></details></li>
-        <li><b>Break the second stage.</b> In step 3, run the <span class="k">stat3d</span> window down to 1
+        <li><b>Break the second stage.</b> <em>Why bother: the smoothing length is the parameter with the widest range of defensible settings, and the cost of getting it wrong runs both ways.</em> In step 3, run the <span class="k">stat3d</span> window down to 1
           trace and then up to 15, watching the contrast figure.
           <details class="reveal"><summary>Hint</summary><span class="ans">At 1 trace there is almost
             nothing to take a standard deviation over, so the panel is the raw speckle and the separation is
@@ -359,25 +420,39 @@
             the cost keeps accruing, because a wider window puts the boundary of the chaotic package in more
             places at once and the edges of the anomaly blur outward. Stop where the curve
             flattens rather than where the number is highest.</span></details></li>
-        <li><b>Separate the two attributes.</b> In step 4, set the fault throw to maximum and every noise
-          slider to zero, then reverse it.
+        <li><b>Separate the two attributes.</b> <em>Why bother: coherence and disorder are often run on the same volume, so what each one adds is a practical question.</em> In step 4, take the chaotic package to zero and leave the
+          fault where it is, then reverse the two: chaos back up, throw down to zero. The module opens with
+          the throw at its maximum, so the first half of this is one slider.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
-            with, coherence falls by roughly the same amount at the fault as it does in the chaotic package
-            — it reacts to both, and almost equally. Disorder responds to the chaotic package several times
-            more strongly than it does to the fault. Neither attribute is blind to either feature; what
+            with, coherence falls at the fault by more than half as much as it falls in the chaotic package,
+            so it reacts to both and to within a factor of two. Disorder responds to the chaotic package
+            several times more strongly than it does to the fault. Neither attribute is blind to either feature; what
             separates them is which one they reserve their response for, and that is enough to make them
             answer different questions. Note also what happens when you take the chaos away entirely: with
             clean data the background disorder is so close to zero that any response at all looks enormous
             as a percentage, which is a good reminder that a ratio against a near-zero baseline is not a
             measurement you should quote.</span></details></li>
-        <li><b>Test the confidence claim.</b> In step 5, raise the noise until the tracker starts making
+        <li><b>Test the confidence claim.</b> <em>Why bother: this is the reason to compute disorder at all rather than to read coherence and stop.</em> In step 5, raise the noise until the tracker starts making
           mistakes, then compare the two mean-disorder figures.
           <details class="reveal"><summary>Hint</summary><span class="ans">Disorder along the mistracked
             traces runs well above disorder along the good ones. That gap is the entire practical claim of
             the attribute, and you can watch it open up as the data get worse. Note the limitation too: it
             tells you the pick is <em>unreliable</em>, not which way it is wrong, and a confident wrong pick
             in quiet data is something no attribute here will catch.</span></details></li>
-      </ol>
+              <li><b>Put the fault below the limit of what you can see.</b> <em>Why bother: it is the reason
+          discontinuity attributes are computed at all.</em> Set the fault throw to 4 samples. The scale
+          panel reads that back as a fraction of the wavelength, and 4 samples is close to
+          &lambda;/8. Turn every noise slider to zero and look at the section in the header: the offset is
+          marginal, and on a busier display it would be gone. Then read the fault response in step 4.
+          <details class="reveal"><summary>Hint</summary><span class="ans">Coherence still falls at the
+            plane and disorder still rises there. Below about a quarter of a wavelength the two reflections
+            either side of the fault no longer separate into two events; they interfere, and the
+            interference changes the shape of the waveform even where it no longer produces a step you can
+            point at. That leftover distortion is what a discontinuity attribute measures. Raise the throw
+            back up and the response grows, but it does not switch on at the resolution limit, because
+            nothing physical happens there — the limit is a statement about the eye, not about the
+            rock.</span></details></li>
+</ol>
     </div>
   </section>
 
@@ -432,6 +507,22 @@
         there are scaled by their own range across the section before the responses are compared. Coherence
         and disorder have neither the same units nor the same sense, so quoting them against each other
         unscaled would be meaningless.</p>
+            <p><b>Where the meters come from.</b> The operator, the normalization and the stat3d stage all work
+        in samples and traces. The scale panel adds an assumed interval velocity of 2800 m/s and an assumed
+        trace spacing of 12.5 m, purely to report a smoothing length as a distance and a fault throw as a
+        fraction of the dominant wavelength. Changing either constant changes what the panel says and
+        nothing that is computed.</p>
+      <p><b>The panels are not the same kind of picture.</b> The section is amplitude, signed. Coherence
+        is a bounded similarity with no units. Disorder is a ratio of a second difference to the energy in
+        the window, also unitless but unbounded above and running the opposite way. Three panels, three
+        quantities, and the only honest comparison between them is the one made here: each measured
+        against its own background rather than against the others.</p>
+      <p><b>What the model leaves out.</b> The fault is a rigid offset of an otherwise undisturbed
+        section: no drag, no damage zone, no fault-plane reflection, no tip diffractions. Those are exactly
+        the features that make a real fault produce more disorder than the clean offset modeled here, so
+        the fault response measured on this page is closer to a floor than to a typical value. The
+        chaotic package, in the other direction, is scrambled by a formula rather than by a landslide, and
+        real chaotic intervals are not uniformly chaotic throughout.</p>
       <ul>
         <li>AASPI, <em>Computing volumetric estimates of the signal-to-noise ratio: Program disorder</em>,
           University of Oklahoma — the workflow, the two-stage computation, and the Gulf of Mexico and
@@ -504,6 +595,16 @@
   const CRIM = '#841617', SLATE = '#5C6670', TEAL = '#0B7285', INK = '#16191C';
 
   const NX = 150, NT = 210, DT = 0.002;
+
+  /* The model is built in samples and traces because that is what the
+     arithmetic needs. These two numbers are what turn it back into ground: a
+     velocity to convert two-way time into thickness, and a bin spacing to
+     convert traces into distance along the line. Nothing in the attribute
+     calculations uses them. They exist so that a window can be quoted as a
+     length, which is the form in which the question "is this window the right
+     size?" can actually be answered. */
+  const VEL = 2800, BINM_LINE = 12.5, FREQ = 30;
+  const P = LAB.physics({ dt: DT, v: VEL, bin: BINM_LINE, freq: FREQ });
   const CHAOS_TOP = 0.36, CHAOS_BOT = 0.60;
   // the same limits as whole samples, because they index arrays
   const CHAOS_A = Math.round(CHAOS_TOP * NT) + 4;
@@ -513,6 +614,7 @@
   const DEF = {
     noise: 10, coh: 20, chaos: 80, thr: 10, smooth: 7, steer: 1,
     px: 40, pt: 105, tab: 'p1',
+    seed: 21, units: 'm',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -525,7 +627,7 @@
   function recompute() {
     SEC = LAB.buildSection({
       nx: NX, nt: NT, dt: DT, freq: 30, fold: 22, foldWidth: 0.22,
-      throw: S.thr, faultAt: 0.62, seed: 21,
+      throw: S.thr, faultAt: 0.62, seed: S.seed,
       chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
       noise: S.noise / 100, coherent: S.coh / 100,
     });
@@ -539,7 +641,8 @@
   const cohAt = (ix, it) => clamp(ATTR.sampleGrid(COH, COH.c, ix, it), 0, 1);
 
   /* The nine values under the 2D form of the stencil, gathered along dip. */
-  function gather9(ix, it, p) {
+  function gather9(ix, it, p, F) {
+    const f = F || SEC.f;
     const out = new Float64Array(9);
     let n = 0;
     for (let j = -1; j <= 1; j++) {
@@ -547,19 +650,20 @@
       for (let k = -1; k <= 1; k++) {
         const tt = it + k + p * j;
         const i0 = Math.floor(tt), fr = tt - i0;
-        const v0 = SEC.f[x * NT + clamp(i0, 0, NT - 1)];
-        const v1 = SEC.f[x * NT + clamp(i0 + 1, 0, NT - 1)];
+        const v0 = f[x * NT + clamp(i0, 0, NT - 1)];
+        const v1 = f[x * NT + clamp(i0 + 1, 0, NT - 1)];
         out[n++] = v0 * (1 - fr) + v1 * fr;
       }
     }
     return out;
   }
 
-  function rawDisorder() {
+  function rawDisorder(F, G) {
+    const dip = G ? (ix, it) => ATTR.sampleGrid(G, G.p, ix, it) : dipAt;
     const out = new Float32Array(NX * NT);
     for (let ix = 0; ix < NX; ix++) {
       for (let it = 0; it < NT; it++) {
-        out[ix * NT + it] = EXTRA.disorder2D(gather9(ix, it, dipAt(ix, it)));
+        out[ix * NT + it] = EXTRA.disorder2D(gather9(ix, it, dip(ix, it), F));
       }
     }
     return out;
@@ -567,12 +671,13 @@
 
   /* Program stat3d: the standard deviation of the raw volume, taken along dip
      over a window. Not the average - see step 3 for why that matters. */
-  function statStage(raw, len) {
+  function statStage(raw, len, G) {
+    const dip = G ? (ix, it) => ATTR.sampleGrid(G, G.p, ix, it) : dipAt;
     const out = new Float32Array(NX * NT);
     const half = Math.floor(len / 2);
     for (let ix = 0; ix < NX; ix++) {
       for (let it = 0; it < NT; it++) {
-        const p = dipAt(ix, it);
+        const p = dip(ix, it);
         let s = 0, ss = 0, n = 0;
         for (let j = -half; j <= half; j++) {
           const x = clamp(ix + j, 0, NX - 1);
@@ -1137,19 +1242,186 @@
 
   /* ============================== plumbing ============================== */
 
-  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'pw', 'pe', 'pk', 'pm'];
+  const PANES = ['p1', 'p2', 'p3', 'p4', 'p5', 'pb', 'pw', 'pe', 'pk', 'pm'];
   const NAMES = {
     p1: 'The operator', p2: 'Why divide', p3: 'The two-stage recipe',
-    p4: 'Against coherence', p5: 'Confidence in a pick',
+    p4: 'Against coherence', p5: 'Confidence in a pick', pb: 'Blind test',
     pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
   };
 
+  const WINTEXT = () => S.smooth + ' traces, ' + P.len(P.across(S.smooth));
+
+  /* The scale readout. Throw is reported against the wavelength as well as in
+     samples, because a throw of eight samples is a different thing at 15 Hz
+     and at 60 Hz, and the fraction is the part that carries over to real
+     data. */
+  function scaleLabels() {
+    P.setUnits(S.units);
+    LAB.put('pVel', P.vel());
+    LAB.put('pBin', P.len(P.bin, 1));
+    LAB.put('pLam', P.len(P.lambda()));
+    LAB.put('pQ', P.len(P.quarter()));
+    LAB.put('pWin', WINTEXT());
+    if (typeof S.thr === 'number') {
+      LAB.put('pThr', S.thr === 0 ? 'no fault'
+        : P.len(P.thick(S.thr)) + '  \u00b7  ' + P.ms(S.thr).toFixed(0) + ' ms  \u00b7  \u03bb/'
+          + (P.lambda() / P.thick(S.thr)).toFixed(1));
+    }
+  }
+
   function labels() {
+    scaleLabels();
     LAB.put('noiseV', S.noise + '%');
     LAB.put('cohV', S.coh + '%');
     LAB.put('chaosV', S.chaos + '%');
     LAB.put('thrV', S.thr + (S.thr === 1 ? ' sample' : ' samples'));
     LAB.put('smoothV', S.smooth + (S.smooth === 1 ? ' trace' : ' traces'));
+  }
+
+
+  /* ============================= blind test ============================
+     The steps above all show the model first and the attribute second, which
+     is the reverse of the order an interpreter meets them in. This runs the
+     other way: a disorder map from a section the reader has not seen, with the
+     chaotic package present or absent and the settings randomized.
+
+     The empty cases are the point. An attribute map is never blank, so the
+     question a reader actually faces is not "is there an anomaly" but "is this
+     anomaly different from the background", and a case with heavy noise and no
+     chaotic package in it is where that question gets answered honestly. */
+
+  const B = {
+    seed: 1, hidden: null, sec: null, stat: null, lim: 1,
+    guess: null, revealed: false, asked: 0, right: 0,
+  };
+
+  function newBlindCase() {
+    B.seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+    const rnd = SEIS.mulberry32(B.seed);
+    // a third of cases have nothing in them
+    const hasChaos = rnd() > 0.34;
+    const top = 0.24 + 0.30 * rnd();
+    const h = {
+      chaos: hasChaos ? 0.35 + 0.55 * rnd() : 0,
+      top: top, bot: Math.min(0.90, top + 0.14 + 0.16 * rnd()),
+      noise: 0.10 + 0.35 * rnd(),
+      coh: 0.35 * rnd(),
+      thr: rnd() < 0.5 ? 0 : Math.round(4 + 6 * rnd()),
+      seed: Math.floor(rnd() * 90000) + 100,
+    };
+    B.hidden = h;
+    B.sec = LAB.buildSection({
+      nx: NX, nt: NT, dt: DT, freq: 30, fold: 22, foldWidth: 0.22,
+      throw: h.thr, faultAt: 0.38 + 0.3 * rnd(), seed: h.seed,
+      chaos: h.chaos, chaosTop: h.top, chaosBot: h.bot,
+      noise: h.noise, coherent: h.coh,
+    });
+    const g = ATTR.dipField(B.sec.f, NX, NT,
+      { decX: 3, decT: 4, half: 2, kHalf: 5, pMax: 6, nP: 41 });
+    B.stat = statStage(rawDisorder(B.sec.f, g), S.smooth, g);
+    B.lim = scaleOf(B.stat);
+    B.guess = null; B.revealed = false;
+    drawBlind();
+  }
+
+  function blindVerdict() {
+    const h = B.hidden;
+    if (!h) return '\u2014';
+    const truth = h.chaos > 0;
+    if (B.guess === 'none') return truth ? 'missed it' : 'correct';
+    const f = B.guess;
+    if (f === null) return '\u2014';
+    if (!truth) return 'called one that is not there';
+    return (f >= h.top - 0.03 && f <= h.bot) ? 'correct' : 'wrong depth';
+  }
+
+  function drawBlind() {
+    if (!B.hidden) return;
+    const w = LAB.rowWidth('rowb', 2), h = Math.max(215, Math.round(w * 0.78));
+    const hid = B.hidden;
+
+    const el = $('cb1');
+    if (el) {
+      const ctx = SEIS.fitCanvas(el, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, true);
+      LAB.imageInto(ctx, R, NX, NT,
+        (ix, it) => B.stat[ix * NT + (NT - 1 - it)] / (B.lim || 1), EXTRA.MAPS.confidence);
+      if (B.guess !== null && B.guess !== 'none') {
+        const y = R.y + B.guess * R.h;
+        SEIS.dashedLine(ctx, R.x, y, R.x + R.w, y, CRIM, [6, 4], 2);
+        SEIS.tag(ctx, R.x + 6, y - 6, 'your call', CRIM);
+      }
+      if (B.revealed && hid.chaos > 0) {
+        const y0 = R.y + hid.top * R.h, y1 = R.y + hid.bot * R.h;
+        SEIS.dashedLine(ctx, R.x, y0, R.x + R.w, y0, TEAL, [3, 3], 1.6);
+        SEIS.dashedLine(ctx, R.x, y1, R.x + R.w, y1, TEAL, [3, 3], 1.6);
+        SEIS.tag(ctx, R.x + 6, y0 + 12, 'the package', TEAL);
+      }
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, 0, (NT - 1) * DT * 1000, 'time (ms)', (v) => String(Math.round(v)), { ticks: 4 });
+      LAB.colorbar(ctx, R, EXTRA.MAPS.confidence, '0 \u00b7 easy to pick', 'hard to pick', 'disorder', 34);
+    }
+
+    const e2 = $('cb2');
+    if (e2) {
+      const ctx = SEIS.fitCanvas(e2, w, h);
+      ctx.clearRect(0, 0, w, h);
+      const R = rect(w, h, false);
+      if (B.revealed) {
+        SEIS.drawVarDensity(ctx, B.sec.f, NX, NT, R,
+          { cmap: SEIS.COLORMAPS.gray, clip: B.sec.peak });
+        if (hid.chaos > 0) {
+          const y0 = R.y + hid.top * R.h, y1 = R.y + hid.bot * R.h;
+          SEIS.dashedLine(ctx, R.x, y0, R.x + R.w, y0, TEAL, [3, 3], 1.6);
+          SEIS.dashedLine(ctx, R.x, y1, R.x + R.w, y1, TEAL, [3, 3], 1.6);
+        }
+      } else {
+        ctx.save();
+        ctx.fillStyle = '#EEF1F2';
+        ctx.fillRect(R.x, R.y, R.w, R.h);
+        ctx.fillStyle = SLATE;
+        ctx.font = '13px ui-monospace, Menlo, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('hidden', R.x + R.w / 2, R.y + R.h / 2);
+        ctx.restore();
+      }
+      SEIS.frame(ctx, R);
+      SEIS.axisBottom(ctx, R, 0, NX - 1, 'trace', (v) => String(Math.round(v)), { ticks: 4 });
+      SEIS.axisLeft(ctx, R, 0, (NT - 1) * DT * 1000, 'time (ms)', (v) => String(Math.round(v)), { ticks: 4 });
+    }
+
+    const ms = (f) => Math.round(f * (NT - 1) * DT * 1000) + ' ms';
+    LAB.put('sb1', B.guess === null ? 'nothing marked yet'
+      : B.guess === 'none' ? 'no chaotic package' : 'top at ' + ms(B.guess));
+    LAB.put('sb2', !B.revealed ? 'hidden'
+      : hid.chaos > 0 ? 'package from ' + ms(hid.top) + ' to ' + ms(hid.bot)
+        + (hid.thr ? ', and a fault' : ', no fault')
+      : 'no chaotic package' + (hid.thr ? ', but there is a fault' : ' and no fault'));
+    LAB.put('sb3', B.revealed ? blindVerdict() : '\u2014');
+    LAB.put('sb4', B.right + ' / ' + B.asked);
+    LAB.put('bNote', B.revealed ? 'the model behind the map' : 'hidden until you commit');
+  }
+
+  LAB.attachProbe('cb1', (x, y, r) => {
+    if (B.revealed || !B.hidden) return;
+    const R = rect(r.width, r.height, true);
+    B.guess = clamp((y - R.y) / R.h, 0, 1);
+    drawBlind();
+  });
+
+  function bindBlind() {
+    const on = (id, fn) => { const e = $(id); if (e) e.addEventListener('click', fn); };
+    on('bNew', () => newBlindCase());
+    on('bNone', () => { if (!B.revealed) { B.guess = 'none'; drawBlind(); } });
+    on('bReveal', () => {
+      if (!B.hidden || B.revealed || B.guess === null) return;
+      B.revealed = true;
+      B.asked++;
+      if (blindVerdict() === 'correct') B.right++;
+      drawBlind();
+    });
   }
 
   function drawAll() {
@@ -1161,6 +1433,7 @@
     if (!$('p3').hidden) draw3();
     if (!$('p4').hidden) draw4();
     if (!$('p5').hidden) draw5();
+    if (!$('pb').hidden) { if (!B.hidden) newBlindCase(); else drawBlind(); }
   }
 
   let busy = null;
@@ -1171,11 +1444,21 @@
 
   const show = LAB.setupTabs({
     panes: PANES, names: NAMES,
-    hideLabOn: ['pw', 'pe', 'pk', 'pm'],
+    hideLabOn: ['pb', 'pw', 'pe', 'pk', 'pm'],
     onShow: (id) => { S.tab = id; drawAll(); saveState(); },
   });
 
+  bindBlind();
   LAB.bindControls(S, refresh);
+
+  LAB.utilityBar({
+    canvas: 'cSec', pngName: 'disorder-section', units: S.units,
+    // a fresh stratigraphy at the same settings: the check on whether a
+    // separation just measured is a property of the attribute or of one model
+    onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    onUnits: (u) => { S.units = u; labels(); saveState(); },
+    onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
+  });
 
   LAB.attachProbe('cSec', (x, y, r) => {
     const R = { x: M.l, y: M.t, w: r.width - M.l - M.r, h: r.height - M.t - M.b };

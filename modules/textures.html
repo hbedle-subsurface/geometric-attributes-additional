@@ -84,6 +84,16 @@
               <label for="hilb" style="display:inline">Add the Hilbert transform term</label>
             </div>
           </div>
+          <div class="ctl-col">
+            <h2>Scale, and this setup</h2>
+            <div class="ctl"><label>Interval velocity, for scale <span class="val" id="pVel">&mdash;</span></label></div>
+            <div class="ctl"><label>Trace spacing <span class="val" id="pBin">&mdash;</span></label></div>
+            <div class="ctl"><label>Wavelength &lambda; = V / f <span class="val" id="pLam">&mdash;</span></label></div>
+            <div class="ctl"><label>&lambda;/4, the resolution limit <span class="val" id="pQ">&mdash;</span></label></div>
+            <div class="ctl"><label>Analysis window <span class="val" id="pWin">&mdash;</span></label></div>
+            <div class="ctl"><label>Throw, against &lambda; <span class="val" id="pThr">&mdash;</span></label></div>
+            <div id="utilbar"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -389,21 +399,21 @@
     <div class="tryit" style="max-width:none">
       <h3>Try this</h3>
       <ol>
-        <li><b>Separate contrast from dissimilarity.</b> In step 1, put the analysis point in the middle of
+        <li><b>Separate contrast from dissimilarity.</b> <em>Why bother: the three differ only in how they weight distance from the diagonal, and this is where that difference becomes a number.</em> In step 1, put the analysis point in the middle of
           the chaotic package and read the share of contrast carried by the ten most distant pairs.
           <details class="reveal"><summary>Hint</summary><span class="ans">A small number of extreme pairs
             carries a large share of the contrast, because contrast squares the distance. Dissimilarity
             weights the same pairs linearly and so reports something much closer to the typical behavior of
             the window. When the two attributes disagree on your data, that is what the disagreement means:
             contrast has found outliers, dissimilarity has found the bulk.</span></details></li>
-        <li><b>Confirm the energy trap.</b> Set the noise and the chaotic package to zero and put the
+        <li><b>Confirm the energy trap.</b> <em>Why bother: energy is the most commonly chosen of the eight and the easiest one to read backwards.</em> Set the noise and the chaotic package to zero and put the
           analysis point in a quiet interval between two reflectors.
           <details class="reveal"><summary>Hint</summary><span class="ans">The energy is high — the window
             is monotonous, so the matrix has almost all of its weight in one box, and that is what energy
             measures. There is no seismic energy there at all. If you handed this map to somebody and called
             it "energy" they would read it as an amplitude map and be wrong everywhere it
             matters.</span></details></li>
-        <li><b>Check the variance claim yourself.</b> In step 3, read the correlation between GLCM variance
+        <li><b>Check the variance claim yourself.</b> <em>Why bother: two attributes that measure the same thing waste a slot in whatever you feed them to.</em> In step 3, read the correlation between GLCM variance
           and semblance coherence, then change the window radius and read it again.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
             with it reads strongly negative, and it stays strongly negative whatever you do, because the two
@@ -412,7 +422,7 @@
             you can watch it hold as the parameters change rather than taking it on faith. Notice also that
             narrowing the window pulls the correlation toward zero — not because the two attributes stop
             agreeing, but because a smaller window makes both of them noisier.</span></details></li>
-        <li><b>Find a genuinely independent pair.</b> In step 5, look for the palest box in the correlation
+        <li><b>Find a genuinely independent pair.</b> <em>Why bother: choosing attributes is a question about redundancy between them, not about which one is best on its own.</em> In step 5, look for the palest box in the correlation
           table.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings the
             palest boxes involve <em>mean</em> — it correlates with variance and with entropy at a few
@@ -422,7 +432,7 @@
             map tells you which. Contrast and dissimilarity, at better than 0.95, are the clearest redundancy;
             energy and entropy, nearly as strongly and with the opposite sign, are the next. Three components account for 90% of the variance
             in all eight, and the first alone takes 64%.</span></details></li>
-        <li><b>Watch a channel become invisible.</b> In step 6, switch the mapped attribute to
+        <li><b>Watch a channel become invisible.</b> <em>Why bother: an attribute that discards amplitude cannot see a feature that is defined by amplitude.</em> In step 6, switch the mapped attribute to
           <em>mean</em>, then to <em>homogeneity</em>.
           <details class="reveal"><summary>Hint</summary><span class="ans">GLCM mean reads within a couple of
             percent of the background on the channel, a difference no color bar will render visible.
@@ -432,7 +442,7 @@
             that the channel has bars across it and the background does not. That is the case for texture
             attributes in one pair of images — the feature is a pattern, not an amplitude, and no amount of
             tuning turns an amplitude map into something that finds it.</span></details></li>
-        <li><b>Turn the Hilbert term off.</b> Uncheck it in the header and watch step 4.
+        <li><b>Turn the Hilbert term off.</b> <em>Why bother: AASPI computes it and this module can skip it, so the size of the difference is worth seeing rather than taking on trust.</em> Uncheck it in the header and watch step 4.
           <details class="reveal"><summary>Hint</summary><span class="ans">The maps become banded: the
             attribute changes with the phase of the wavelet, so it oscillates vertically at the frequency of
             the data. Adding the matrix of the Hilbert transform removes that, because where the data are at
@@ -507,6 +517,22 @@
         computing the correlation matrix and its eigenvalues. The eight have wildly different units, and an
         unstandardized analysis would simply rank them by magnitude.</p>
       <p>Every number quoted on this page is measured from the running page.</p>
+            <p><b>Where the meters come from.</b> The section model has an assumed interval velocity of
+        2800 m/s and an assumed trace spacing of 12.5 m attached to it, used nowhere in the eight measures
+        and only in the scale panel. The map-view model is built on 25 m bins directly. Neither number is
+        fitted to anything; they are there so that the size of an analysis window can be compared against
+        the size of the feature it is meant to resolve.</p>
+      <p><b>The panels are not the same kind of picture.</b> The section is amplitude. The eight measures
+        are statistics of a matrix of pair counts, each with its own units or none, and several of them
+        run in opposite senses — homogeneity is high where contrast is low. A map of one of them is
+        not a map of the rock but a map of a property of a window, and moving the window changes the
+        value at a point without anything in the ground having changed.</p>
+      <p><b>What the model leaves out.</b> Both models are cartoons. The section has no multiples, no
+        tuning wedges beyond what the random bed spacing produces by accident, and no amplitude variation
+        with offset, so nothing on this page tests whether these measures survive an AVO-driven amplitude
+        change. The map-view facies are drawn as textures on a flat statistical model rather than deposited
+        by any process, which is why they separate more cleanly here than they will on a real
+        horizon slice.</p>
       <ul>
         <li>AASPI, <em>Generating texture attributes: Program glcm3d</em>, University of Oklahoma — the
           eight measures, the recommendation of entropy and homogeneity, and the statements that GLCM
@@ -583,6 +609,16 @@
   const CRIM = '#841617', SLATE = '#5C6670', TEAL = '#0B7285', INK = '#16191C';
 
   const NX = 130, NT = 180, DT = 0.002;
+
+  /* The model is built in samples and traces because that is what the
+     arithmetic needs. These two numbers are what turn it back into ground: a
+     velocity to convert two-way time into thickness, and a bin spacing to
+     convert traces into distance along the line. Nothing in the attribute
+     calculations uses them. They exist so that a window can be quoted as a
+     length, which is the form in which the question "is this window the right
+     size?" can actually be answered. */
+  const VEL = 2800, BINM_LINE = 12.5, FREQ = 30;
+  const P = LAB.physics({ dt: DT, v: VEL, bin: BINM_LINE, freq: FREQ });
   const CHAOS_TOP = 0.36, CHAOS_BOT = 0.60;
   const KHALF = 1;
   const KEYS = ['contrast', 'dissimilarity', 'homogeneity', 'energy',
@@ -593,6 +629,7 @@
   const DEF = {
     noise: 15, chaos: 60, thr: 10, attr: 4, half: 6, lev: 9, hilb: 1,
     px: 30, pt: 32, tab: 'p1',
+    seed: 21, units: 'm',
   };
   let S = SEIS.readState(DEF);
   const CAN_LINK = location.protocol !== 'file:';
@@ -652,7 +689,7 @@
   function recompute() {
     SEC = LAB.buildSection({
       nx: NX, nt: NT, dt: DT, freq: 30, fold: 20, foldWidth: 0.22,
-      throw: S.thr, faultAt: 0.62, seed: 21,
+      throw: S.thr, faultAt: 0.62, seed: S.seed,
       chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
       noise: S.noise / 100,
     });
@@ -1265,7 +1302,28 @@
     pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
   };
 
+  const WINTEXT = () => (2 * S.half + 1) + ' traces, ' + P.len(P.across(2 * S.half + 1));
+
+  /* The scale readout. Throw is reported against the wavelength as well as in
+     samples, because a throw of eight samples is a different thing at 15 Hz
+     and at 60 Hz, and the fraction is the part that carries over to real
+     data. */
+  function scaleLabels() {
+    P.setUnits(S.units);
+    LAB.put('pVel', P.vel());
+    LAB.put('pBin', P.len(P.bin, 1));
+    LAB.put('pLam', P.len(P.lambda()));
+    LAB.put('pQ', P.len(P.quarter()));
+    LAB.put('pWin', WINTEXT());
+    if (typeof S.thr === 'number') {
+      LAB.put('pThr', S.thr === 0 ? 'no fault'
+        : P.len(P.thick(S.thr)) + '  \u00b7  ' + P.ms(S.thr).toFixed(0) + ' ms  \u00b7  \u03bb/'
+          + (P.lambda() / P.thick(S.thr)).toFixed(1));
+    }
+  }
+
   function labels() {
+    scaleLabels();
     LAB.put('noiseV', S.noise + '%');
     LAB.put('chaosV', S.chaos + '%');
     LAB.put('thrV', S.thr + (S.thr === 1 ? ' sample' : ' samples'));
@@ -1299,6 +1357,15 @@
   });
 
   LAB.bindControls(S, refresh);
+
+  LAB.utilityBar({
+    canvas: 'cSec', pngName: 'textures-section', units: S.units,
+    // a fresh stratigraphy at the same settings: the check on whether a
+    // separation just measured is a property of the attribute or of one model
+    onReroll: () => { S.seed = (S.seed * 7919 + 13) % 100000; refresh(); },
+    onUnits: (u) => { S.units = u; labels(); saveState(); },
+    onReset: () => LAB.resetState(S, DEF, () => { recompute(); drawAll(); }),
+  });
 
   LAB.attachProbe('cSec', (x, y, r) => {
     const R = { x: M.l, y: M.t, w: r.width - M.l - M.r, h: r.height - M.t - M.b };
