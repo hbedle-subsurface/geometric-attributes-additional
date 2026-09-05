@@ -93,9 +93,12 @@ const LAB = (function () {
        faultAt         where the fault crosses mid-section, as a fraction of nx
        faultDipDeg     dip of the fault plane as it will be DRAWN, in degrees
                        from horizontal. 90 is vertical; the default 65 is a
-                       fairly ordinary normal fault. The plane is planar and
-                       its position is carried at sub-trace precision. Whether
-                       it LOOKS planar is set by reflGap, not by the dip.
+                       fairly ordinary normal fault. This is the dip in the
+                       ground; what it looks like on a panel follows from the
+                       vertical exaggeration of that panel
+       vel             interval velocity, m/s, used only to place the fault
+                       plane and to report distances (default 2800)
+       binM            trace spacing in m, used the same way (default 12.5)
        chaos           0-1, how disordered the middle package is
        chaosTop/Bot    sample range of the chaotic package
        noise           0-1, random noise as a fraction of peak amplitude
@@ -108,6 +111,7 @@ const LAB = (function () {
     const c = Object.assign({
       nx: 180, nt: 260, dt: 0.002, freq: 30,
       reflGap: 14, nRefl: 0, spacingJitter: 0.22, firstRefl: 0.07, lastRefl: 0.94,
+      vel: 2800, binM: 12.5,
       fold: 16, foldWidth: 0.24, throw: 0, faultAt: 0.52, faultDipDeg: 65,
       chaos: 0, chaosTop: 0.34, chaosBot: 0.56,
       noise: 0, spike: 0, coherent: 0, seed: 7,
@@ -129,29 +133,43 @@ const LAB = (function () {
        The position is kept as a float: rounding it to a whole trace at each
        depth is one way to produce a staircase.
 
-       DRAW_ASPECT has to match the panels where the fault is actually studied.
-       The step panels are two, three or four across and come out roughly
-       square once the axis margins are taken off, so the plane is tuned to
-       1.0. The wide locator banner at the top of a module then shows the same
-       plane a little shallower than stated, which is the lesser error: the
-       banner is a locator, the step panels are where the fault is examined.
+       The dip is a dip in the ground, not a dip on the screen. Getting there
+       needs two numbers the model otherwise has no use for: the interval
+       velocity, which turns a sample of two-way time into a thickness of rock,
+       and the bin spacing, which turns a trace into a distance along the line.
+       With both in hand a plane at theta runs
 
-       The plane itself is not what makes a fault read as a staircase. Nothing
-       on a section draws the plane; what a reader sees is the set of points
-       where reflectors terminate against it, and the eye joins those points
-       only if they are close enough together. The spacing between them is the
-       reflector spacing times the slope above. With reflectors two dozen
-       samples apart the terminations land seven or eight traces apart with a
-       flat segment of reflector between each pair, and the eye follows the
-       flat segments instead: stairs. Two things below fix that, and neither
-       is the dip: reflectors close enough together that the terminations join
-       into a line, and a block rule that puts each termination on the plane
-       instead of up-dip of it. */
-    const DRAW_ASPECT = 1.0;                 // shape of the step panels, as drawn
+         (dt * v / 2) / (tan(theta) * bin)
+
+       traces sideways for every sample of depth, and that is the whole
+       conversion. The earlier version had no velocity, so it guessed at the
+       shape of the panel the fault would be drawn on and tuned the plane to
+       look right there. Tuned to a square panel and drawn on the wide locator
+       banner, a 65 degree plane came out at about 41, which stretched the
+       distance between reflector terminations by a factor of three and put the
+       stairs back on the panel a reader looks at first.
+
+       Doing it physically also makes the drawn dip a consequence rather than a
+       setting. A section is nearly always vertically exaggerated, so a fault
+       drawn on one is steeper than the fault in the ground, and the amount
+       depends on the panel. Fault dips read off a section are too steep for
+       exactly this reason, which is worth a student knowing.
+
+       None of this is what made the fault read as a staircase in the first
+       place. Nothing on a section draws the plane; what a reader sees is the
+       set of points where reflectors terminate against it, and the eye joins
+       those points only if they are close enough together. The spacing between
+       them is the reflector spacing times the slope above. With reflectors two
+       dozen samples apart the terminations land seven or eight traces apart
+       with a flat segment of reflector between each pair, and the eye follows
+       the flat segments instead. Three things fix it together: reflectors
+       close enough that the terminations join into a line, a block rule that
+       puts each termination on the plane instead of up-dip of it, and a slope
+       that is not three times too shallow. */
     const fx0 = c.faultAt * nx;              // where it crosses mid-section
     const theta = Math.max(20, Math.min(90, c.faultDipDeg)) * Math.PI / 180;
     // traces of horizontal run per sample of depth
-    const faultSlope = (1 / Math.tan(theta)) * (nx / nt) / DRAW_ASPECT;
+    const faultSlope = (c.dt * c.vel / 2) / (Math.tan(theta) * c.binM);
     // the plane dips toward increasing trace, so the hanging wall on the right
     // is the side that drops - an ordinary normal fault
     const faultXAt = (z) => fx0 + faultSlope * (z - nt / 2);
@@ -835,6 +853,20 @@ const LAB = (function () {
       // trace spacing is a survey parameter, so a module that lets a reader
       // change it has to be able to change it here too
       setBin: (b) => { c.bin = b; P.bin = b; },
+      /* The dip a reader measures off a panel, given the dip in the ground.
+         A section is drawn with the time axis stretched relative to the
+         distance axis, and the ratio of the two scales is the vertical
+         exaggeration. Dips read off a section are steeper than the dips in
+         the rock by exactly that factor, which is a thing worth showing
+         rather than correcting away. */
+      drawnDip: (deg, R, nx, nt) => {
+        const pxPerM_h = R.w / (nx * c.bin);
+        const pxPerM_v = R.h / (nt * c.dt * c.v / 2);
+        const t = Math.tan(deg * Math.PI / 180) * (pxPerM_v / pxPerM_h);
+        return Math.atan(t) * 180 / Math.PI;
+      },
+      exaggeration: (R, nx, nt) =>
+        (R.h / (nt * c.dt * c.v / 2)) / (R.w / (nx * c.bin)),
       unitLabel: () => U().lab,
       // format a length, converting to the display unit
       len: (m, d) => (m * U().len).toFixed(d === undefined ? 0 : d) + ' ' + U().lab,
