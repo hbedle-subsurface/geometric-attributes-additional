@@ -26,7 +26,7 @@ page was opened (see *Page-view counting* below).
 | # | File | AASPI program | Subject |
 |---|------|---------------|---------|
 | 01 | `modules/sof.html` | `sof3d` | Filtering along structure: mean, alpha-trimmed, median, LUM, principal component; cascading |
-| 02 | `modules/edgepreserve.html` | `sof3d` | Kuwahara window selection and the Fehmers–Höecker coherence weighting; s_low, s_high, s_center |
+| 02 | `modules/edgepreserve.html` | `sof3d` | Kuwahara window selection and the Fehmers–Höcker coherence weighting; s_low, s_high, s_center |
 | 03 | `modules/disorder.html` | `disorder` | The 27-point second-difference operator, normalization, and the `stat3d` second stage |
 | 04 | `modules/glcm.html` | `glcm3d` | Building the gray-level co-occurrence matrix: quantization, the 1.5σ clip, four directions, sparsity |
 | 05 | `modules/textures.html` | `glcm3d` | The eight Haralick measures, how few of them are independent, and how they read on a horizon slice |
@@ -47,7 +47,9 @@ URL is the feature.
 
 ## Page-view counting
 
-`assets/count.js` records that a page was opened, and nothing else. It is loaded
+`assets/count.js` records that a page was opened, and nothing about what happened
+on it. What it sends, once per page load: the page path, the page title, the
+referrer, the screen size, and the browser's user-agent string. It is loaded
 by every page — `assets/count.js` from the root, `../assets/count.js` from
 `modules/` — as the first script at the foot of the body. `ADD-COUNTING.md`
 carries the full procedure and is identical to the copy in the other
@@ -68,8 +70,8 @@ what the site tells people it does — and do not add a second analytics tool.
 
 The definitions follow the AASPI program documentation for `sof3d`,
 `disorder`, `glcm3d` and `nonparallelism`, together with the published
-literature — Kuwahara et al. (1976), Fehmers and Höecker (2003), Luo et al.
-(2002), Marfurt (2006), Haralick et al. (1973), Barnes (2002), al-Dossary et
+literature — Kuwahara et al. (1976), Fehmers and Höcker (2003), Luo et al.
+(2002), Marfurt (2006), Haralick et al. (1973), Barnes (2000), Al-Dossary et
 al. (2014), Gao (2011), Qi et al. (2014). Every module's **Method** tab lists
 its own sources and states plainly where the implementation simplifies or
 departs from a production volume.
@@ -110,8 +112,9 @@ Actually Work*, University of Oklahoma,
 `hbedle-subsurface.github.io/geometric-attributes-additional`.
 
 <!-- TODO before release: replace this block with the SSRN link once the
-     companion working paper is posted. Eight places carry it: this file, the
-     landing page, and the six module footers. -->
+     companion working paper is posted. This file is the only place that carries
+     the placeholder; if the link is also wanted on the landing page and in the
+     six module footers, those seven places have to be added at the same time. -->
 A companion working paper describing the design of this set, its verification
 and its limitations is in preparation and will be linked here.
 

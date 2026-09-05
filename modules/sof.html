@@ -161,9 +161,10 @@
       <div class="stat"><span>Steepest dip away from the fault</span><b id="s1c">—</b></div>
       <div class="stat wide"><span>What this means</span><b id="s1d">—</b></div>
     </div>
-    <p class="legend prose"><span>Signal loss is the drop in RMS amplitude against the same region before
-      filtering. It is measured only where the beds dip by more than about half a sample per trace. A number near zero means the filter left the reflection alone. Raise the fault
-      throw to give it something steep to work with.</span></p>
+    <p class="legend prose"><span>Signal loss is the drop in RMS amplitude against the same region of the
+      clean model, quoted as a percentage of that model's RMS amplitude there. It is measured only where
+      the beds dip by more than about half a sample per trace. A number near zero means the filter left the
+      reflection alone. Raise the fault throw to give it something steep to work with.</span></p>
   </section>
 
   <!-- ================================ 2 ================================ -->
@@ -326,12 +327,14 @@
 
     <div class="stats">
       <div class="stat"><span>Energy removed</span><b id="s5a">—</b></div>
-      <div class="stat key"><span>How much of it was signal</span><b id="s5b">—</b></div>
+      <div class="stat key wide"><span>How much of it resembles the reflectors</span><b id="s5b">—</b></div>
       <div class="stat wide"><span>Verdict</span><b id="s5c">—</b></div>
     </div>
-    <p class="legend prose"><span>Because the clean model is known, the rejected panel can be split into the
-      part that really was noise and the part that was signal. On real data you cannot do that arithmetic,
-      which is why you have to look at the panel instead.</span></p>
+    <p class="legend prose"><span>Because the clean model is known, the rejected panel can be measured
+      against it. The first figure is the correlation between what was thrown away and the clean model. The
+      second is the share of the rejected energy that lies along it, which is the square of the first and
+      is therefore always the smaller of the two. On real data neither number exists, which is why you have
+      to look at the panel instead.</span></p>
   </section>
 
   <!-- ================================ 6 ================================ -->
@@ -345,8 +348,12 @@
     <p class="lede">A single pass weights every sample in the window equally, so the sample at the far edge
       counts as much as the one at the center. Cascading small operators produces weights that taper toward
       the edges all by themselves, and a tapered filter follows a curving reflector better because it leans
-      on the far samples less. It is also cheaper: three passes of a 3&times;3 filter cost 27 operations
-      against 49 for a single 7&times;7.</p>
+      on the far samples less.</p>
+    <p class="lede">The panels below are one-dimensional, and in one dimension the two cost about the same:
+      seven multiply-adds for the single pass against nine for the three short ones. The saving arrives in
+      higher dimensions, where the count grows with the volume of the window rather than with its width.
+      Three passes of a 3&times;3&times;3 operator cost 81 operations against 343 for a single
+      7&times;7&times;7, which is the form <span class="k">sof3d</span> actually runs.</p>
 
     <div class="sec-row" id="row6">
       <div class="panel-col">
@@ -523,12 +530,12 @@
         <li>AASPI, <em>Structure-oriented filtering of poststack data: Program sof3d</em>, University of
           Oklahoma — the filter definitions, the cascading advice, and the recommendation to output the
           rejected noise.</li>
-        <li>Fehmers, G., and F. W. Höecker, 2003, Fast structural interpretation with structure-oriented
-          filtering: <em>Geophysics</em>, 68, 1286–1293.</li>
-        <li>Luo, Y., S. al-Dossary, and M. Marhoon, 2002, Edge-preserving smoothing and applications:
-          <em>The Leading Edge</em>, 21, 136–158.</li>
-        <li>Marfurt, K. J., 2006, Robust estimates of reflector dip and azimuth: <em>Geophysics</em>, 71,
-          P29–P40.</li>
+        <li>Fehmers, G. C., and C. F. W. Höcker, 2003, Fast structural interpretation with
+          structure-oriented filtering: <em>Geophysics</em>, 68, 1286–1293.</li>
+        <li>Luo, Y., M. Marhoon, S. Al Dossary, and M. Alfaraj, 2002, Edge-preserving smoothing and
+          applications: <em>The Leading Edge</em>, 21, 136–141.</li>
+        <li>Marfurt, K. J., 2006, Robust estimates of 3D reflector dip and azimuth:
+          <em>Geophysics</em>, 71, P29–P40.</li>
         <li>Kirlin, R. L., and W. J. Done, 1999, <em>Covariance Analysis for Seismic Signal Processing</em>:
           SEG Geophysical Developments 8.</li>
       </ul>
@@ -571,8 +578,9 @@
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that we can show the university these are being used &mdash; no cookie and no
-        identifier, and nothing about what you did on the page.</p>
+        count, so that we can show the university these are being used. It sends the page address and
+        title, the page you arrived from, your screen size and your browser's own identifying string, once
+        per load &mdash; no cookie, no identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>
@@ -820,8 +828,8 @@
     secPanel('c1a', MEAN_FLAT, w, h, { overlay: (c, R) => markOn(c, R, false) });
     secPanel('c1b', MEAN_DIP, w, h, { overlay: (c, R) => markOn(c, R, false) });
     const la = flankLoss(MEAN_FLAT), lb = flankLoss(MEAN_DIP);
-    LAB.put('s1a', (100 * la).toFixed(1) + '% of peak amplitude');
-    LAB.put('s1b', (100 * lb).toFixed(1) + '% of peak amplitude');
+    LAB.put('s1a', (100 * la).toFixed(1) + '% of RMS amplitude');
+    LAB.put('s1b', (100 * lb).toFixed(1) + '% of RMS amplitude');
     LAB.put('s1c', ATTR.dipToMsPerTrace(steepestDip(), DT).toFixed(2) + ' ms per trace');
     LAB.put('s1d', la > lb + 0.12
       ? 'The unsteered filter is removing a large part of the reflection the steered one keeps'
@@ -930,7 +938,11 @@
     const raw = rms(SEC.f, CLEAN.f);
     LAB.put('s3r', raw.toFixed(4));
     ['s3a', 's3b', 's3c', 's3d'].forEach((id, i) => {
-      LAB.put(id, e[i].toFixed(4) + '  (' + (100 * (1 - e[i] / raw)).toFixed(0) + '% better)');
+      // a filter can leave the section worse than it found it, and "-12% better"
+      // is not a thing anyone says
+      const d = 100 * (1 - e[i] / raw);
+      LAB.put(id, e[i].toFixed(4) + '  (' + Math.abs(d).toFixed(0)
+        + (d < 0 ? '% worse)' : '% better)'));
     });
     let bi = 0;
     for (let i = 1; i < 4; i++) if (e[i] < e[bi]) bi = i;
@@ -1046,7 +1058,13 @@
     }
     const corr = (er > 1e-12 && ec > 1e-12) ? Math.abs(ex) / Math.sqrt(er * ec) : 0;
     LAB.put('s5a', (100 * er / (ein || 1)).toFixed(1) + '% of the input energy');
-    LAB.put('s5b', (100 * corr).toFixed(1) + '% of it resembles the reflectors');
+    /* Two numbers, because they answer two different questions and are easy to
+       confuse. corr is how much the rejected panel LOOKS like the clean model,
+       which is what the eye judges. corr squared is the share of the rejected
+       ENERGY that lies along the clean model, which is what "how much signal
+       did I lose" actually asks. The second is always the smaller. */
+    LAB.put('s5b', (100 * corr).toFixed(1) + '% correlation with the clean model'
+      + '  \u00b7  ' + (100 * corr * corr).toFixed(1) + '% of the rejected energy');
     LAB.put('s5c', corr < 0.10 ? 'Mostly noise. This filter is earning its place.'
       : corr < 0.25 ? 'Some signal is going with the noise. Acceptable, but watch it.'
       : 'Too much. Reduce the window, or the data are cleaner than the filter assumes.');
@@ -1111,7 +1129,7 @@
     const e1 = rms(WIDE1, CLEAN.f), e3 = rms(NARROW3, CLEAN.f);
     LAB.put('s6a', e1.toFixed(4));
     LAB.put('s6b', e3.toFixed(4));
-    LAB.put('s6c', '7 against 3 + 3 + 3');
+    LAB.put('s6c', '7 against 3 + 3 + 3 in 1D  \u00b7  343 against 81 in 3D');
     LAB.put('s6d', e3 <= e1
       ? 'The cascaded filter reaches as far, costs less, and here is also the more accurate of the two'
       : 'At these settings the single pass is slightly more accurate; the taper still follows curvature better');

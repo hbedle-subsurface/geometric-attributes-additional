@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Edge-preserving filtering | More Geometric Attributes</title>
-<meta name="description" content="Kuwahara multi-window filtering and the Fehmers and Hoecker coherence weighting: how a structure-oriented filter is stopped from smoothing the faults away, and how s_low, s_high and s_center are chosen.">
+<meta name="description" content="Kuwahara multi-window filtering and the Fehmers and Höcker coherence weighting: how a structure-oriented filter is stopped from smoothing the faults away, and how s_low, s_high and s_center are chosen.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -199,7 +199,7 @@
   <section class="tabpane" id="p3" role="tabpanel" hidden>
     <div class="plot-head" style="margin-bottom:14px">
       <h3><span class="stepno">3</span>Or simply refuse to filter</h3>
-      <span class="hint">The Fehmers and Höecker weighting</span>
+      <span class="hint">The Fehmers and Höcker weighting</span>
     </div>
     <p class="lede">The second idea does not move the window at all. It looks up the coherence at the
       analysis point and uses it to decide how much of the filtered value to accept:</p>
@@ -467,7 +467,7 @@
       <p><b>The weighting.</b> w = 0 below s<sub>low</sub>, w = 1 above s<sub>high</sub>, and
         w = (s &minus; s<sub>low</sub>)/(s<sub>high</sub> &minus; s<sub>low</sub>) between them, with the
         output d = w·d<sub>filt</sub> + (1&minus;w)·d<sub>orig</sub>. This is equation-for-equation what
-        Fehmers and Höecker (2003) describe and what <span class="k">sof3d</span> implements.</p>
+        Fehmers and Höcker (2003) describe and what <span class="k">sof3d</span> implements.</p>
       <p><b>Where this departs from AASPI.</b> Two dimensions rather than three, so windows shift laterally
         along one axis only and the vertical Kuwahara search available to the principal component filter has
         no analogue here. The filter itself is the mean throughout, so that the panels differ only in their
@@ -503,14 +503,15 @@
       <ul>
         <li>AASPI, <em>Structure-oriented filtering of poststack data: Program sof3d</em>, University of
           Oklahoma — the edge-preservation parameters, and the procedure for choosing them by eye.</li>
-        <li>Fehmers, G., and F. W. Höecker, 2003, Fast structural interpretation with structure-oriented
-          filtering: <em>Geophysics</em>, 68, 1286–1293.</li>
-        <li>Kuwahara, M., K. Hachimura, S. Eiho, and M. Kinoshita, 1976, Digital processing of biomedical
-          images: Plenum Press, 187–203.</li>
-        <li>Luo, Y., S. al-Dossary, and M. Marhoon, 2002, Edge-preserving smoothing and applications:
-          <em>The Leading Edge</em>, 21, 136–158.</li>
-        <li>Marfurt, K. J., 2006, Robust estimates of reflector dip and azimuth: <em>Geophysics</em>, 71,
-          P29–P40.</li>
+        <li>Fehmers, G. C., and C. F. W. Höcker, 2003, Fast structural interpretation with
+          structure-oriented filtering: <em>Geophysics</em>, 68, 1286–1293.</li>
+        <li>Kuwahara, M., K. Hachimura, S. Eiho, and M. Kinoshita, 1976, Processing of
+          RI-angiocardiographic images, <em>in</em> K. Preston and M. Onoe, eds., Digital processing of
+          biomedical images: Plenum Press, 187–202.</li>
+        <li>Luo, Y., M. Marhoon, S. Al Dossary, and M. Alfaraj, 2002, Edge-preserving smoothing and
+          applications: <em>The Leading Edge</em>, 21, 136–141.</li>
+        <li>Marfurt, K. J., 2006, Robust estimates of 3D reflector dip and azimuth:
+          <em>Geophysics</em>, 71, P29–P40.</li>
         <li>Davogustto, O., 2011, Removing footprint from legacy seismic data volumes: MS thesis, The
           University of Oklahoma.</li>
       </ul>
@@ -553,8 +554,9 @@
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that we can show the university these are being used &mdash; no cookie and no
-        identifier, and nothing about what you did on the page.</p>
+        count, so that we can show the university these are being used. It sends the page address and
+        title, the page you arrived from, your screen size and your browser's own identifying string, once
+        per load &mdash; no cookie, no identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>

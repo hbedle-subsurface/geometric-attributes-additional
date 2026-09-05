@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The co-occurrence matrix | More Geometric Attributes</title>
-<meta name="description" content="How a gray-level co-occurrence matrix is built from seismic data: quantizing amplitudes to levels, clipping at 1.5 standard deviations, counting neighboring pairs in four directions, and reading the matrix that results.">
+<meta name="description" content="How a gray-level co-occurrence matrix is built from seismic data: quantizing amplitudes to levels, clipping at 1.5 times the window RMS, counting neighboring pairs in four directions, and reading the matrix that results.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -135,8 +135,10 @@
     </div>
     <p class="lede">The window of data is scaled so that its amplitudes land on a small set of integers —
       33 of them by default, numbered 0 to 32, with zero amplitude at the middle level. Anything beyond
-      1.5 standard deviations of the local distribution is pushed onto the end level rather than being
-      allowed to stretch the scale.</p>
+      1.5 times the RMS amplitude of the window is pushed onto the end level rather than being allowed to
+      stretch the scale. That RMS is written σ here and throughout, which is the symbol AASPI uses;
+      because it is measured about zero amplitude rather than about the window's own mean, it is not quite
+      the standard deviation, and step 5 says what turns on the difference.</p>
     <p class="lede">After this the actual millivolts are gone. Two windows with identical patterns and very
       different amplitudes quantize to the same set of levels and produce the same texture attributes.
       Whether that is a feature or a problem depends on what you are asking, and it is the single most
@@ -221,7 +223,7 @@
     </ul>
     <p class="lede">The three windows below are taken from different parts of the same section, and the
       fourth follows wherever you put the analysis point. The first and third are snapped onto a reflector
-      on purpose. Quantization scales each window by its own standard deviation. So a window sitting in the
+      on purpose. Quantization scales each window by its own RMS amplitude. So a window sitting in the
       quiet gap between two reflectors is scaled by its own noise, and reports the texture of that noise
       rather than of the geology. That is not a quirk of the display — it is how these attributes behave,
       and it is worth knowing before you interpret a texture volume.</p>
@@ -271,9 +273,12 @@
       how the survey happens to be oriented.</p>
     <p class="lede">Window size trades detail for reliability in the usual way, with one extra twist that
       matters here. A 33 by 33 matrix has 1089 boxes, and a window of 13 traces by 3 samples supplies only
-      a few hundred pairs. Most boxes are empty not because that combination cannot happen but because there
-      were not enough pairs to find out. Attributes computed on a sparse matrix are noisy, and entropy in
-      particular is badly biased by it.</p>
+      a couple of hundred entries to spread across them. Most boxes are empty not because that combination
+      cannot happen but because there were not enough pairs to find out. Attributes computed on a sparse
+      matrix are noisy, and entropy in particular is badly biased by it.</p>
+    <p class="lede">Entries rather than pairs, because each neighboring pair is counted twice — once at
+      box (i, j) and once at box (j, i) — which is what makes the matrix symmetric. The readout below
+      counts entries, so it is twice the number of distinct neighboring pairs the window holds.</p>
 
     <div class="sec-row" id="row4">
       <div class="panel-col">
@@ -294,7 +299,7 @@
       is switched off.</p>
 
     <div class="stats">
-      <div class="stat"><span>Pairs available at this window size</span><b id="s4a">—</b></div>
+      <div class="stat"><span>Entries this window size supplies</span><b id="s4a">—</b></div>
       <div class="stat"><span>Boxes in the matrix</span><b id="s4b">—</b></div>
       <div class="stat key"><span>Fraction of boxes that are occupied</span><b id="s4c">—</b></div>
       <div class="stat wide"><span>Is the matrix well enough sampled?</span><b id="s4d">—</b></div>
@@ -312,9 +317,19 @@
       level and every ordinary sample is squeezed into the few levels near the middle. The matrix collapses
       onto a small clump, the texture measures all report "uniform", and the window looks featureless
       because of one sample.</p>
-    <p class="lede">Clipping at a fixed number of standard deviations fixes this. AASPI's default is 1.5σ,
-      which puts about 87% of a Gaussian distribution inside the range and pushes the rest onto the end
-      levels. The outliers are not deleted; they are just prevented from setting the scale.</p>
+    <p class="lede">Clipping at a fixed multiple of the window's own RMS amplitude fixes this. AASPI's
+      default is 1.5σ. On a window whose amplitudes average out to zero, which is what a window centered
+      on a reflector package does, that puts about 87% of a Gaussian distribution inside the range and
+      pushes the rest onto the end levels. The outliers are not deleted; they are just prevented from
+      setting the scale.</p>
+    <p class="lede">σ here is the RMS amplitude of the window, taken about zero rather than about the
+      window's own mean, and that is a deliberate choice rather than a shorthand. Seismic amplitude is
+      signed and its zero means something, so the scale is centered on zero amplitude and level
+      (L&minus;1)/2 is the sample that is neither a peak nor a trough. A standard deviation would center
+      the scale on whatever the window happened to average, which moves as the window slides up and down
+      the wavelet. The two agree when the window averages to zero and separate when it does not: on this
+      module's own section the standard deviation of a window runs between about a sixth and all of its
+      RMS, depending on where the window sits.</p>
     <p class="lede">The <b>bad samples</b> slider adds isolated wild values to the data, which is what gives
       the clip something to protect against. Turn it to zero and the two matrices below become nearly
       identical, which is the honest answer to "does the clip matter": only when there is an outlier.</p>
@@ -387,7 +402,7 @@
         <li><b>Starve the matrix.</b> <em>Why bother: a sparse matrix gives attribute values that move for no geological reason, and this is how to recognize it happening.</em> In step 4, set the gray levels to 49 and the window radius to 2.
           <details class="reveal"><summary>Hint</summary><span class="ans">Around one box in fifty is occupied.
             There are 2401 of them at 49 levels, and a five-trace window three samples tall supplies only 76
-            pairs to fill them with. Any attribute computed from that matrix is mostly
+            entries to fill them with, which is 38 neighboring pairs counted both ways round. Any attribute computed from that matrix is mostly
             reporting which boxes happened to get a pair, which changes from sample to sample for no
             geological reason. Drop the levels to 5 with the same window and the occupancy rises severalfold; widen
             the window back to 12 traces at 49 levels and it rises again, though not as far. Fewer levels on a small window is
@@ -403,7 +418,7 @@
         <li><b>Let one spike set the scale.</b> <em>Why bother: quantization is a scaling step, and scaling steps are where a single bad sample does its damage.</em> In step 5, compare the two matrices with the noise slider
           around 40%.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
-            with, the largest sample in the window sits several standard deviations out, and the bulk of the
+            with, the largest sample in the window sits several times the window RMS out, and the bulk of the
             window spreads over roughly twice as many levels with the clip as without it — half the detail,
             thrown away to make room for one sample. Set the bad samples slider to zero and the difference
             disappears, because there is no longer an outlier to protect against. That is the whole
@@ -473,10 +488,17 @@
         that can be made chaotic, with an optional normal fault and band-limited random noise. Dip comes
         from the semblance scan of the first module set, and the analysis window is gathered along it with
         linear interpolation.</p>
-      <p><b>Quantization</b> follows the AASPI description. The standard deviation of the window is
-        computed, and the range is set to plus and minus the clip factor times that standard deviation. The
-        amplitudes are then mapped linearly onto the integers 0 to L&minus;1, with zero amplitude at the
-        middle level. Anything outside the range is assigned the end level rather than discarded. <b>The
+      <p><b>Quantization</b> follows the AASPI description. A scale σ is computed for the window and
+        the range is set to plus and minus the clip factor times σ. The amplitudes are then mapped
+        linearly onto the integers 0 to L&minus;1, with zero amplitude at the middle level. Anything
+        outside the range is assigned the end level rather than discarded. <b>σ here is the RMS
+        amplitude of the window, taken about zero rather than about the window's own mean.</b> That keeps
+        the scale centered on zero amplitude, which is what puts a sample that is neither peak nor trough
+        at the middle level; a standard deviation would center it on whatever the window averaged to. The
+        two coincide on a window that averages to zero. Where they do not, they can differ by a good deal:
+        measured over this module's own section, the standard deviation of a window runs between about a
+        sixth and all of its RMS. If a production volume is quantized against the standard deviation
+        instead, this is the step to look at first when the numbers do not match. <b>The
         matrix</b> counts every neighboring pair in the chosen directions, adds each pair in both
         orientations so that the result is symmetric, and divides by the total count.</p>
       <p><b>Where this departs from AASPI.</b> Two dimensions rather than three, so the four directions are
@@ -566,8 +588,9 @@
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that we can show the university these are being used &mdash; no cookie and no
-        identifier, and nothing about what you did on the page.</p>
+        count, so that we can show the university these are being used. It sends the page address and
+        title, the page you arrived from, your screen size and your browser's own identifying string, once
+        per load &mdash; no cookie, no identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>
@@ -968,7 +991,7 @@
   /* ------------------------------ step 3 ------------------------------- */
 
   /* The comparison windows of step 3. Quantization scales every window by its
-     own standard deviation, so a window sitting between two reflectors is
+     own RMS amplitude, so a window sitting between two reflectors is
      scaled by its own noise and reports the texture of that noise. The two
      conformable windows are therefore snapped onto a reflector, which is where
      you would put them on real data too. */
@@ -1133,13 +1156,13 @@
       SEIS.dashedLine(ctx, xh, R.y, xh, R.y + R.h, TEAL, [4, 3], 1.5);
       SEIS.tag(ctx, xh + 3, R.y + 32, 'you are here', TEAL);
       SEIS.frame(ctx, R);
-      SEIS.axisBottom(ctx, R, 0.5, 4, 'clip (standard deviations)', (v) => v.toFixed(1), { ticks: 4 });
+      SEIS.axisBottom(ctx, R, 0.5, 4, 'clip (\u00d7 window RMS)', (v) => v.toFixed(1), { ticks: 4 });
       SEIS.axisLeft(ctx, R, 0, 100, 'levels used (%)', (v) => String(Math.round(v)),
         { flip: true, ticks: 4 });
     }
 
     const uc = levelSpan(mClip.lev), ur = levelSpan(mRaw.lev);
-    LAB.put('s5e', bigSigma.toFixed(2) + ' standard deviations');
+    LAB.put('s5e', bigSigma.toFixed(2) + ' \u00d7 the window RMS');
     LAB.put('s5a', uc + ' of ' + mClip.L);
     LAB.put('s5b', ur + ' of ' + mRaw.L);
     LAB.put('s5c', occupied(mClip) + ' against ' + occupied(mRaw));

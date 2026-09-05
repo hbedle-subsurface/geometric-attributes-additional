@@ -113,13 +113,15 @@ const EXTRA = (function () {
    * The Hilbert-transform term is what makes the estimate insensitive to where
    * the window happens to be centered on the wavelet.
    *
-   * traces: array of J Float32Array/Array of length K (already gathered along
-   * dip). Returns the filtered value for trace index `out` at sample index
-   * `ks`, or the whole filtered window if `out` is undefined.
+   * traces: array of J arrays of length K, already gathered along dip. hilb is
+   * the matching Hilbert transform, or omitted. Returns { filtered, eigvec }:
+   * `filtered` is the whole reconstructed window, same shape as `traces`, and
+   * `eigvec` is the waveform weighting the reconstruction used. Callers wanting
+   * one value take filtered[trace][sample].
    */
   function pcFilter(traces, hilb) {
     const J = traces.length;
-    if (J === 0) return [];
+    if (J === 0) return { filtered: [], eigvec: new Float64Array(0) };
     const K = traces[0].length;
     // covariance between traces, summed down the vertical window
     const C = [];
@@ -161,7 +163,7 @@ const EXTRA = (function () {
   }
 
   /**
-   * Fehmers and Hoecker (2003) edge weighting, as AASPI states it.
+   * Fehmers and Hocker (2003) edge weighting, as AASPI states it.
    *
    *     s < s_low                 w = 0     do not filter at all
    *     s_low < s < s_high        w = (s - s_low)/(s_high - s_low)
@@ -295,8 +297,12 @@ const EXTRA = (function () {
    *
    *     level = CLIP( (L-1)/2 * [ 1 + d / (1.5 sigma + eps) ] )
    *
-   * sigma is the RMS of the window, so the scaling is relative to how loud
-   * this piece of data happens to be, and the clip at 1.5 standard deviations
+   * sigma is the RMS of the window, taken about zero rather than about the
+   * window's own mean, which is what keeps zero amplitude on the middle level
+   * however the window happens to average. It is therefore not the standard
+   * deviation, and the two separate on any window that does not average to
+   * zero. The scaling is relative to how loud this piece of data happens to
+   * be, and the clip at 1.5 sigma
    * means the loudest few percent of samples all land in an end level rather
    * than stretching the scale for everyone else. Samples past the clip are
    * assigned the end level rather than discarded, so the pair count does not
@@ -378,6 +384,13 @@ const EXTRA = (function () {
    *
    * AASPI computes each of these on the data and on its Hilbert transform and
    * adds the two; pass a second matrix as PH to do that.
+   *
+   * One assumption to know if you reuse this. Variance and correlation are
+   * written with a single mean mu, taken over j, and used for the i deviation
+   * as well. That is exact for a symmetric matrix, which is what coOccurrence
+   * returns by default and what every caller here passes. On a matrix built
+   * with symmetric:false the two marginal means differ and both quantities
+   * would need their own.
    */
   function haralick(P, L, PH) {
     const has = !!PH;
@@ -468,7 +481,11 @@ const EXTRA = (function () {
      the subject of module 06 step 4.
      ======================================================================= */
 
-  /** Unit normal to a reflector with inline dip p and crossline dip q. */
+  /* Unit normal to a reflector with inline dip p and crossline dip q.
+     Written (p, q, 1) rather than (-p, -q, 1), so it points the opposite way to
+     the textbook normal of a surface z = f(x, y). Nothing downstream notices:
+     every use is a scatter about a mean of these same vectors, and flipping all
+     of them flips the mean with them. */
   function unitNormal(p, q) {
     const den = Math.sqrt(p * p + q * q + 1);
     return [p / den, q / den, 1 / den];

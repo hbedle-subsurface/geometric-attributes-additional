@@ -119,7 +119,8 @@
         <div class="card-body">
           <div class="card-no">03</div>
           <h3>Disorder</h3>
-          <p>A second difference in all three directions, divided by the energy in the window. It ignores
+          <p>A second difference in all three directions, divided by the length of the data in the
+            window. It ignores
             faults on purpose and finds the places where the data are too messy to pick — which turns a
             structure map into a structure map with error bars.</p>
           <div class="q">How much should I trust this pick?</div>
@@ -196,11 +197,13 @@
       <p>Everything runs in the browser. No installation and no account. Nothing you do inside a module
         — no slider, no click, no trace you generate — is transmitted anywhere. The module code makes no
         network requests of its own.</p>
-      <p>The one request each page does make is a page-view count, which records that the page was opened
-        and nothing else. No cookie is set and no identifier is stored, and nothing about what you did on
-        the page is sent. We keep that count for two reasons — so the modules people actually use are the
-        ones that get improved, and so we can show the university that you all are using these, which is
-        how they keep getting built.</p>
+      <p>The one request each page does make is a page-view count. It sends five things, once per page
+        load: the address of the page, its title, the page you arrived from, the size of your screen, and
+        the identifying string your browser sends to every site it visits. No cookie is set and no
+        identifier is stored, and nothing about what you did on the page is sent — no slider, no click, no
+        answer to an exercise. We keep that count for two reasons — so the modules people actually use are
+        the ones that get improved, and so we can show the university that you all are using these, which
+        is how they keep getting built.</p>
       <p><i>More Geometric Attributes, and How They Actually Work</i> &copy; 2026 by Heather Bedle and
         April Moreno-Ward is licensed under <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA
         4.0</a>. You are free to share this material in any medium or format and to adapt it &mdash; remix

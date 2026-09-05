@@ -240,10 +240,19 @@
       <h3><span class="stepno">4</span>Putting the two together</h3>
       <span class="hint">A 2×2 matrix and its larger eigenvalue</span>
     </div>
-    <p class="lede">The third attribute asks whether the two deviations vary together. The two are
-      normalized onto a common footing and arranged as a 2×2 covariance matrix. The attribute is its larger
-      eigenvalue. That is the same device as the energy-ratio coherence of the first module set, applied to
-      a much smaller matrix.</p>
+    <p class="lede">The third attribute asks whether the two deviations are large in the same places. The
+      two are normalized onto a common footing and arranged as a 2×2 covariance matrix. The attribute is
+      its larger eigenvalue. That is the same device as the energy-ratio coherence of the first module set,
+      applied to a much smaller matrix.</p>
+    <p class="lede">The word covariance is doing less work here than it usually does. The diagonal entries
+      are mean squared deviations, so they cannot be negative, and the off-diagonal entry is built from the
+      square root of the product of the two magnitudes rather than from a signed product of centered
+      variables. It therefore has no sign to report: it says whether the two deviations are large at the
+      same samples, not whether they rise and fall together. Two places where a reader will notice the
+      difference: the matrix cannot report anti-correlation, and the larger eigenvalue is never smaller
+      than the larger diagonal entry, so the attribute cannot come out quieter than whichever of its two
+      inputs is louder. The <b>correlation between the two deviations</b> reported below is an ordinary
+      signed correlation computed over the whole map, and it is not the off-diagonal entry.</p>
     <p class="lede">Because an eigenvalue responds to either input, this attribute lights up where dip is
       chaotic, where energy is changing fast, and most strongly where both happen at once. The AASPI
       documentation puts it plainly: the covariance expresses both the chaotic and the high-energy features,
@@ -423,7 +432,7 @@
     <details class="notes" open>
       <summary>Method, sources, and what has been simplified</summary>
       <p>The model is a picked horizon in map view. It carries four features on a regional dip: a dome with a
-        gentle roll, a sinuous normal fault, a circular chaotic body whose relief is scrambled by three
+        gentle roll, a near-straight normal fault, a circular chaotic body whose relief is scrambled by three
         superposed patterns, and a sinuous channel. The channel dims the reflection strength without
         touching the structure.
         Every point carries a label saying which of those it belongs to, which is what lets the response
@@ -442,7 +451,12 @@
         real ones. The noise slider adds scatter back to compensate. What that scatter does to the
         speckliness of the result is the honest part of the trade. The normalization constants inside the
         covariance are medians of the two deviations over the map. AASPI's are set differently. The choice
-        affects the balance between the two contributions but not the character of the result.</p>
+        affects the balance between the two contributions but not the character of the result. The
+        off-diagonal entry of the 2×2 is the mean of the square root of the product of the two normalized
+        deviations, which is the construction step 4 describes: it cannot go negative and it carries no
+        sign. Absolute values from this page are therefore not comparable against a production
+        nonparallelism volume without checking that construction against the program documentation
+        first.</p>
             <p><b>Where the meters come from.</b> This model is built on 25 m bins from the start, so the bin
         spacing is part of the geometry rather than a display convention, and window radii convert to
         distance without any further assumption. There is no velocity here because there is no time axis:
@@ -462,16 +476,16 @@
         <li>AASPI, <em>Measuring chaotic vs. conformal reflectors: Program nonparallelism</em>, University of
           Oklahoma — the three attributes, the Great South Basin and Gulf of Mexico examples, and the
           salt-and-pepper caveat.</li>
-        <li>Barnes, A. E., 2002, Attributes for automating seismic facies analysis: 72nd Annual
+        <li>Barnes, A. E., 2000, Attributes for automating seismic facies analysis: 70th Annual
           International Meeting, SEG, Expanded Abstracts, 553–556 — the original standard deviation of
           vector dip.</li>
-        <li>Marfurt, K. J., and J. R. Rich, 2010, Beyond curvature: volumetric estimates of reflector
+        <li>Marfurt, K. J., and J. R. Rich, 2010, Beyond curvature — volumetric estimates of reflector
           rotation and convergence: 80th Annual International Meeting, SEG, Expanded Abstracts,
           1467–1472.</li>
         <li>Qi, J., B. Zhang, H. Zhou, and K. J. Marfurt, 2014, Attribute expression of fault-controlled
           karst — Fort Worth Basin, TX: <em>Interpretation</em>, 2, SF91–SF110.</li>
-        <li>Marfurt, K. J., 2006, Robust estimates of reflector dip and azimuth: <em>Geophysics</em>, 71,
-          P29–P40.</li>
+        <li>Marfurt, K. J., 2006, Robust estimates of 3D reflector dip and azimuth:
+          <em>Geophysics</em>, 71, P29–P40.</li>
       </ul>
     </details>
   </section>
@@ -512,8 +526,9 @@
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that we can show the university these are being used &mdash; no cookie and no
-        identifier, and nothing about what you did on the page.</p>
+        count, so that we can show the university these are being used. It sends the page address and
+        title, the page you arrived from, your screen size and your browser's own identifying string, once
+        per load &mdash; no cookie, no identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>

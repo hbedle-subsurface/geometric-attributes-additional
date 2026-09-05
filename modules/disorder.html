@@ -116,6 +116,12 @@
       are the pattern <b>1, &minus;2, 1</b> applied in all three directions. That is the standard recipe for
       a second difference, which measures how much a set of values <em>bends</em> rather than how big they
       are or how fast they change.</p>
+    <p class="lede">Applied in all three directions means multiplied together, not added up. Each weight is
+      the pattern's value across times its value down times its value through, so the 27 numbers are one
+      operator rather than three stacked on top of each other. A Laplacian, which is the other operator
+      built out of second differences, adds them instead, and the two behave differently: this one returns
+      zero whenever the data are smooth along any single direction, and the panel on the left is where that
+      is easiest to see.</p>
     <p class="lede">A second difference is zero on anything smooth. Feed it a flat surface and it returns
       zero; feed it a straight ramp and it still returns zero, because a ramp does not bend. Feed it
       something that goes up, down, up from one sample to the next and it returns a large number. That is
@@ -536,8 +542,10 @@
         <li>AASPI, <em>Computing volumetric estimates of the signal-to-noise ratio: Program disorder</em>,
           University of Oklahoma — the workflow, the two-stage computation, and the Gulf of Mexico and
           Halten Terrace examples.</li>
-        <li>Al-Dossary, S., W. Yuchun, and M. McFarlane, 2014, A new algorithm for the seismic disorder
-          attribute: <em>Interpretation</em>, 2, SA93–SA97.</li>
+        <li>Al-Dossary, S., Y. E. Wang, and M. McFarlane, 2014, Estimating randomness using seismic
+          disorder: <em>Interpretation</em>, 2, SA93–SA97.</li>
+        <li>Chopra, S., and K. J. Marfurt, 2016, Understanding the seismic disorder attribute and its
+          applications: <em>The Leading Edge</em>, 35, 695–702.</li>
         <li>Ha, T., and K. J. Marfurt, 2014, Quantifying confidence in horizon picking: <em>AAPG Explorer
           Geophysical Corner</em>, July.</li>
         <li>Brown, A. R., <em>Interpretation of Three-Dimensional Seismic Data</em>: AAPG Memoir 42 — the
@@ -582,8 +590,9 @@
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that we can show the university these are being used &mdash; no cookie and no
-        identifier, and nothing about what you did on the page.</p>
+        count, so that we can show the university these are being used. It sends the page address and
+        title, the page you arrived from, your screen size and your browser's own identifying string, once
+        per load &mdash; no cookie, no identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>
@@ -954,7 +963,7 @@
       SEIS.frame(ctx, R);
       SEIS.axisBottom(ctx, R, 0.1, 10, 'gain applied to the data', (v) => v.toFixed(1) + '\u00d7',
         { ticks: 5 });
-      SEIS.axisLeft(ctx, R, 0, 1, 'scaled to its own maximum', (v) => v.toFixed(1),
+      SEIS.axisLeft(ctx, R, 0, 1, 'raw scaled to its own maximum; disorder as it reads', (v) => v.toFixed(1),
         { flip: true, ticks: 4 });
       SEIS.tag(ctx, R.x + 8, R.y + 14, 'raw L \u00b7 e  \u2014 grows with the data', SLATE);
       SEIS.tag(ctx, R.x + 8, R.y + 32, 'disorder \u2014 flat', CRIM);

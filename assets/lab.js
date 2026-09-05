@@ -78,11 +78,6 @@ const LAB = (function () {
        spacingJitter   0-0.6, how uneven the reflector spacing is
        firstRefl       depth of the shallowest reflector, as a fraction of nt
        lastRefl        depth of the deepest one
-
-     Each horizon returned in `horizons` carries t, a depth in samples at every
-     trace, and cut, a flag marking the traces where the fault has removed that
-     reflector. t still holds a depth there - the depth of the plane - so
-     anything snapping a window to the nearest horizon still gets an answer.
        fold            relief of the fold, in samples
        foldWidth       how wide the fold is, as a fraction of the section. A
                        narrow fold gives steep flanks without translating the
@@ -105,6 +100,11 @@ const LAB = (function () {
        spike           0-1, fraction of samples that get an isolated spike
        coherent        0-1, cross-cutting linear noise (migration artifacts)
        seed            reproducibility
+
+     Each horizon returned in `horizons` carries t, a depth in samples at every
+     trace, and cut, a flag marking the traces where the fault has removed that
+     reflector. t still holds a depth there - the depth of the plane - so
+     anything snapping a window to the nearest horizon still gets an answer.
      ======================================================================= */
 
   function buildSection(cfg) {
@@ -594,8 +594,9 @@ const LAB = (function () {
       for (let ix = 0; ix < ng; ix++) {
         const i = iy * ng + ix;
         const u = (ix - ng * 0.34) / (ng * 0.24), w = (iy - ng * 0.56) / (ng * 0.34);
-        // z is negative downward, so a structural high is the LESS negative
-        // value: the dome has to be added, not subtracted
+        // z is a relief above an arbitrary datum rather than a depth: larger is
+        // shallower, so the dome has to be added, not subtracted. Every value
+        // written here is positive; only differences between them mean anything.
         let d = c.fold * Math.exp(-0.5 * (u * u + w * w))         // a dome
                 + 0.22 * c.fold * (ix / ng)                       // regional dip
                 + 12 * Math.sin(iy * 0.11);                       // a gentle roll

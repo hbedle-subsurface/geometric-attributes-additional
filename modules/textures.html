@@ -214,7 +214,7 @@
       variance V = &Sigma; P<sub>ij</sub> (i &minus; &mu;)<sup>2</sup><br>
       correlation R = (1/V) &Sigma; P<sub>ij</sub> (i &minus; &mu;)(j &minus; &mu;)</p>
     <p class="lede"><b>Mean</b> is the average gray level in the window. The levels came from quantizing the
-      window against its own standard deviation, so this is close to a constant everywhere. AASPI says
+      window against its own RMS amplitude, so this is close to a constant everywhere. AASPI says
       plainly that it has little value in either interpretation or machine learning.</p>
     <p class="lede"><b>Variance</b> is the spread of levels, and the AASPI documentation states the
       consequence directly: it reproduces semblance-based similarity, up to a scaling and a change of sign,
@@ -500,7 +500,7 @@
           <details class="reveal"><summary>Hint</summary><span class="ans">GLCM mean reads within a couple of
             percent of the background on the channel, a difference no color bar will render visible.
             Homogeneity separates the two by better than a tenth and the channel is obvious. The
-            reason mean fails is that every window was quantized against its own standard deviation, so the
+            reason mean fails is that every window was quantized against its own RMS amplitude, so the
             channel being brighter was normalized away before the matrix was ever built; what survives is
             that the channel has bars across it and the background does not. That is the case for texture
             attributes in one pair of images — the feature is a pattern, not an amplitude, and no amount of
@@ -552,7 +552,8 @@
     <details class="notes" open>
       <summary>Method, sources, and what has been simplified</summary>
       <p>The co-occurrence matrices are built exactly as in module 04. The window is gathered along
-        structural dip and quantized against its own standard deviation with a 1.5σ clip, and all four
+        structural dip and quantized against its own RMS amplitude with a 1.5σ clip — σ being the RMS
+        taken about zero rather than about the window mean, as module 04 sets out — and all four
         directions are counted with each pair added both ways round. The eight measures are then computed
         from those matrices with the formulas printed in steps 1 to 3, which are the forms given in the
         <span class="k">glcm3d</span> documentation.</p>
@@ -562,6 +563,12 @@
         weights the contribution of each one-sample-thick slice by its RMS amplitude; that weighting is not
         applied here, and the difference it makes is small on a section with no strong amplitude
         gradient.</p>
+      <p>Correlation is the one measure where &ldquo;compute both and add&rdquo; does not describe what
+        happens, because it is a ratio rather than a sum. With the Hilbert term on, the summed cross term
+        is divided by the summed variance, so the two matrices are pooled into one correlation instead of
+        producing two that are added. Pooling is the sensible reading of a normalized quantity, but it is a
+        choice, and it is why correlation moves differently from the other seven when the checkbox is
+        toggled.</p>
       <p><b>Where this departs from AASPI.</b> Two dimensions rather than three. The maps use fewer gray
         levels than the 33-level default, and the slider tops out at 17. A map requires a matrix at every
         sample, and a sparse matrix produces a noisy map. The single-point matrices in module 04 use the
@@ -656,8 +663,9 @@
         <span class="k">hbedle-subsurface.github.io/geometric-attributes-additional</span>.</p>
       <p class="lic">Nothing you do inside this module leaves your browser: no slider, no click and no
         trace you generate is transmitted anywhere. The one request the page itself makes is a page-view
-        count, so that we can show the university these are being used &mdash; no cookie and no
-        identifier, and nothing about what you did on the page.</p>
+        count, so that we can show the university these are being used. It sends the page address and
+        title, the page you arrived from, your screen size and your browser's own identifying string, once
+        per load &mdash; no cookie, no identifier, and nothing about what you did on the page.</p>
     </div>
   </footer>
 </div>
