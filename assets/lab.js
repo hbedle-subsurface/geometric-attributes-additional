@@ -216,6 +216,18 @@ const LAB = (function () {
     // its own random stream, so changing the stratigraphy does not change the
     // noise or spike patterns a module was built to show
     const srnd = SEIS.mulberry32(c.seed + 3);
+    /* The chaotic package needs its own fields. Two sine terms, which is what
+       this used to use, wobble every reflector in the package the same way,
+       so the package came out with a visible fabric running through it: the
+       reflectors were displaced but still parallel to each other, which is
+       the one thing a chaotic package is not. Sampling a smooth random field
+       at a different offset for each reflector decorrelates them, and cutting
+       reflectors out at random gives the terminations that make a mass
+       transport deposit look the way it does. */
+    const crnd = SEIS.mulberry32(c.seed + 71);
+    const Vc1 = valueField(crnd, Math.max(nx, nt), 9);
+    const Vc2 = valueField(crnd, Math.max(nx, nt), 3.5);
+    const Vcut = valueField(crnd, Math.max(nx, nt), 4.5);
     const gaps = [];
     let gsum = 0;
     for (let h = 0; h < nRefl - 1; h++) {
@@ -277,11 +289,15 @@ const LAB = (function () {
           // else: footwall, and it stayed where it was
         }
         if (inChaosPkg && c.chaos > 0) {
-          // reflectors in a chaotic package wander: three wavelengths of
-          // wobble, scaled by the slider
-          z += c.chaos * (7 * Math.sin(u * 17 + h * 1.9)
-                        + 5 * Math.sin(u * 41 + h * 0.7)
-                        + 4 * (rnd() * 2 - 1));
+          /* Each reflector reads the field at its own offset, so the package
+             loses its internal parallelism rather than being folded as a
+             unit. The last term keeps a little trace-to-trace roughness. */
+          const yo = h * 23 + 5;
+          z += c.chaos * (9.0 * fieldAt(Vc1, ix, yo)
+                        + 5.0 * fieldAt(Vc2, ix, yo * 1.7)
+                        + 2.0 * (rnd() * 2 - 1));
+          // and it breaks: reflectors inside a chaotic package terminate
+          if (fieldAt(Vcut, ix, yo * 2.3) > 1.05 - 0.75 * c.chaos) cut[ix] = 1;
         }
         t[ix] = z;
       }
@@ -565,6 +581,12 @@ const LAB = (function () {
     const facies = new Uint8Array(N);     // 0 background 1 chaos 2 channel 3 fault
 
     const cx = ng * 0.62, cy = ng * 0.44;
+    /* Fields for the chaotic body, replacing two sine terms that laid a
+       regular cross-hatch over it. A pattern that repeats is the opposite of
+       what the word chaotic is doing in the name. */
+    const hrnd = SEIS.mulberry32(c.seed + 91);
+    const Vh1 = valueField(hrnd, ng, 6.0);
+    const Vh2 = valueField(hrnd, ng, 2.4);
     for (let iy = 0; iy < ng; iy++) {
       for (let ix = 0; ix < ng; ix++) {
         const i = iy * ng + ix;
@@ -576,8 +598,16 @@ const LAB = (function () {
                 + 12 * Math.sin(iy * 0.11);                       // a gentle roll
         let amp = 1;
 
-        // a normal fault running north-south with a little sinuosity
-        const fx = ng * 0.30 + 4 * Math.sin(iy * 0.13);
+        /* A normal fault, running north-south. Its trace is close to
+           straight: a fault is a plane cutting a surface, so where it meets a
+           horizon it is a line, bending only where the surface is not flat or
+           where segments step. It used to be given four bins of sinusoidal
+           sway, which made it look exactly like the channel below and left
+           two features on the map that a reader could not tell apart. The
+           difference between them is now the difference it is on real data:
+           the fault is straight and offsets the surface, the channel meanders
+           and does not. */
+        const fx = ng * 0.30 + 0.11 * (iy - ng * 0.5) + 0.9 * Math.sin(iy * 0.045);
         if (c.throwM && ix > fx) d += c.throwM;
         if (c.throwM && Math.abs(ix - fx) < 1.2) facies[i] = 3;
 
@@ -587,9 +617,9 @@ const LAB = (function () {
           if (r < 1) {
             facies[i] = 1;
             const taper = 1 - r * r;
-            d += c.chaos * taper * (11 * Math.sin(ix * 0.9 + iy * 0.6)
-                                  + 8 * Math.sin(ix * 0.35 - iy * 1.4)
-                                  + 9 * (rnd() * 2 - 1));
+            d += c.chaos * taper * (14 * fieldAt(Vh1, ix, iy)
+                                  + 9 * fieldAt(Vh2, ix, iy)
+                                  + 5 * (rnd() * 2 - 1));
             // Amplitudes inside are poor and fairly uniform, and climb steeply
             // back to normal at the rim - which is how salt and a mass
             // transport complex behave, and why an attribute built on the
@@ -598,10 +628,15 @@ const LAB = (function () {
           }
         }
 
-        // a channel: dim fill, no structural expression at all
+        /* A channel: dim fill, no structural expression at all. It runs
+           roughly east-west, across the fault rather than beside it, which is
+           the second half of keeping the two features distinguishable. A
+           channel that crosses a fault is also the more useful picture: it
+           shows a reader that the two are different kinds of thing rather
+           than two versions of the same lineament. */
         if (c.channel > 0) {
-          const chx = ng * 0.74 + 7 * Math.sin(iy * 0.09);
-          const dd = Math.abs(ix - chx);
+          const chy = ng * 0.76 + 7 * Math.sin(ix * 0.085) + 3.5 * Math.sin(ix * 0.21 + 1.3);
+          const dd = Math.abs(iy - chy);
           const inside = 1 / (1 + Math.exp((dd - 4.5) / 1.1));
           if (inside > 0.5) facies[i] = 2;
           amp *= 1 - c.channel * inside;

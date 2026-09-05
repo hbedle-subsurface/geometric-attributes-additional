@@ -336,7 +336,7 @@
 
     <div class="sec-row" id="rowb">
       <div class="panel-col">
-        <p class="sublabel"><b>1</b> Disorder <span class="note">click to mark the top of the package</span></p>
+        <p class="sublabel"><b>1</b> Disorder <span class="note">click inside the package</span></p>
         <canvas id="cb1" aria-label="Disorder map from a hidden model, for the blind test"></canvas>
       </div>
       <div class="panel-col">
@@ -356,6 +356,7 @@
       <div class="stat"><span>Your call</span><b id="sb1">&mdash;</b></div>
       <div class="stat"><span>The truth</span><b id="sb2">&mdash;</b></div>
       <div class="stat key"><span>Verdict</span><b id="sb3">&mdash;</b></div>
+      <div class="stat"><span>Noise in this case</span><b id="sb5">&mdash;</b></div>
       <div class="stat key wide"><span>Called correctly</span><b id="sb4">0 / 0</b></div>
     </div>
 
@@ -1327,11 +1328,19 @@
     // a third of cases have nothing in them
     const hasChaos = rnd() > 0.34;
     const top = 0.24 + 0.30 * rnd();
+    /* The noise range is the whole difficulty of this test, and it has to be
+       chosen against a measurement rather than by eye. At 45% random noise
+       with 35% correlated noise on top, the median disorder inside a chaotic
+       package is 1.08 times the median outside it: the package is not faint,
+       it is absent, and a reader marking one is guessing. Held between 8 and
+       22% the separation runs from about 2.1 down to 1.4, which spans easy to
+       genuinely hard while staying possible throughout. A test nobody can
+       pass teaches that the attribute does not work. */
     const h = {
-      chaos: hasChaos ? 0.35 + 0.55 * rnd() : 0,
-      top: top, bot: Math.min(0.90, top + 0.14 + 0.16 * rnd()),
-      noise: 0.10 + 0.35 * rnd(),
-      coh: 0.35 * rnd(),
+      chaos: hasChaos ? 0.50 + 0.45 * rnd() : 0,
+      top: top, bot: Math.min(0.90, top + 0.16 + 0.16 * rnd()),
+      noise: 0.08 + 0.14 * rnd(),
+      coh: 0.05 + 0.15 * rnd(),
       thr: rnd() < 0.5 ? 0 : Math.round(4 + 6 * rnd()),
       seed: Math.floor(rnd() * 90000) + 100,
     };
@@ -1358,7 +1367,7 @@
     const f = B.guess;
     if (f === null) return '\u2014';
     if (!truth) return 'called one that is not there';
-    return (f >= h.top - 0.03 && f <= h.bot) ? 'correct' : 'wrong depth';
+    return (f >= h.top - 0.04 && f <= h.bot + 0.02) ? 'correct' : 'missed the package';
   }
 
   function drawBlind() {
@@ -1420,12 +1429,16 @@
 
     const ms = (f) => Math.round(f * (NT - 1) * DT * 1000) + ' ms';
     LAB.put('sb1', B.guess === null ? 'nothing marked yet'
-      : B.guess === 'none' ? 'no chaotic package' : 'top at ' + ms(B.guess));
+      : B.guess === 'none' ? 'no chaotic package' : 'inside at ' + ms(B.guess));
     LAB.put('sb2', !B.revealed ? 'hidden'
       : hid.chaos > 0 ? 'package from ' + ms(hid.top) + ' to ' + ms(hid.bot)
         + (hid.thr ? ', and a fault' : ', no fault')
       : 'no chaotic package' + (hid.thr ? ', but there is a fault' : ' and no fault'));
     LAB.put('sb3', B.revealed ? blindVerdict() : '\u2014');
+    // on reveal, say how noisy the case was: the hard ones are the noisy ones,
+    // and that is the thing worth learning from a run of them
+    LAB.put('sb5', !B.revealed ? '\u2014'
+      : Math.round(hid.noise * 100) + '% random, ' + Math.round(hid.coh * 100) + '% correlated');
     LAB.put('sb4', B.right + ' / ' + B.asked);
     LAB.put('bNote', B.revealed ? 'the model behind the map' : 'hidden until you commit');
   }
