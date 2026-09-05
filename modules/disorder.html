@@ -80,6 +80,8 @@
             <div class="ctl"><label>&lambda;/4, the resolution limit <span class="val" id="pQ">&mdash;</span></label></div>
             <div class="ctl"><label>Smoothing window <span class="val" id="pWin">&mdash;</span></label></div>
             <div class="ctl"><label>Throw, against &lambda; <span class="val" id="pThr">&mdash;</span></label></div>
+            <div class="ctl"><label>Fault dip, true and as drawn
+              <span class="val" id="pDip">&mdash;</span></label></div>
             <div id="utilbar"></div>
           </div>
         </div>
@@ -523,6 +525,12 @@
         the fault response measured on this page is closer to a floor than to a typical value. The
         chaotic package, in the other direction, is scrambled by a formula rather than by a landslide, and
         real chaotic intervals are not uniformly chaotic throughout.</p>
+            <p><b>Fault dip, and why the drawn one is steeper.</b> The dip is specified in the ground and
+        converted to a slope on the section through the velocity and the bin spacing, so the plane is at
+        65&deg; in the rock rather than 65&deg; on the screen. The section is vertically exaggerated, as
+        nearly every seismic display is, and the scale panel reports the drawn dip alongside the true one
+        so the difference can be seen rather than inferred. Fault dips measured off a section are
+        routinely too steep for this reason alone.</p>
       <ul>
         <li>AASPI, <em>Computing volumetric estimates of the signal-to-noise ratio: Program disorder</em>,
           University of Oklahoma — the workflow, the two-stage computation, and the Gulf of Mexico and
@@ -604,6 +612,7 @@
      length, which is the form in which the question "is this window the right
      size?" can actually be answered. */
   const VEL = 2800, BINM_LINE = 12.5, FREQ = 30;
+  const FAULT_DIP = 65;          // degrees from horizontal, in the ground
   const P = LAB.physics({ dt: DT, v: VEL, bin: BINM_LINE, freq: FREQ });
   const CHAOS_TOP = 0.36, CHAOS_BOT = 0.60;
   // the same limits as whole samples, because they index arrays
@@ -626,7 +635,7 @@
 
   function recompute() {
     SEC = LAB.buildSection({
-      nx: NX, nt: NT, dt: DT, freq: 30, fold: 22, foldWidth: 0.22,
+      nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 22, foldWidth: 0.22,
       throw: S.thr, faultAt: 0.62, seed: S.seed,
       chaos: S.chaos / 100, chaosTop: CHAOS_TOP, chaosBot: CHAOS_BOT,
       noise: S.noise / 100, coherent: S.coh / 100,
@@ -759,6 +768,22 @@
     for (let i = 0; i < field.length; i += 7) v.push(field[i]);
     v.sort((a, b) => a - b);
     return Math.max(1e-6, v[Math.floor(0.98 * (v.length - 1))]);
+  }
+
+
+  /* The header panel is the one a reader looks at first and the one they would
+     measure a dip off, so the exaggeration is reported for that panel rather
+     than for an average of all of them. */
+  function dipReadout() {
+    const el = $('cSec');
+    if (!el) return;
+    const w = LAB.panelWidth(el, 320);
+    const h = Math.max(200, Math.round(w * 0.46));
+    const R = rect(w, h, false);
+    const drawn = P.drawnDip(FAULT_DIP, R, NX, NT);
+    LAB.put('pDip', S.thr === 0 ? 'no fault'
+      : FAULT_DIP + '\u00b0 in the ground, ' + drawn.toFixed(0)
+        + '\u00b0 as drawn  \u00b7  ' + P.exaggeration(R, NX, NT).toFixed(1) + '\u00d7 vertical');
   }
 
   function drawHeader() {
@@ -1262,6 +1287,7 @@
     LAB.put('pLam', P.len(P.lambda()));
     LAB.put('pQ', P.len(P.quarter()));
     LAB.put('pWin', WINTEXT());
+    dipReadout();
     if (typeof S.thr === 'number') {
       LAB.put('pThr', S.thr === 0 ? 'no fault'
         : P.len(P.thick(S.thr)) + '  \u00b7  ' + P.ms(S.thr).toFixed(0) + ' ms  \u00b7  \u03bb/'
@@ -1311,7 +1337,7 @@
     };
     B.hidden = h;
     B.sec = LAB.buildSection({
-      nx: NX, nt: NT, dt: DT, freq: 30, fold: 22, foldWidth: 0.22,
+      nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 22, foldWidth: 0.22,
       throw: h.thr, faultAt: 0.38 + 0.3 * rnd(), seed: h.seed,
       chaos: h.chaos, chaosTop: h.top, chaosBot: h.bot,
       noise: h.noise, coherent: h.coh,

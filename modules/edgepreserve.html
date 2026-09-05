@@ -88,6 +88,8 @@
             <div class="ctl"><label>&lambda;/4, the resolution limit <span class="val" id="pQ">&mdash;</span></label></div>
             <div class="ctl"><label>Analysis window <span class="val" id="pWin">&mdash;</span></label></div>
             <div class="ctl"><label>Throw, against &lambda; <span class="val" id="pThr">&mdash;</span></label></div>
+            <div class="ctl"><label>Fault dip, true and as drawn
+              <span class="val" id="pDip">&mdash;</span></label></div>
             <div id="utilbar"></div>
           </div>
         </div>
@@ -492,6 +494,12 @@
         Each of those makes the discontinuity easier for the window selection to find in some settings and
         harder in others. None of them removes the trade the module is about, which is that a symmetric
         window and a sharp edge cannot both be respected.</p>
+            <p><b>Fault dip, and why the drawn one is steeper.</b> The dip is specified in the ground and
+        converted to a slope on the section through the velocity and the bin spacing, so the plane is at
+        65&deg; in the rock rather than 65&deg; on the screen. The section is vertically exaggerated, as
+        nearly every seismic display is, and the scale panel reports the drawn dip alongside the true one
+        so the difference can be seen rather than inferred. Fault dips measured off a section are
+        routinely too steep for this reason alone.</p>
       <ul>
         <li>AASPI, <em>Structure-oriented filtering of poststack data: Program sof3d</em>, University of
           Oklahoma — the edge-preservation parameters, and the procedure for choosing them by eye.</li>
@@ -576,6 +584,7 @@
      length, which is the form in which the question "is this window the right
      size?" can actually be answered. */
   const VEL = 2800, BINM_LINE = 12.5, FREQ = 30;
+  const FAULT_DIP = 65;          // degrees from horizontal, in the ground
   const P = LAB.physics({ dt: DT, v: VEL, bin: BINM_LINE, freq: FREQ });
   const MODES = ['none', 'Kuwahara windows', 'coherence weighting', 'both'];
 
@@ -594,7 +603,7 @@
 
   function cfg(withNoise) {
     return {
-      nx: NX, nt: NT, dt: DT, freq: 30, fold: 30, foldWidth: 0.20,
+      nx: NX, nt: NT, dt: DT, freq: 30, vel: VEL, binM: P.bin, faultDipDeg: FAULT_DIP, fold: 30, foldWidth: 0.20,
       throw: S.thr, faultAt: 0.52, seed: S.seed,
       noise: withNoise ? S.noise / 100 : 0,
     };
@@ -762,6 +771,22 @@
   function markOn(ctx, R) {
     const x = R.x + (S.px / (NX - 1)) * R.w, y = R.y + (S.pt / (NT - 1)) * R.h;
     LAB.marker(ctx, x, y, CRIM, 5);
+  }
+
+
+  /* The header panel is the one a reader looks at first and the one they would
+     measure a dip off, so the exaggeration is reported for that panel rather
+     than for an average of all of them. */
+  function dipReadout() {
+    const el = $('cSec');
+    if (!el) return;
+    const w = LAB.panelWidth(el, 320);
+    const h = Math.max(200, Math.round(w * 0.44));
+    const R = { x: M.l, y: M.t, w: w - M.l - M.r, h: h - M.t - M.b };
+    const drawn = P.drawnDip(FAULT_DIP, R, NX, NT);
+    LAB.put('pDip', S.thr === 0 ? 'no fault'
+      : FAULT_DIP + '\u00b0 in the ground, ' + drawn.toFixed(0)
+        + '\u00b0 as drawn  \u00b7  ' + P.exaggeration(R, NX, NT).toFixed(1) + '\u00d7 vertical');
   }
 
   function drawHeader() {
@@ -1049,6 +1074,7 @@
     LAB.put('pLam', P.len(P.lambda()));
     LAB.put('pQ', P.len(P.quarter()));
     LAB.put('pWin', WINTEXT());
+    dipReadout();
     if (typeof S.thr === 'number') {
       LAB.put('pThr', S.thr === 0 ? 'no fault'
         : P.len(P.thick(S.thr)) + '  \u00b7  ' + P.ms(S.thr).toFixed(0) + ' ms  \u00b7  \u03bb/'
