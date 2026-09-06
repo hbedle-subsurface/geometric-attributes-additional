@@ -26,10 +26,10 @@
   <div class="mod-head">
     <p class="eyebrow">Module 02 &nbsp;·&nbsp; Program sof3d</p>
     <h1>Edge preservation: the fault is signal, not noise</h1>
-    <p class="sub">Every filter in module 01 smooths across a fault as happily as it smooths along a
-      reflector, because nothing has told it the difference. Two ideas fix that, and they work in completely
-      different ways. One changes <em>where</em> the window sits. The other decides <em>whether to filter
-      at all</em>. AASPI applies both, and this module takes them apart.</p>
+    <p class="sub">Every filter in module 01 smooths across a fault as readily as it smooths along a
+      reflector, because nothing in the filter distinguishes the two. Two mechanisms correct this, and they
+      work in different ways. One changes <em>where</em> the window sits. The other sets <em>how much of
+      the filtered value is used</em>. AASPI applies both, and this module separates them.</p>
   </div>
 
   <div class="labhead">
@@ -120,12 +120,11 @@
     </div>
     <p class="lede">Put a window across a fault and half of its samples come from the upthrown side and half
       from the downthrown side. Averaging them produces a value belonging to neither, and doing that at
-      every point along the fault turns a sharp break into a ramp. The fault does not disappear; it goes
-      soft, which is worse, because a soft fault still looks like a fault and no longer tells you where it
-      is.</p>
-    <p class="lede">Coherence run on the filtered volume is the honest test. If the filter has smeared the
-      fault, the coherence anomaly gets broader and weaker — and coherence is usually the reason the data
-      were filtered in the first place.</p>
+      every point along the fault turns a sharp break into a ramp. The fault does not disappear. Its edge
+      is broadened, so it remains visible as a fault while no longer marking its own position.</p>
+    <p class="lede">Coherence computed on the filtered volume is a direct test of this. If the filter has
+      smeared the fault, the coherence anomaly becomes broader and weaker, and coherence is usually the
+      reason the data were filtered in the first place.</p>
 
     <div class="sec-row" id="row1">
       <div class="panel-col">
@@ -184,8 +183,8 @@
 
     <p class="lede" style="margin-top:12px">Drag the analysis point onto the fault and watch the winner jump
       to one side. Drag it into the middle of a conformable package and the scores flatten out, because
-      every candidate window sees the same well-behaved data. That is the situation s<sub>center</sub>
-      exists to handle, in step 4.</p>
+      every candidate window contains the same well-behaved data. That is the case s<sub>center</sub>
+      addresses, in step 4.</p>
 
     <div class="stats">
       <div class="stat"><span>Candidate windows</span><b id="s2a">—</b></div>
@@ -209,9 +208,9 @@
       <li>In between: a linear blend, so the filter fades in rather than switching on.</li>
     </ul>
     <p class="lede">Everything about this rests on the coherence volume being right. If coherence marks a
-      noise burst as an edge, the filter will politely leave that noise burst alone; if it misses a subtle
-      fault, the filter will smooth it away. The weighting does not detect edges. It only acts on a
-      detection somebody else made.</p>
+      noise burst as an edge, the filter will leave that noise burst unfiltered; if it misses a subtle
+      fault, the filter will smooth the fault away. The weighting does not detect edges; it acts on a
+      detection made elsewhere.</p>
 
     <div class="sec-row" id="row3">
       <div class="panel-col">
@@ -242,16 +241,16 @@
       <h3><span class="stepno">4</span>Where the thresholds come from</h3>
       <span class="hint">A histogram, and a decision somebody has to make</span>
     </div>
-    <p class="lede">Most interpreters are surprised to learn how many processing parameters are chosen by
-      eye rather than derived. These three are among them. The AASPI documentation describes the procedure
-      honestly. Display coherence with a color bar. Raise the lower limit until the real geologic edges are
+    <p class="lede">Many processing parameters are chosen by eye rather than derived, and these three are
+      among them. The AASPI documentation sets out the procedure directly. Display coherence with a color
+      bar. Raise the lower limit until the real geologic edges are
       the only things left at the bottom of the scale, and raise the upper limit until the acquisition
       footprint stops being visible. Then read the two numbers off the color bar.</p>
     <p class="lede">The histogram below is the same decision in one picture. The bulk of any coherence
-      volume is a tall peak near one — that is the ordinary, conformable data, which is most of the
+      volume is a tall peak near one, the ordinary conformable data, which is most of the
       section. The edges live in the thin tail on the left. s<sub>low</sub> and s<sub>high</sub> go in the
-      gap between the tail and the peak. The honest reason for choosing one pair of values over another is
-      that the pictures on either side of them look right.</p>
+      gap between the tail and the peak. The stated basis for choosing one pair of values over another is
+      the appearance of the images on either side of them.</p>
 
     <div class="sec-row" id="row4">
       <div class="panel-col">
@@ -266,10 +265,10 @@
     </div>
 
     <p class="lede" style="margin-top:12px">s<sub>center</sub> is a different kind of parameter. It is not
-      about edges at all — it is a brake on the Kuwahara search. Where coherence is already high there is no
-      edge to avoid, so letting the window wander off center serves no purpose and does real harm. The
-      filter starts choosing a slightly different offset at every point, and the image acquires a blocky,
-      patchy look in exactly the places you expected it to be smooth. Above s<sub>center</sub>, AASPI stops
+      an edge threshold; it limits where the Kuwahara search runs. Where coherence is already high there is
+      no edge to avoid, so allowing the window to move off center serves no purpose and does harm. The
+      filter then chooses a slightly different offset at every point, and the image takes on a blocky,
+      patchy appearance in the places that should be smooth. Above s<sub>center</sub>, AASPI stops
       searching and uses the centered window.</p>
 
     <div class="stats">
@@ -288,10 +287,10 @@
     </div>
     <p class="lede">Same mean filter, same window size, same data. The only thing changing is which edge
       preservation is switched on. Each row carries two numbers: the error against the clean model over the
-      whole section, and the lowest coherence left on the fault. Those two numbers usually disagree about
-      which filter is best, and the disagreement is the point.</p>
+      whole section, and the lowest coherence left on the fault. Those two numbers usually rank the filters
+      differently.</p>
     <p class="lede">Overall error is dominated by the 99% of the section that is ordinary data, so it
-      rewards whichever filter smooths hardest — which is the one with no edge preservation at all. The
+      rewards whichever filter smooths hardest, which is the one with no edge preservation at all. The
       fault coherence is measured on the one percent you were actually trying to protect. Deciding which
       number matters is an interpretation decision, not a processing one.</p>
 
@@ -321,39 +320,38 @@
       <div class="stat"><span>Both · error, fault coherence</span><b id="s5d">—</b></div>
       <div class="stat key wide"><span>Fault best preserved by</span><b id="s5e">—</b></div>
     </div>
-    <p class="legend prose"><span>The two things being scored pull against each other, which is the point of
-      the step. Suppressing noise everywhere and keeping the fault sharp are different jobs, and a filter
-      that does one perfectly usually does the other badly. Watch both numbers as you change the window
+    <p class="legend prose"><span>The two quantities being scored trade against each other. Suppressing
+      noise everywhere and keeping the fault sharp are different objectives, and a filter that achieves one
+      of them fully usually achieves the other poorly. Both numbers respond to the window
       radius.</span></p>
   </section>
 
   <!-- ============================ WHY IT MATTERS ========================= -->
   <section class="tabpane" id="pw" role="tabpanel" hidden>
-    <p class="lede">Edge preservation is the reason structure-oriented filtering is usable at all. Without
-      it, the step that was supposed to make faults easier to see makes them harder.</p>
+    <p class="lede">Edge preservation is what makes structure-oriented filtering usable ahead of a fault
+      interpretation. Without it, filtering makes faults harder to see rather than easier.</p>
     <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
       <li><b>The circularity is real, and worth naming.</b> The filter needs coherence to find the edges;
-        coherence is computed better on filtered data. AASPI's answer is to iterate — filter, recompute dip
-        and coherence on the result, filter again — rather than pretend the problem is not there.</li>
+        coherence is computed better on filtered data. AASPI's answer is to iterate: filter, recompute dip
+        and coherence on the result, then filter again.</li>
       <li><b>The dip volume has to be cleaned up first.</b> A dip scan run across a fault reports a very
         steep apparent dip, because that is what the data look like there. A Kuwahara window steered by that
         bad dip reads from the wrong place, and the search then makes the result worse instead of better.
         AASPI has a separate program, <span class="k">filter_dip_components</span>, for this, and this
-        module runs the short version of it before doing anything else. Skipping it is a quiet way to make
-        edge preservation look useless.</li>
-      <li><b>A bad coherence volume is worse than none.</b> The weighting obeys whatever it is given. If the
-        coherence volume marks acquisition footprint as edges, the filter carefully preserves the
+        module runs the short version of it before anything else. Without that step, edge preservation
+        appears to be ineffective.</li>
+      <li><b>A bad coherence volume is worse than none.</b> The weighting acts on whatever coherence volume
+        it is given. If that volume marks acquisition footprint as edges, the filter preserves the
         footprint.</li>
       <li><b>Thresholds are data-specific and survey-specific.</b> The values that worked on last year's
-        survey are a starting guess and nothing more. Any published triple, including the one this module
-        opens with, is somebody else's picture.</li>
-      <li><b>Kuwahara filtering sharpens as well as smooths.</b> That is why it is capable of making an
-        image look processed. If the result is blocky where the geology is not, s<sub>center</sub> is the
-        parameter to reach for.</li>
+        survey are a starting guess. Any published triple, including the one this module opens with, was
+        chosen for somebody else's data.</li>
+      <li><b>Kuwahara filtering sharpens as well as smooths.</b> That is what can give the result a
+        processed appearance. If it is blocky where the geology is not, s<sub>center</sub> is the parameter
+        to adjust.</li>
       <li><b>The stratigraphic edges matter as much as the faults.</b> Channel margins, fan edges and
-        unconformities are all discontinuities, and everything said here about the fault applies to them —
-        with the difference that they are subtler, so they are the first thing an over-aggressive filter
-        removes.</li>
+        unconformities are all discontinuities, and everything said here about the fault applies to them. They
+        are subtler, so they are the first features an over-aggressive filter removes.</li>
     </ul>
   </section>
 
@@ -366,20 +364,20 @@
           numbers.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
             with, the coherence minimum on the fault climbs most of the way back toward 1 and the flank
-            steepness falls by most of an order of magnitude. Read that again: the plain filter has put back
-            the better part of the drop that told you a fault was there. Widening the window makes it worse. Both numbers move
-            the same way — the anomaly ends up shallower <em>and</em> softer, so after filtering you would
-            place the fault less precisely and believe in it less. Now go to step 5 and switch the
-            preservation on at the same radius.</span></details></li>
+            steepness falls by most of an order of magnitude. The plain filter has removed the better part
+            of the coherence drop that marked the fault. Widening the window removes more of it. Both
+            numbers move the same way: the anomaly ends up shallower <em>and</em> softer, so after filtering
+            the fault is both less precisely located and less clearly identified. Now go to step 5 and
+            switch the preservation on at the same radius.</span></details></li>
         <li><b>Watch the window jump.</b> <em>Why bother: the jump is the entire mechanism. Everything else in the module is bookkeeping around it.</em> In step 2, drag the analysis point slowly across the fault and
           watch the winning offset.
           <details class="reveal"><summary>Hint</summary><span class="ans">Approaching from the left, the
             winner stays centered until the window starts to overlap the fault, then jumps to the offset
             that keeps it entirely on the left side. It holds there across the fault, then jumps to the
-            right-hand offset. That switch is exactly what preserves the edge — and it is also why the
-            method can make a smooth image look segmented, because the same jump happens on much smaller
-            provocation when there is no real edge.</span></details></li>
-        <li><b>Put the thresholds in the wrong place.</b> <em>Why bother: badly placed thresholds do not fail loudly. They quietly turn the filter back into a mean.</em> In step 4, set s<sub>low</sub> and
+            right-hand offset. That switch is what preserves the edge. It is also why the method can make a
+            smooth image look segmented, since the same jump occurs on a much smaller difference where
+            there is no real edge.</span></details></li>
+        <li><b>Put the thresholds in the wrong place.</b> <em>Why bother: badly placed thresholds produce no obvious failure. They turn the filter back into a plain mean.</em> In step 4, set s<sub>low</sub> and
           s<sub>high</sub> both above the main peak of the histogram.
           <details class="reveal"><summary>Hint</summary><span class="ans">Almost everything falls below
             s<sub>low</sub>, so almost nothing gets filtered and the noise stays. Then drag both down below
@@ -391,7 +389,7 @@
           the noise to 60% and compare again.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings the
             fault coherence is highest with no preservation, lower with either the Kuwahara search or the
-            weighting alone, and lowest with both — so both together preserve the most of the anomaly, and
+            weighting alone, and lowest with both, so the two together preserve the most of the anomaly, and
             neither alone gets there. The separations are small; what matters is the order, and it
             holds. The two
             work differently, which is why they add: the weighting protects the fault by declining to filter
@@ -401,12 +399,11 @@
             saved.</span></details></li>
         <li><b>Take the fault away.</b> <em>Why bother: an edge-preserving filter with no edge in front of it should cost nothing, and that is worth confirming rather than assuming.</em> Set the throw to zero and look at step 5 again.
           <details class="reveal"><summary>Hint</summary><span class="ans">The plain filter is now the best of
-            the four, by something like a tenth. With no edge to
-            preserve, edge preservation can only cost you: the other three are declining to filter, or
-            filtering off-center, in places where there was nothing to protect. That is the honest limit of
-            the technique. It is insurance, the premium is real, and you buy it because you cannot know in
-            advance where the edges are — which is why you were computing coherence in the first
-            place.</span></details></li>
+            the four, by something like a tenth. With no edge to preserve, edge preservation can only cost
+            error: the other three are declining to filter, or filtering off-center, in places where there
+            was nothing to protect. That is the limit of the technique. The cost is real and is accepted
+            because the location of the edges is not known in advance, which is the reason coherence was
+            being computed in the first place.</span></details></li>
               <li><b>Filter a fault you cannot see.</b> <em>Why bother: the filter has to decide what to
           preserve using coherence, not using your eye.</em> Set the throw to 4 samples, which the scale
           panel puts near &lambda;/8, and raise the noise to 40%. The step is no longer something you would
@@ -415,9 +412,9 @@
             drops, so the window selection still moves off the discontinuity and the edge-preserving
             methods still beat the mean, though by less than they do at a large throw. This is the case
             that matters on real data. A fault with an obvious step will survive a mean filter well enough
-            for an interpreter to work with; a fault at the resolution limit is exactly the one a smoothing
-            operator can erase, and the erasing is invisible because the thing erased was never visible in
-            the first place.</span></details></li>
+            for an interpreter to work with. A fault at the resolution limit is the one a smoothing
+            operator can remove entirely, and its removal leaves no trace on the section, because it was
+            not visible there beforehand.</span></details></li>
 </ol>
     </div>
   </section>
@@ -439,9 +436,8 @@
           where the data are already coherent, which is what keeps the result from looking blocky.</li>
         <li><b>The thresholds are chosen by looking, not by deriving.</b> The histogram of the coherence
           volume is where to look.</li>
-        <li><b>Edge preservation costs something on data with no edges.</b> It is worth paying because you
-          usually cannot know in advance where the edges are — which is, after all, why you are
-          filtering.</li>
+        <li><b>Edge preservation costs something on data with no edges.</b> That cost is accepted because
+          the location of the edges is usually not known in advance.</li>
       </ul>
     </div>
   </section>
@@ -522,7 +518,7 @@
     <p class="eyebrow">Next up</p>
     <h3><a href="disorder.html">03 · Disorder</a></h3>
     <p>Coherence treats an edge as the thing worth finding. Disorder treats an edge as signal and goes
-      looking for the noise instead — which turns out to be the measurement you want when the question is
+      looking for the noise instead, which is the measurement wanted when the question is
       how much to trust a horizon pick.</p>
     <a class="btn" href="disorder.html">Open module 03 →</a>
     <a class="btn ghost" href="../index.html">All modules</a>

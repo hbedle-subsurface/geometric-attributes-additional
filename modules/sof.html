@@ -152,8 +152,8 @@
 
     <p class="lede" style="margin-top:12px">On the flat part of the section the two are almost identical.
       Wherever the beds dip, on the flanks of the fold and everywhere below the fault, the horizontal
-      filter is averaging across the wavelet instead of along it, so it cancels part of the reflection. That is not
-      noise suppression. That is throwing away signal, and the steeper the dip the more of it goes.</p>
+      filter is averaging across the wavelet instead of along it, so it cancels part of the reflection. What
+      is removed there is signal rather than noise, and the loss grows with the dip.</p>
 
     <div class="stats">
       <div class="stat key"><span>Signal lost, horizontal filter</span><b id="s1a">—</b></div>
@@ -178,7 +178,7 @@
       turning that list into one number to write back at the center.</p>
     <p class="lede">Sorted, the list makes the differences between the filters obvious. Random noise spreads
       the values out evenly. A bad sample puts one value a long way from the rest, at one end of the sorted
-      list — which is exactly where a rule that trims the ends will find it.</p>
+      list, which is exactly where a rule that trims the ends will find it.</p>
 
     <div class="sec-row" id="row2">
       <div class="panel-col">
@@ -262,8 +262,8 @@
       <span class="hint">The only one that uses the whole 3D window</span>
     </div>
     <p class="lede">The four filters in step 3 look at one value per trace. This one looks at the whole
-      window, every trace and every sample in the vertical half-window. It asks a different question. What
-      single waveform, scaled differently on each trace, best explains all of them at once?</p>
+      window, every trace and every sample in the vertical half-window. It asks which single waveform,
+      scaled differently on each trace, best explains all of them at once.</p>
     <p class="lede">That waveform is the first eigenvector of the covariance matrix between the traces. Each
       trace is then rebuilt as its own projection onto it. Anything the traces share survives; anything only
       one trace has does not, because it cannot be written as a scaled copy of a shared waveform.</p>
@@ -302,13 +302,12 @@
       <h3><span class="stepno">5</span>Always look at what you threw away</h3>
       <span class="hint">Input minus output</span>
     </div>
-    <p class="lede">The filtered section will look better whatever you do to it, because smoothing always
-      makes a picture calmer. The honest check is the difference between input and output: the part of the
-      data the filter decided was noise. If a reflector is visible in that panel, the filter removed signal
-      and the calmer picture is a lie.</p>
-    <p class="lede">Turn the noise down and the window radius up, and watch reflectors appear in the rejected
-      panel. That is the failure mode this display exists to catch. AASPI outputs the rejected noise as a
-      volume for exactly this reason.</p>
+    <p class="lede">A filtered section looks better whatever is done to it, because smoothing makes any
+      picture calmer. The check that carries information is the difference between input and output: the
+      part of the data the filter classified as noise. A reflector visible in that panel means the filter
+      removed signal, and a calmer output is no evidence that it did not.</p>
+    <p class="lede">Turn the noise down and the window radius up, and reflectors appear in the rejected
+      panel. AASPI outputs the rejected noise as a volume so that this check can be made on real data.</p>
 
     <div class="sec-row" id="row5">
       <div class="panel-col">
@@ -344,7 +343,8 @@
       <span class="hint">Same reach, different weights, less arithmetic</span>
     </div>
     <p class="lede">A 7-point filter can be built two ways: apply a 7-point operator once, or apply a
-      3-point operator three times. They reach equally far. They are not the same filter.</p>
+      3-point operator three times. The two reach equally far across the data but apply different
+      weights.</p>
     <p class="lede">A single pass weights every sample in the window equally, so the sample at the far edge
       counts as much as the one at the center. Cascading small operators produces weights that taper toward
       the edges all by themselves, and a tapered filter follows a curving reflector better because it leans
@@ -393,14 +393,14 @@
         creates false peaks for it to jump to, and structure-oriented filtering removes most of them without
         moving the real ones, because it smooths along the reflector rather than across it.</li>
       <li><b>Acquisition footprint is the classic target.</b> The striping that follows the shooting
-        direction is coherent, so it survives filters that only fight random noise, but it cuts across the
-        geology — and a filter aligned with the geology is aligned against the footprint.</li>
-      <li><b>The rejected volume is the deliverable that keeps you honest.</b> On real data nobody can prove
-        the filter removed only noise. The one defense is to look at what came out, every time, on the
-        sections that matter.</li>
+        direction is coherent, so it survives filters that only suppress random noise. It also cuts across
+        the geology, so a filter aligned along the geology attenuates it.</li>
+      <li><b>The rejected volume is the check on the filter.</b> On real data there is no way to prove the
+        filter removed only noise. Inspecting the rejected volume, every time, on the sections that matter,
+        is the available substitute.</li>
       <li><b>It is not a substitute for processing.</b> If the data are noisy because the migration velocity
-        was wrong, a filter aligned along the resulting mispositioned reflectors will happily make the wrong
-        answer look convincing.</li>
+        was wrong, a filter aligned along the resulting mispositioned reflectors will make an incorrect
+        image look more convincing rather than less.</li>
     </ul>
   </section>
 
@@ -414,9 +414,9 @@
           <details class="reveal"><summary>Hint</summary><span class="ans">The horizontal filter loses
             several times more amplitude on the steeply dipping flank than the dip-steered one does, and the
             loss grows with dip. The general rule: a horizontal filter of half-width J starts destroying a
-            reflector once the dip moves it more than about a quarter of a wavelength across the window. It
-            is not that dip steering is a refinement — an unsteered filter is simply wrong everywhere the
-            beds are not flat.</span></details></li>
+            reflector once the dip moves it more than about a quarter of a wavelength across the window.
+            Dip steering is not a refinement of an unsteered filter; an unsteered filter is wrong everywhere
+            the beds are not flat.</span></details></li>
         <li><b>Find where alpha-trimmed beats both of its end members.</b> <em>Why bother: the mean and the median are the two filters people actually reach for, and here neither of them wins.</em> Put bad samples at 40% and random
           noise at 30%, then read the four errors in step 3 at &alpha; = 0, 0.25 and 0.5.
           <details class="reveal"><summary>Hint</summary><span class="ans">The error dips in the middle: it is
@@ -426,28 +426,28 @@
             alpha-trimmed mean is those filters. The mean is dragged around by every spike; the median
             ignores the spikes but keeps one value instead of averaging five, so it does less about the
             random noise. In between, both problems are handled and the measured error is lower than at
-            either end. That is the entire argument for the filter.</span></details></li>
+            either end. That behavior is the reason the filter has a tunable &alpha; at all.</span></details></li>
         <li><b>Make LUM do nothing.</b> <em>Why bother: leaving clean data alone is a property worth knowing about, because it decides what is safe to run everywhere.</em> Turn both noise sliders to zero and watch the LUM error.
           <details class="reveal"><summary>Hint</summary><span class="ans">LUM does about half the damage the
             mean does. On data with nothing wrong with it, LUM only changes a
             sample that falls outside the range of its neighbors, and hardly any do; the mean smooths
             everything whether or not it needed smoothing. Now put the noise sliders back up and read step 3
-            again: LUM is the worst of the four there. That is the trade, and it is the reason the filter
-            exists — LUM is the safest one to run when you are not sure the data need filtering, and the
-            least effective when they do.</span></details></li>
+            again: LUM is the worst of the four there. That is the trade the filter makes. LUM is the
+            safest of the four to run when it is not clear the data need filtering, and the least effective
+            when they do.</span></details></li>
         <li><b>Catch a filter stealing signal.</b> <em>Why bother: the rejected part is the only place a filter’s mistakes are visible. The output always looks better.</em> In step 5, set the noise sliders low, the window radius to
           5 and the vertical half-window to 7.
           <details class="reveal"><summary>Hint</summary><span class="ans">Reflectors appear in the rejected
-            panel and the signal fraction climbs. The filter has run out of noise to remove and has started
-            on the data. Notice that the filtered panel still looks perfectly reasonable on its own — that
-            is why the rejected panel is not optional.</span></details></li>
-        <li><b>Watch the PC filter at the fault.</b> <em>Why bother: structure-oriented filtering is sold on preserving faults, and this is where that claim gets tested.</em> Move the analysis point onto the fault plane in step 4
+            panel and the signal fraction climbs. At these settings the filter is removing signal rather
+            than noise. The filtered panel still looks reasonable on its own, which is why the rejected
+            panel is worth checking separately.</span></details></li>
+        <li><b>Watch the PC filter at the fault.</b> <em>Why bother: structure-oriented filtering is recommended on the grounds that it preserves faults, and this is where that claim can be tested.</em> Move the analysis point onto the fault plane in step 4
           with the throw at maximum.
           <details class="reveal"><summary>Hint</summary><span class="ans">The eigenvalue spectrum flattens:
             the traces on the two sides of the fault are no longer scaled copies of one waveform, so no
             single eigenvector explains them. The filter reconstructs from the first one anyway, which
-            smears the discontinuity — and this is precisely the failure that the edge preservation in
-            module 02 exists to prevent.</span></details></li>
+            smears the discontinuity, which is the failure the edge preservation of module 02
+            addresses.</span></details></li>
       </ol>
     </div>
   </section>
@@ -457,14 +457,14 @@
     <div class="takeaway" style="max-width:none">
       <h3>The main points</h3>
       <ul>
-        <li><b>The direction matters more than the filter.</b> Every filter here is respectable. Pointed
-          horizontally at a dipping reflector, all of them destroy it.</li>
+        <li><b>The direction matters more than the filter.</b> All five filters here are sound. Applied
+          horizontally to a dipping reflector, every one of them destroys it.</li>
         <li><b>Dip steering is why this needs <span class="k">dip3d</span> first.</b> Structure-oriented
           filtering cannot run without a dip volume, which is why it sits where it does in the workflow.</li>
         <li><b>Mean and median are the two ends of one filter.</b> The alpha-trimmed mean is both, and
           everything in between, on one slider.</li>
         <li><b>LUM is the conservative choice.</b> It leaves alone anything its neighbors agree with, so it
-          is the least likely to invent a smooth answer where the data do not support one.</li>
+          is the least likely to produce a smooth result the data do not support.</li>
         <li><b>The principal component filter uses the whole window.</b> More information, a stronger result
           on coherent data, and a worse one across an edge, where no single waveform describes the
           traces.</li>
@@ -499,8 +499,8 @@
         eigenvector is found by power iteration rather than by a full eigen-decomposition, which is enough
         when only the dominant one is needed. Three parameters make production structure-oriented filtering
         usable: the Kuwahara window search and the similarity thresholds s<sub>low</sub>,
-        s<sub>high</sub> and s<sub>center</sub>. They are deliberately absent here, so that module 02 can
-        introduce them against the damage they repair.</p>
+        s<sub>high</sub> and s<sub>center</sub>. They are absent here so that module 02 can introduce them
+        alongside the problem they address.</p>
       <p>The cascading demonstration in step 6 uses the mean filter, because the effective-weight argument
         is exact for a linear filter and only approximate for the others.</p>
             <p><b>Where the meters come from.</b> The model is built in samples and traces; nothing in the
@@ -516,7 +516,7 @@
         ranking.</p>
       <p><b>What the model leaves out.</b> The noise here is band-limited and laterally correlated, which
         resembles a migrated section, but the model has no multiples, no acquisition footprint, and no
-        residual migration smile — three of the things structure-oriented filtering is most often
+        residual migration smile, three of the things structure-oriented filtering is most often
         deployed against. The fault is a clean rigid offset with no damage zone, no drag and no
         fault-plane reflection. Real faults come with a few traces of genuinely disturbed data around
         them, and that zone is harder for every filter here than the sharp discontinuity in this model.</p>
@@ -545,7 +545,7 @@
   <section class="nextup" id="nextup" hidden>
     <p class="eyebrow">Next up</p>
     <h3><a href="edgepreserve.html">02 · Edge-preserving filtering</a></h3>
-    <p>Everything in this module smooths across a fault as happily as it smooths along a reflector. Two
+    <p>Everything in this module smooths across a fault as readily as it smooths along a reflector. Two
       ideas fix that: choose a window that does not straddle the edge, and refuse to filter where coherence
       says an edge is there.</p>
     <a class="btn" href="edgepreserve.html">Open module 02 →</a>

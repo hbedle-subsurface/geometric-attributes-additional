@@ -218,17 +218,16 @@
     <p class="lede"><b>Variance</b> is the spread of levels, and the AASPI documentation states the
       consequence directly: it reproduces semblance-based similarity, up to a scaling and a change of sign,
       and adds almost nothing to it. The panel below checks that claim against the semblance coherence of
-      the first module set rather than asking you to take it on trust. The coherence is computed with the
+      the first module set. The coherence is computed with the
       same lateral window as the texture measures, so that the comparison is about the two attributes and
       not about two different window sizes.</p>
     <p class="lede"><b>Correlation</b> is the one whose everyday meaning does not transfer. On a photograph
       it measures whether neighboring pixels resemble each other, and reads as a measure of how alike a
       window is. Here it measures whether one level <em>predicts</em> its neighbor, and those are not the
-      same question. A window whose amplitudes are all close to the mean scores low, which is the part that
-      surprises people. A window of random values scores about as low, which is the part that surprises
-      them next. What scores high is a window whose levels climb or fall steadily across it &mdash; on
-      seismic data, a wavelet passing through. The quantity is predictability, not variety, and a window
-      can have a great deal of variety with none of it predictable.</p>
+      same question. A window whose amplitudes are all close to the mean scores low. So does a window of
+      random values. What scores high is a window whose levels climb or fall steadily across it, which on
+      seismic data means a wavelet passing through. The quantity measured is predictability rather than
+      variety, and a window can hold a great deal of variety with none of it predictable.</p>
 
     <div class="sec-row" id="row3">
       <div class="panel-col">
@@ -273,9 +272,9 @@
 
     <p class="lede" style="margin-top:12px">The AASPI documentation is blunt about what these images are
       for: in general the output attributes are somewhat fuzzy and not very useful for human
-      interpretation, and their role is to be input to clustering. Compare any of these panels with the
-      coherence of the first module set and the point makes itself. But a self-organizing map does not need
-      a crisp picture. It needs several measurements that disagree with each other in a consistent way.</p>
+      interpretation, and their role is to be input to clustering. The comparison with the coherence of the
+      first module set bears that out. A self-organizing map does not require a crisp picture; it requires
+      several measurements that differ from one another in a consistent way.</p>
 
     <div class="stats">
       <div class="stat"><span>Attribute shown</span><b id="s4a">—</b></div>
@@ -329,10 +328,11 @@
       <h3><span class="stepno">6</span>On a horizon slice</h3>
       <span class="hint">Where these attributes are actually read</span>
     </div>
-    <p class="lede">Everything so far has been on a vertical section, which is the honest place to learn the
-      arithmetic and the wrong place to use it. A texture attribute computed on a section is largely
-      measuring the pattern the <em>wavelet</em> makes. The strongest thing in any vertical window is the
-      peak-trough-peak of the wavelet itself, which is why the Hilbert term of step 2 has to exist.</p>
+    <p class="lede">Every step so far has worked on a vertical section, which is a convenient place to
+      follow the arithmetic and a poor place to apply it. A texture attribute computed on a section is
+      largely measuring the pattern the <em>wavelet</em> makes. The strongest variation in any vertical
+      window is the peak-trough-peak of the wavelet itself, which is what the Hilbert term of step 2
+      corrects for.</p>
     <p class="lede">Sliced along a horizon, the same attribute is measuring the pattern the
       <em>geology</em> makes. Amplitude changes laterally because the rock changes laterally, and the
       texture of that change is the facies. This is how a GLCM volume normally gets looked at, and it is why
@@ -373,34 +373,34 @@
     <p class="legend prose"><span>In map view the four directions are the four compass directions, which
       makes the anisotropy visible rather than theoretical. A north-only matrix and an east-only matrix
       agree almost exactly on the background and disagree on the channel, which is banded across its axis
-      and smooth along it. The size of that disagreement is worth reading carefully, because it is smaller
-      than most people expect: roughly two to one, not ten to one. A channel on a real horizon slice is
+      and smooth along it. The size of that disagreement is modest, roughly two to one. A channel on a
+      real horizon slice is
       only modestly anisotropic at a one-bin lag, and most of what shows up comes from its margins rather
       than from the bars inside it. The fault lineament, at about one to two the other way, is the more
       strongly directional feature on this map. Summing all four directions, which is what AASPI does, buys
-      an answer that does not depend on how a feature happens to be oriented, and gives up the ability to
-      tell you that it is oriented at all. Ratios of this size are also the reason azimuth scanning exists:
-      four compass directions at unit offset is a blunt instrument for measuring orientation.</span></p>
+      an answer that does not depend on how a feature happens to be oriented, at the cost of any indication
+      that it is oriented at all. Ratios of this size are also why azimuth scanning is used: four compass
+      directions at unit offset resolves orientation only coarsely.</span></p>
   </section>
 
 
   <!-- ============================ WHY IT MATTERS ========================= -->
   <section class="tabpane" id="pw" role="tabpanel" hidden>
-    <p class="lede">Texture attributes are not read; they are fed to something. That changes what makes a
-      good choice among them.</p>
+    <p class="lede">Texture attributes are normally used as classifier input rather than displayed for
+      interpretation, which changes the basis on which a good set of them is chosen.</p>
     <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
-      <li><b>Choose for independence, not for beauty.</b> The attribute that looks best on a section is
-        usually the one most like coherence, which you already have. What a classifier needs is measurements
-        that disagree — and step 5 is how you find out which those are on your data rather than on
-        somebody else's.</li>
+      <li><b>Choose for independence rather than for appearance.</b> The attribute that looks best on a
+        section is usually the one most like coherence, which is already available. A classifier needs
+        measurements that differ from one another, and step 5 identifies which those are on a given
+        dataset.</li>
       <li><b>Entropy and homogeneity are the recommended default.</b> That is the AASPI documentation's own
         advice, and the correlation table usually supports it: they sit on opposite sides of the redundancy
         structure.</li>
-      <li><b>Do not read GLCM energy as amplitude.</b> It is the single most misleading name in the whole
-        attribute vocabulary. A window of constant zeros has maximum GLCM energy.</li>
-      <li><b>GLCM variance duplicates semblance.</b> If you already compute coherence, variance is a second
-        copy of it with different units. Spend the slot on something else.</li>
-      <li><b>These attributes reward a stable acquisition and processing history.</b> Because the matrix is
+      <li><b>GLCM energy is not amplitude.</b> The name is inherited from signal processing and does not
+        describe what the measure reports. A window of constant zeros has maximum GLCM energy.</li>
+      <li><b>GLCM variance duplicates semblance.</b> Where coherence is already computed, variance is a
+        second copy of it in different units and adds nothing to a classifier.</li>
+      <li><b>These attributes depend on a stable acquisition and processing history.</b> Because the matrix is
         built from local rank rather than amplitude, changes in the processing that alter the noise
         character between survey vintages show up as texture changes that look exactly like facies
         changes.</li>
@@ -423,26 +423,26 @@
             weights the same pairs linearly and so reports something much closer to the typical behavior of
             the window. When the two attributes disagree on your data, that is what the disagreement means:
             contrast has found outliers, dissimilarity has found the bulk.</span></details></li>
-        <li><b>Confirm the energy trap.</b> <em>Why bother: energy is the most commonly chosen of the eight and the easiest one to read backwards.</em> Set the noise and the chaotic package to zero and put the
+        <li><b>Confirm the energy trap.</b> <em>Why bother: energy is the most commonly chosen of the eight and the one whose name most invites misreading.</em> Set the noise and the chaotic package to zero and put the
           analysis point in a quiet interval between two reflectors.
-          <details class="reveal"><summary>Hint</summary><span class="ans">The energy is high — the window
+          <details class="reveal"><summary>Hint</summary><span class="ans">The energy is high. The window
             is monotonous, so the matrix has almost all of its weight in one box, and that is what energy
-            measures. There is no seismic energy there at all. If you handed this map to somebody and called
-            it "energy" they would read it as an amplitude map and be wrong everywhere it
-            matters.</span></details></li>
+            measures. There is no seismic energy there at all. A map labeled "energy" invites reading as an
+            amplitude map, and that reading is wrong wherever the window is
+            monotonous.</span></details></li>
         <li><b>Check the variance claim yourself.</b> <em>Why bother: two attributes that measure the same thing waste a slot in whatever you feed them to.</em> In step 3, read the correlation between GLCM variance
           and semblance coherence, then change the window radius and read it again.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
             with it reads strongly negative, and it stays strongly negative whatever you do, because the two
             are measuring the same thing with opposite signs. The AASPI documentation says variance provides
-            almost no additional interpretational value; this is the arithmetic behind that sentence, and
-            you can watch it hold as the parameters change rather than taking it on faith. Notice also that
-            narrowing the window pulls the correlation toward zero — not because the two attributes stop
-            agreeing, but because a smaller window makes both of them noisier.</span></details></li>
+            almost no additional interpretational value; this is the arithmetic behind that statement, and
+            it holds as the parameters change. Narrowing the window pulls the correlation toward zero. The
+            two attributes have not stopped agreeing; a smaller window makes both of them
+            noisier.</span></details></li>
         <li><b>Find a genuinely independent pair.</b> <em>Why bother: choosing attributes is a question about redundancy between them, not about which one is best on its own.</em> In step 5, look for the palest box in the correlation
           table.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings the
-            palest boxes involve <em>mean</em> — it correlates with variance and with entropy at a few
+            palest boxes involve <em>mean</em>. It correlates with variance and with entropy at a few
             hundredths, which is to say it is independent of the others because it is barely responding to anything at
             all. That is a warning about reading the table too quickly: an attribute can be independent
             because it carries different information or because it carries none, and only looking at its
@@ -456,10 +456,10 @@
             Homogeneity separates the two by better than a tenth and the channel is obvious. The
             reason mean fails is that every window was quantized against its own RMS amplitude, so the
             channel being brighter was normalized away before the matrix was ever built; what survives is
-            that the channel has bars across it and the background does not. That is the case for texture
-            attributes in one pair of images — the feature is a pattern, not an amplitude, and no amount of
-            tuning turns an amplitude map into something that finds it.</span></details></li>
-        <li><b>Turn the Hilbert term off.</b> <em>Why bother: AASPI computes it and this module can skip it, so the size of the difference is worth seeing rather than taking on trust.</em> Uncheck it in the header and watch step 4.
+            that the channel has bars across it and the background does not. The feature is a pattern
+            rather than an amplitude, and no setting of an amplitude map will
+            resolve it.</span></details></li>
+        <li><b>Turn the Hilbert term off.</b> <em>Why bother: AASPI computes it and this module can skip it, so the size of the difference can be measured directly.</em> Uncheck it in the header and watch step 4.
           <details class="reveal"><summary>Hint</summary><span class="ans">The maps become banded: the
             attribute changes with the phase of the wavelet, so it oscillates vertically at the frequency of
             the data. Adding the matrix of the Hilbert transform removes that, because where the data are at
@@ -481,13 +481,13 @@
           constant values scores maximum.</li>
         <li><b>Entropy is energy's opposite and the more useful of the two.</b> AASPI recommends entropy and
           homogeneity as the default pair.</li>
-        <li><b>GLCM mean says almost nothing</b>, because quantization already normalized each window.</li>
+        <li><b>GLCM mean carries very little information</b>, because quantization has already normalized each window.</li>
         <li><b>GLCM variance is semblance in different units.</b> The documentation says so and the crossplot
           in step 3 confirms it.</li>
-        <li><b>GLCM correlation does not mean what it means on a photograph.</b> A uniform window scores
+        <li><b>GLCM correlation does not carry its everyday photographic meaning.</b> A uniform window scores
           low, and so does a window of random values; what scores high is a window whose levels change
           smoothly across it, which on seismic data means a wavelet passing through.</li>
-        <li><b>Eight measures are not eight facts.</b> On this section three components carry 90% of the
+        <li><b>Eight measures do not carry eight measurements' worth of information.</b> On this section three components carry 90% of the
           variance in all eight. Check the redundancy on your own data before choosing what to feed a
           classifier.</li>
         <li><b>The Hilbert term removes the dependence on wavelet phase.</b> Without it the attributes band
@@ -548,7 +548,7 @@
         the size of the feature it is meant to resolve.</p>
       <p><b>The panels are not the same kind of picture.</b> The section is amplitude. The eight measures
         are statistics of a matrix of pair counts, each with its own units or none, and several of them
-        run in opposite senses — homogeneity is high where contrast is low. A map of one of them is
+        run in opposite senses: homogeneity is high where contrast is low. A map of one of them is
         not a map of the rock but a map of a property of a window, and moving the window changes the
         value at a point without anything in the ground having changed.</p>
       <p><b>What the model leaves out.</b> Both models are cartoons. The section has no multiples, no

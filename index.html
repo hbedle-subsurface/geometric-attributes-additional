@@ -30,8 +30,9 @@
       <p class="eyebrow">AASPI &nbsp;·&nbsp; University of Oklahoma</p>
       <h1 class="title">Coherence and curvature answer one kind of question. These four programs answer <em>the others</em>.</h1>
       <p class="lede">Is this reflector broken, and is it bent? Those two questions cover a great deal of
-        structural interpretation, and the first set of modules is about how they get answered. They leave
-        out a lot. How do I clean the volume up without flattening the faults I am looking for? How much
+        structural interpretation, and the first set of modules is about how they get answered. Other
+        questions they do not reach. How do I clean the volume up without flattening the faults I am
+        looking for? How much
         should I trust this pick? What does this package <em>look</em> like, as a pattern rather than as a
         set of amplitudes? Are these reflectors even parallel to each other?</p>
       <p class="lede">Six modules on four AASPI programs — <span class="k">sof3d</span>,
@@ -70,9 +71,9 @@
         none of those, and they need attributes that ask a different question.</p>
     </div>
     <div>
-      <h3>Some of these are not for looking at</h3>
-      <p>Texture attributes are built to be fed to a classifier. Judging them by whether the section looks
-        good is judging them by the wrong criterion, and the documentation says so.</p>
+      <h3>Some of these are not meant to be displayed</h3>
+      <p>Texture attributes are built to be fed to a classifier. The AASPI documentation states directly
+        that their images are fuzzy and of limited use for visual interpretation.</p>
     </div>
    </div>
   </section>
@@ -107,7 +108,7 @@
         <div class="card-body">
           <div class="card-no">02</div>
           <h3>Edge-preserving filtering</h3>
-          <p>Every filter in module 01 smooths a fault away as happily as it smooths a reflector. Two fixes:
+          <p>Every filter in module 01 smooths across a fault as readily as it smooths along a reflector. Two fixes:
             move the window off the edge, or refuse to filter where coherence says there is one. Both, with
             the damage measured.</p>
           <div class="q">Where did my fault go?</div>
@@ -121,8 +122,8 @@
           <h3>Disorder</h3>
           <p>A second difference in all three directions, divided by the length of the data in the
             window. It ignores
-            faults on purpose and finds the places where the data are too messy to pick — which turns a
-            structure map into a structure map with error bars.</p>
+            faults on purpose and finds the places where the data are too rough to pick reliably, which
+            puts a confidence estimate alongside a structure map.</p>
           <div class="q">How much should I trust this pick?</div>
         </div>
       </a>
@@ -134,7 +135,7 @@
           <h3>The co-occurrence matrix</h3>
           <p>Texture starts by throwing the amplitudes away and keeping only their rank, then tallying which
             level sits next to which. Quantization, the 1.5σ clip, four directions, and why the matrix is
-            nearly always too sparse for comfort.</p>
+            nearly always sparse.</p>
           <div class="q">What is a texture attribute computed from?</div>
         </div>
       </a>
@@ -156,9 +157,9 @@
         <div class="card-body">
           <div class="card-no">06</div>
           <h3>Nonparallelism</h3>
-          <p>Turn every dip into an arrow and measure how much the arrows in a window disagree. Salt, mass
-            transport complexes and karst fail that test while often passing coherence, and a channel with no
-            structural expression fails a different one.</p>
+          <p>Turn every dip into a unit vector and measure how much the vectors in a window differ in
+            direction. Salt, mass transport complexes and karst are non-parallel while often remaining
+            coherent, and a channel with no structural expression is found only by the amplitude version.</p>
           <div class="q">Is this package chaotic, or just dipping?</div>
         </div>
       </a>
@@ -175,8 +176,7 @@
       tab listing what it has simplified and why.</p>
     <p>Every number quoted in the text is measured from the page you are looking at, not estimated. Move a
       slider and the numbers in the prose move with it — including, in a couple of places, past the point
-      where the conclusion in the text still holds. Those places are marked, because noticing them is the
-      more useful skill.</p>
+      where the conclusion in the text still holds. Those places are marked.</p>
     <p>This is not attribute software. For production work on real volumes, use
       <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> or your interpretation package. The numbers here
       describe the model on the screen, not your survey.</p>
@@ -193,7 +193,7 @@
       <p>A companion to <em><a href="https://hbedle-subsurface.github.io/geometric-attributes/">How Geometric
         Attributes Actually Work</a></em>, which covers dip, coherence, curvature and aberrancy. This set
         takes four more AASPI programs that sit alongside those: the filtering that usually runs before them,
-        and three attributes that measure things coherence and curvature were never built to see.</p>
+        and three attributes that respond to properties coherence and curvature do not measure.</p>
       <p>Everything runs in the browser. No installation and no account. Nothing you do inside a module
         — no slider, no click, no trace you generate — is transmitted anywhere. The module code makes no
         network requests of its own.</p>

@@ -181,7 +181,7 @@
       the total count so it sums to one, and that table is the gray-level co-occurrence matrix.</p>
     <p class="lede">The matrix is symmetric, because each pair is counted both ways round. It is also almost
       entirely empty. A 33-level matrix has 1089 boxes, and a small window has only a few hundred pairs to
-      put in them. Where those pairs land is the whole message.</p>
+      put in them. Which boxes those pairs fall into is what the texture measures read.</p>
 
     <div class="sec-row" id="row2">
       <div class="panel-col">
@@ -211,8 +211,8 @@
       <h3><span class="stepno">3</span>Reading a matrix on sight</h3>
       <span class="hint">Diagonal, spread, and clumps</span>
     </div>
-    <p class="lede">Three patterns cover almost everything you will see, and once you can name them the
-      texture attributes of the next module stop being arbitrary.</p>
+    <p class="lede">Three patterns cover almost every matrix that occurs in practice, and they are what
+      the texture measures of the next module summarize.</p>
     <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
       <li><b>Everything on the diagonal.</b> Neighbors have the same level as each other. That is smooth,
         continuous data — a conformable reflector package.</li>
@@ -225,8 +225,8 @@
       fourth follows wherever you put the analysis point. The first and third are snapped onto a reflector
       on purpose. Quantization scales each window by its own RMS amplitude. So a window sitting in the
       quiet gap between two reflectors is scaled by its own noise, and reports the texture of that noise
-      rather than of the geology. That is not a quirk of the display — it is how these attributes behave,
-      and it is worth knowing before you interpret a texture volume.</p>
+      rather than of the geology. That is a property of the attributes themselves rather than of this
+      display, and it applies equally to a production texture volume.</p>
 
     <div class="sec-row" id="row3">
       <div class="panel-col">
@@ -255,9 +255,9 @@
     </div>
     <p class="legend prose"><span>The mean level step is the average distance between a sample's level and
       its neighbor's, divided by the full scale. It runs from 0 for a matrix entirely on the diagonal to 1
-      for one entirely in the corners. That is the crudest possible summary the matrix admits, and it
-      already separates the three windows — a fair warning that the eight measures of the next module are
-      not eight independent pieces of information.</span></p>
+      for one entirely in the corners. It is the simplest summary the matrix admits, and it already
+      separates the three windows, which indicates that the eight measures of the next module are not
+      eight independent pieces of information.</span></p>
   </section>
 
   <!-- ================================ 4 ================================ -->
@@ -268,7 +268,7 @@
     </div>
     <p class="lede">"The neighbor" is not one thing. East is the trace beside you at the same level; north
       is the sample above; northeast and northwest are the diagonals. A single direction makes the matrix
-      sensitive to features that run one way — which is useful if you know the orientation you care about,
+      sensitive to features that run one way, which is useful where the orientation of interest is known,
       and misleading if you do not. AASPI counts all four and adds them, so the answer does not depend on
       how the survey happens to be oriented.</p>
     <p class="lede">Window size trades detail for reliability in the usual way, with one extra twist that
@@ -277,7 +277,7 @@
       cannot happen but because there were not enough pairs to find out. Attributes computed on a sparse
       matrix are noisy, and entropy in particular is badly biased by it.</p>
     <p class="lede">Entries rather than pairs, because each neighboring pair is counted twice — once at
-      box (i, j) and once at box (j, i) — which is what makes the matrix symmetric. The readout below
+      box (i, j) and once at box (j, i), which is what makes the matrix symmetric. The readout below
       counts entries, so it is twice the number of distinct neighboring pairs the window holds.</p>
 
     <div class="sec-row" id="row4">
@@ -292,8 +292,8 @@
       </div>
     </div>
 
-    <p class="lede" style="margin-top:12px">One thing the window does not do is stay level. Like everything
-      else in this set, the window is gathered along structural dip, so that a dipping conformable package
+    <p class="lede" style="margin-top:12px">The window does not stay level. As everywhere else in this set,
+      it is gathered along structural dip, so that a dipping conformable package
       quantizes to a set of near-identical rows rather than to a staircase. Without that step the matrix
       would report structure as texture, which is the same failure disorder has in module 03 when steering
       is switched off.</p>
@@ -332,7 +332,7 @@
       RMS, depending on where the window sits.</p>
     <p class="lede">The <b>bad samples</b> slider adds isolated wild values to the data, which is what gives
       the clip something to protect against. Turn it to zero and the two matrices below become nearly
-      identical, which is the honest answer to "does the clip matter": only when there is an outlier.</p>
+      identical. The clip changes the result only when the window contains an outlier.</p>
 
     <div class="sec-row" id="row5">
       <div class="panel-col">
@@ -365,25 +365,26 @@
     <p class="lede">The co-occurrence matrix is not an attribute you would ever display. It is the
       intermediate object that decides what the texture attributes can possibly say.</p>
     <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
-      <li><b>Discarding the amplitudes is the point, and the risk.</b> Texture attributes describe pattern
-        independently of brightness, which is what lets them separate two facies of similar amplitude. It
-        also means a bright sand and a dim sand with the same internal pattern are, to these attributes, the
-        same thing. If amplitude is your discriminator, this family will throw it away for you.</li>
+      <li><b>Discarding the amplitudes is both the mechanism and the limitation.</b> Texture attributes
+        describe pattern independently of brightness, which is what lets them separate two facies of
+        similar amplitude. It also means a bright sand and a dim sand with the same internal pattern are
+        identical to these attributes. Where amplitude is the discriminator, this family removes it before
+        the measurement begins.</li>
       <li><b>The matrix is what you are really choosing when you set the parameters.</b> Levels, clip and
         window size are not cosmetic. They determine how sparse the matrix is, and every attribute in module
         05 inherits that sparsity.</li>
-      <li><b>These attributes were built to be fed to a machine, not read by a person.</b> The AASPI
-        documentation is direct about it: the images are fuzzy and not very useful for human interpretation,
-        and their purpose is to be input to clustering — self-organizing maps, generative topographic
-        mapping, neural networks, random forests. Judging a GLCM volume by whether it looks good on a
-        section is judging it by the wrong criterion.</li>
+      <li><b>These attributes were designed as classifier input.</b> The AASPI documentation states that
+        the images are fuzzy and not very useful for human interpretation, and that their purpose is to be
+        input to clustering: self-organizing maps, generative topographic mapping, neural networks and
+        random forests. The visual quality of a GLCM section is not the criterion these attributes are
+        built to satisfy.</li>
       <li><b>Parameter consistency matters more than parameter optimality.</b> Since the attributes go into
         a classifier, what breaks the classifier is computing them with different settings on different
         parts of the survey, not choosing 25 levels rather than 33.</li>
-      <li><b>The Hilbert transform is in there for a reason.</b> AASPI computes the matrix on the data and
-        on its Hilbert transform and adds them. That removes the dependence on where the analysis window
-        happens to sit on the wavelet — the same trick, and the same reason, as in the principal component
-        filter of module 01.</li>
+      <li><b>The Hilbert transform term removes the phase dependence.</b> AASPI computes the matrix on the
+        data and on its Hilbert transform and adds them, which removes the dependence on where the analysis
+        window happens to sit on the wavelet. It is the same device, for the same reason, as in the
+        principal component filter of module 01.</li>
     </ul>
   </section>
 
@@ -399,15 +400,15 @@
             level. That is what a texture attribute means by "homogeneous", and it is why homogeneity and
             coherence produce such similar-looking maps despite being computed in completely different
             ways.</span></details></li>
-        <li><b>Starve the matrix.</b> <em>Why bother: a sparse matrix gives attribute values that move for no geological reason, and this is how to recognize it happening.</em> In step 4, set the gray levels to 49 and the window radius to 2.
+        <li><b>Make the matrix too sparse to use.</b> <em>Why bother: a sparse matrix gives attribute values that move for no geological reason, and this is how to recognize that happening.</em> In step 4, set the gray levels to 49 and the window radius to 2.
           <details class="reveal"><summary>Hint</summary><span class="ans">Around one box in fifty is occupied.
             There are 2401 of them at 49 levels, and a five-trace window three samples tall supplies only 76
             entries to fill them with, which is 38 neighboring pairs counted both ways round. Any attribute computed from that matrix is mostly
             reporting which boxes happened to get a pair, which changes from sample to sample for no
             geological reason. Drop the levels to 5 with the same window and the occupancy rises severalfold; widen
-            the window back to 12 traces at 49 levels and it rises again, though not as far. Fewer levels on a small window is
-            not a compromise, it is the correct choice, and the two parameters have to be set
-            together.</span></details></li>
+            the window back to 12 traces at 49 levels and it rises again, though not as far. Fewer levels
+            is the correct setting on a small window rather than a compromise, and the two parameters have
+            to be chosen together.</span></details></li>
         <li><b>See what a single direction misses.</b> <em>Why bother: direction is a parameter most people leave at its default without knowing what the default excludes.</em> In step 4, switch to "north only" and put the
           analysis point on a steeply dipping flank.
           <details class="reveal"><summary>Hint</summary><span class="ans">The vertical direction crosses
@@ -419,17 +420,17 @@
           around 40%.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the settings the module opens
             with, the largest sample in the window sits several times the window RMS out, and the bulk of the
-            window spreads over roughly twice as many levels with the clip as without it — half the detail,
-            thrown away to make room for one sample. Set the bad samples slider to zero and the difference
-            disappears, because there is no longer an outlier to protect against. That is the whole
-            argument, and it is why the parameter is there at all.</span></details></li>
+            window spreads over roughly twice as many levels with the clip as without it: half the detail is
+            given up to accommodate one sample. Set the bad samples slider to zero and the difference
+            disappears, because there is no longer an outlier to protect against. Protecting the scale
+            from outliers is the function of the parameter.</span></details></li>
         <li><b>Find the setting where clipping stops helping.</b> <em>Why bother: the 1.5σ clip is a default, and a default is worth testing at least once.</em> In step 5, drag the clip slider from
           0.5σ up to 4σ and watch the levels-used curve.
           <details class="reveal"><summary>Hint</summary><span class="ans">Very tight clipping pushes most
             of the window onto the two end levels, which destroys the detail you were trying to measure.
             Very loose clipping is the same as not clipping at all. The curve has a broad flat top, and
-            1.5σ sits on it — which is a more honest reason for the default than any derivation would
-            be.</span></details></li>
+            1.5σ sits on it. The default rests on that flat region rather than on a
+            derivation.</span></details></li>
               <li><b>Quantize an offset too small to see.</b> <em>Why bother: the matrix is built from ranks
           within a window, and ranks change before steps do.</em> Set the fault throw to 4 samples —
           roughly &lambda;/8 on the scale panel — with noise and bad samples at zero, then put the
@@ -474,8 +475,7 @@
           readings cover most of what the matrix ever says.</li>
         <li><b>The matrix is nearly always sparse.</b> A thousand boxes and a few hundred pairs, which is
           why levels and window size have to be chosen together.</li>
-        <li><b>Nothing here is displayed.</b> The matrix exists to be reduced to the numbers of module
-          05.</li>
+        <li><b>The matrix itself is not displayed.</b> It is reduced to the numbers of module 05.</li>
       </ul>
     </div>
   </section>
@@ -559,7 +559,7 @@
   <section class="nextup" id="nextup" hidden>
     <p class="eyebrow">Next up</p>
     <h3><a href="textures.html">05 · The texture measures</a></h3>
-    <p>Eight numbers squeezed out of the matrix you just built — and a look at how few of them are really
+    <p>Eight numbers squeezed out of the matrix built in this module, and how few of them are really
       saying different things.</p>
     <a class="btn" href="textures.html">Open module 05 →</a>
     <a class="btn ghost" href="../index.html">All modules</a>

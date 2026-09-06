@@ -11,19 +11,19 @@ Companion to
 [**How Geometric Attributes Actually Work**](https://hbedle-subsurface.github.io/geometric-attributes/),
 which covers dip, coherence, curvature and aberrancy. This set takes the
 programs that sit alongside those: the filtering that usually runs before them,
-and three attributes that measure things coherence and curvature were never
-built to see.
+and three attributes that respond to properties coherence and curvature do not
+measure.
 
 ---
 
 ## What a student does here
 
-An attribute is normally met as a volume that already exists. Someone else ran
-the program, someone else chose the window, and the map either shows the fault
-or it does not. These modules invert that. Each one builds a small synthetic
-model in the browser, computes a real attribute on it, and hands over the
-parameters that are usually left at their defaults — the window size, the number
-of gray levels, the clip, the dip steering, the amount of noise.
+An attribute is normally met as a finished volume. Someone else ran the program
+and chose the parameters, and the map either shows the fault or it does not.
+These modules work the other way around. Each one builds a small synthetic model
+in the browser, computes a real attribute on it, and exposes the parameters that
+are usually left at their defaults: the window size, the number of gray levels,
+the clip, the dip steering, and the amount of noise.
 
 The model is synthetic on purpose. Because the answer is known, a reader can see
 what an attribute does to a feature that is definitely there, and what it does
@@ -34,7 +34,7 @@ property of the attribute or of one particular random seed.
 Every module is a sequence of numbered steps, each with its own panels and
 readouts, followed by four reference tabs:
 
-- **Why it matters** — where the attribute earns its place on real data.
+- **Why it matters** — how the attribute is used on real data.
 - **Exercises** — tasks with a stated purpose and a hint, worked on the page.
 - **Key points** — what to carry away.
 - **Method** — the equations as implemented, the sources, and a plain statement
@@ -57,9 +57,9 @@ side.
 
 ## Using these in a course
 
-**Order and prerequisites.** 01 and 02 are a pair, and so are 04 and 05 — the
-second of each opens by undoing a problem the first one leaves behind, so
-assigning one without the other leaves a reader with half an argument. 03 and 06
+**Order and prerequisites.** 01 and 02 are a pair, and so are 04 and 05. The
+second of each opens by correcting a problem the first one leaves unresolved, so
+assigning one without the other leaves that problem standing. 03 and 06
 stand alone and can be dropped into a week on fault and facies interpretation
 without the others. Everything from 02 onward assumes a dip field and a
 coherence volume exist, which the first module set covers; a class that has not
@@ -76,7 +76,7 @@ configuration. Copy it and you have handed someone the exact setup — a fault
 throw, a window size and a clip that make a particular point. That is the
 intended way to distribute a problem, to put a starting state in a lab handout,
 or to ask a class to explain what they are looking at. There is no copy button;
-the address bar is where the state lives.
+the state is held in the address bar.
 
 **Reading a task while working the controls.** The exercises pop out into a
 separate window, so a student can keep the task in view rather than tabbing back
@@ -87,7 +87,7 @@ up. Each states why it is worth doing, and the hints describe what should happen
 rather than quoting a number: one error lower than both of its end members, a
 figure several times another, a matrix mostly empty. A student who reports a
 reading that contradicts the hint has either found a real disagreement or
-misread a control, and both are worth the conversation.
+misread a control, and both are worth discussing.
 
 ## What is simplified, and what that costs
 
@@ -97,12 +97,12 @@ et al. (1976), Fehmers and Höcker (2003), Luo et al. (2002), Marfurt (2006),
 Haralick et al. (1973), Barnes (2000), Al-Dossary et al. (2014), Gao (2011), Qi
 et al. (2014). Every module's **Method** tab lists its own sources.
 
-The largest departure is the same one in all six: these are two dimensional.
+The largest departure is the same in all six modules. They are two-dimensional.
 There is no crossline direction, so analysis windows are lines of traces rather
 than rectangles or ellipses of them, and the one map-view module works on a
-single picked surface rather than volumetrically. Every module says this in its
-own Method tab and names what specifically is lost, so a student who moves on to
-a production volume knows which of these numbers will not carry across.
+single picked surface rather than volumetrically. Each Method tab states this
+and names what is lost, so a student moving on to a production volume knows
+which of these numbers will not carry across.
 
 Two implementation choices in particular differ from a common reading of the
 documentation, and are flagged in the Method tabs: the texture quantization
@@ -120,8 +120,8 @@ you build under the same terms. Full text in [`LICENSE`](LICENSE).
 
 Instructors are welcome to assign these directly, translate them, cut them into
 a course pack, or take a single step out of a module and put it in a lecture.
-Nothing needs to be asked for. The ShareAlike condition is there so that what
-gets built on top stays as available as this is.
+No permission is needed. The ShareAlike condition keeps derivative material as
+freely available as this material is.
 
 To cite: H. Bedle and A. Moreno-Ward, *More Geometric Attributes, and How They
 Actually Work*, University of Oklahoma,

@@ -122,11 +122,11 @@
       border-left:3px solid var(--crimson);padding:10px 14px;display:inline-block">
       n = (p, q, 1) / (p<sup>2</sup> + q<sup>2</sup> + 1)<sup>1/2</sup></p>
     <p class="lede">A package of parallel reflectors gives a tight cluster of these arrows all pointing the
-      same way. A chaotic package gives arrows pointing everywhere. That is the entire idea, and everything
-      that follows is a way of putting a number on how tight the cluster is.</p>
-    <p class="lede">Note what the measurement does <em>not</em> care about: which way the arrows point.
-      A steeply dipping but perfectly conformable package has arrows that all lean together, and its
-      deviation is as low as a flat one's. This is a measurement of agreement, not of dip.</p>
+      same way. A chaotic package gives arrows pointing in many directions. Everything that follows is a
+      way of putting a number on how tight the cluster is.</p>
+    <p class="lede">The measurement does not depend on which way the arrows point. A steeply dipping but
+      conformable package has arrows that all lean together, and its deviation is as low as that of a flat
+      one. The quantity measured is agreement between dips rather than the dip itself.</p>
 
     <div class="sec-row" id="row1">
       <div class="panel-col">
@@ -162,9 +162,9 @@
       &mu;<sub>k</sub> = &Sigma; e<sub>j</sub> n<sub>kj</sub> / &Sigma; e<sub>j</sub><br>
       &sigma;<sub>n</sub> = { &Sigma; e<sub>j</sub> &Sigma;<sub>k</sub> (n<sub>kj</sub> &minus;
         &mu;<sub>k</sub>)<sup>2</sup> / &Sigma; e<sub>j</sub> }<sup>1/2</sup></p>
-    <p class="lede">The weights <i>e<sub>j</sub></i> are the energy, or RMS amplitude, at each point. That
-      weighting matters more than it looks. A dip estimate made where the reflection is weak is mostly
-      measuring noise. Without the weights, those bad estimates would count as heavily as the good ones.
+    <p class="lede">The weights <i>e<sub>j</sub></i> are the energy, or RMS amplitude, at each point. A dip
+      estimate made where the reflection is weak is mostly measuring noise. Without the weights, those poor
+      estimates would count as heavily as the good ones.
       Switch the weighting off in the header and watch the map get noisier where the amplitudes are
       low.</p>
 
@@ -206,7 +206,7 @@
       partly an artifact of the dip: you are sampling the reflector obliquely. Dividing by
       (1 + p<sup>2</sup>)<sup>1/2</sup> removes that, so what is left is amplitude variation along the bed
       rather than variation caused by geometry.</p>
-    <p class="lede">This one lights up boundaries rather than interiors. The edge of a salt body is where
+    <p class="lede">This attribute responds at boundaries rather than in interiors. The edge of a salt body is where
       reflection strength changes fastest, so that is where the gradient deviation peaks. The middle of the
       body, where the amplitudes are uniformly poor, can be quiet.</p>
 
@@ -247,20 +247,19 @@
     <p class="lede">The word covariance is doing less work here than it usually does. The diagonal entries
       are mean squared deviations, so they cannot be negative, and the off-diagonal entry is built from the
       square root of the product of the two magnitudes rather than from a signed product of centered
-      variables. It therefore has no sign to report: it says whether the two deviations are large at the
-      same samples, not whether they rise and fall together. Two places where a reader will notice the
-      difference: the matrix cannot report anti-correlation, and the larger eigenvalue is never smaller
-      than the larger diagonal entry, so the attribute cannot come out quieter than whichever of its two
-      inputs is louder. The <b>correlation between the two deviations</b> reported below is an ordinary
+      variables. It therefore carries no sign: it records whether the two deviations are large at the same
+      samples, not whether they rise and fall together. Two consequences follow. The matrix cannot report
+      anti-correlation, and the larger eigenvalue is never smaller than the larger diagonal entry, so the
+      attribute cannot return a lower value than whichever of its two inputs is higher. The
+      <b>correlation between the two deviations</b> reported below is an ordinary
       signed correlation computed over the whole map, and it is not the off-diagonal entry.</p>
     <p class="lede">Because an eigenvalue responds to either input, this attribute lights up where dip is
       chaotic, where energy is changing fast, and most strongly where both happen at once. The AASPI
       documentation puts it plainly: the covariance expresses both the chaotic and the high-energy features,
       showing the merged anomalies of the first two.</p>
-    <p class="lede">That merging is a convenience and a hazard. One map is easier to look at than two, and
-      a bright anomaly on it no longer tells you which of the two measurements produced it. The two-panel
-      crossplot below is the honest version: where a point sits in it says which attribute is
-      responding.</p>
+    <p class="lede">That merging has a cost. One map is easier to inspect than two, and a bright anomaly on
+      it no longer identifies which of the two measurements produced it. The two-panel crossplot below
+      keeps that information: the position of a point in it shows which attribute is responding.</p>
 
     <div class="sec-row" id="row4">
       <div class="panel-col">
@@ -292,8 +291,8 @@
       <span class="hint">Which one to reach for</span>
     </div>
     <p class="lede">The model contains a chaotic body, a fault, a dimmed channel with no structural
-      expression at all, and conformable background. Each attribute has a different opinion about which of
-      those is interesting, and the table below is the whole argument for computing more than one.</p>
+      expression at all, and conformable background. The three attributes respond to different members of
+      that set, which is the table's subject.</p>
 
     <div class="sec-row" id="row5">
       <div class="panel-col">
@@ -307,11 +306,11 @@
       </div>
     </div>
 
-    <p class="lede" style="margin-top:12px">The channel is the interesting row. It is a dimming with no
-      structural expression whatsoever: the reflector runs straight through it. So the dip deviation has
-      nothing to report, and only the attributes that look at amplitude find it. If you were mapping
-      channels with dip deviation alone you would miss it entirely, and nothing in the map would tell you
-      that you had.</p>
+    <p class="lede" style="margin-top:12px">The channel row is the one that separates the attributes. The
+      channel is a dimming with no structural expression: the reflector runs straight through it. The dip
+      deviation therefore has nothing to respond to, and only the attributes that use amplitude locate it.
+      A survey mapped for channels with dip deviation alone would miss it, and the map itself would carry
+      no indication of the omission.</p>
 
     <div class="stats">
       <div class="stat"><span>Best attribute for the chaotic body</span><b id="s5a">—</b></div>
@@ -328,30 +327,30 @@
 
   <!-- ============================ WHY IT MATTERS ========================= -->
   <section class="tabpane" id="pw" role="tabpanel" hidden>
-    <p class="lede">Nonparallelism exists because the seismic facies that matter most in exploration are
-      often the ones that coherence handles worst.</p>
+    <p class="lede">The seismic facies of most interest in exploration are often the ones coherence
+      handles least well, which is the gap this family of attributes fills.</p>
     <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
-      <li><b>Salt, mass transport complexes and karst collapse are defined by non-parallelism.</b> Not by
-        being incoherent — the interior of a mass transport complex can be locally quite coherent — but by
-        reflectors that do not run with each other. This attribute measures that property directly instead
-        of hoping a discontinuity detector will notice.</li>
-      <li><b>It is built for machine learning, and it shows.</b> The documentation frames the whole family
-        as an answer to "which dip is useful for machine learning in differentiating seismic facies", and
-        the answer it gives is a statistic of dip rather than dip itself. These are volumes to cluster, not
-        volumes to contour.</li>
-      <li><b>Energy weighting is not a detail.</b> Dip estimated where there is no reflection is noise, and
+      <li><b>Salt, mass transport complexes and karst collapse are defined by non-parallelism.</b> The
+        defining property is reflectors that do not run parallel to one another, not incoherence; the
+        interior of a mass transport complex can be locally quite coherent. This attribute measures that
+        property directly rather than relying on a discontinuity detector to register it.</li>
+      <li><b>The family was designed as classifier input.</b> The documentation frames it as an answer to
+        "which dip is useful for machine learning in differentiating seismic facies", and the answer it
+        gives is a statistic of dip rather than dip itself. These volumes are intended for clustering
+        rather than for contouring.</li>
+      <li><b>Energy weighting changes the result substantially.</b> Dip estimated where there is no reflection is noise, and
         a statistic that counts it equally is a statistic of the noise. The weighting is what makes the
         attribute usable on real data with real amplitude variation.</li>
       <li><b>The salt-and-pepper problem is real and documented.</b> The deviation of vector dip and the
-        covariance both highlight salt domes and both produce scattered spurious anomalies. Expect to smooth
-        the result, and expect that smoothing to cost you the small features.</li>
-      <li><b>The two deviations agreeing is a fact about your geology, not about the attributes.</b> The
+        covariance both highlight salt domes and both produce scattered spurious anomalies. Smoothing the
+        result is usual, and the smoothing removes the smaller features along with the speckle.</li>
+      <li><b>Agreement between the two deviations is a property of the geology rather than of the attributes.</b> The
         documentation makes this point about the Great South Basin example: dip and amplitude change in the
         same places there because faults and progradation change both. On different geology they
         separate.</li>
       <li><b>Window size is inherited from <span class="k">dip3d</span>.</b> AASPI defaults the analysis
         window to double the one used to compute the dips, which is a reminder that this attribute is a
-        statistic of an estimate — everything wrong with the dip volume arrives here first.</li>
+        statistic of an estimate. Everything wrong with the dip volume arrives here first.</li>
     </ul>
   </section>
 
@@ -376,29 +375,29 @@
             producing dip-deviation anomalies it should not have, because the dips picked on a weak
             reflection are unreliable and, unweighted, they count as much as the good ones. The weighting is
             what stops the attribute from mapping the quality of its own input.</span></details></li>
-        <li><b>Find the feature dip deviation cannot see.</b> <em>Why bother: knowing where an attribute is blind is worth more than knowing where it is strong.</em> In step 5, read the channel row.
+        <li><b>Find the feature dip deviation cannot see.</b> <em>Why bother: where an attribute has no response is as useful to know as where its response is strongest.</em> In step 5, read the channel row.
           <details class="reveal"><summary>Hint</summary><span class="ans">At the opening settings dip
             deviation barely registers on the channel while the gradient deviation reads several times
-            as much &mdash; not a large number in absolute terms, but a clear separation, and the channel is visible on one map and not on
-            the other. The reason is that the channel is a pure amplitude feature: the reflector runs
+            as much. The absolute value is small but the separation is clear, and the channel is visible
+            on one map and not on the other. The reason is that the channel is a pure amplitude feature: the reflector runs
             straight through it without bending, so there is nothing there for a statistic of dip to find.
             This is the clearest case in the module for computing both. Neither attribute is more sensitive
             than the other; they are sensitive to different things, and no amount of tuning turns one into
             the other.</span></details></li>
-        <li><b>Make the covariance redundant.</b> <em>Why bother: two attributes that agree everywhere are one attribute wearing two names.</em> In step 4, turn the channel dimming to zero.
+        <li><b>Make the covariance redundant.</b> <em>Why bother: two attributes that agree everywhere occupy two slots and supply one measurement.</em> In step 4, turn the channel dimming to zero.
           <details class="reveal"><summary>Hint</summary><span class="ans">With the only pure-amplitude
             feature gone, the two deviations start agreeing, because everything that remains changes dip and
-            amplitude together. The covariance is then a more expensive way of computing what either one
-            already told you. Put the channel back and they separate again. That is what the correlation
-            figure in that step is for — it tells you whether the third attribute is earning its
-            place on <em>your</em> data.</span></details></li>
-        <li><b>Buy resolution and sell it back.</b> <em>Why bother: window size trades detail against stability, and here the trade can be read in meters.</em> Set the window radius to 1, then to 7, watching step 2.
+            amplitude together. The covariance is then a more expensive route to what either one already
+            reports. Put the channel back and they separate again. The correlation figure in that step
+            reports whether the third attribute adds anything on a given
+            dataset.</span></details></li>
+        <li><b>Trade resolution against stability.</b> <em>Why bother: window size trades detail against stability, and here the trade can be read in meters.</em> Set the window radius to 1, then to 7, watching step 2.
           <details class="reveal"><summary>Hint</summary><span class="ans">At radius 1 the map is
-            speckled — a handful of dip estimates is not enough for a standard deviation to mean much, and
+            speckled: a handful of dip estimates is not enough for a standard deviation to mean much, and
             this is the salt-and-pepper pattern the AASPI documentation warns about. At radius 7 the
-            speckle is gone and so is the edge of the chaotic body, smeared several bins wide. Nothing in
-            the middle of that range is correct; there is a size of feature you are looking for, and the
-            window has to be chosen for it.</span></details></li>
+            speckle is gone and so is the edge of the chaotic body, smeared several bins wide. No setting
+            in that range is correct in general. The window is chosen for the size of feature being
+            sought.</span></details></li>
       </ol>
     </div>
   </section>
@@ -412,17 +411,17 @@
           cluster of those vectors.</li>
         <li><b>The attribute is the scatter of the cluster, not its direction.</b> Steep conformable dip
           reads as low as flat conformable dip.</li>
-        <li><b>σ<sub>dip</sub> = arcsin σ<sub>n</sub></b> turns that scatter into degrees, which is
-          something you can talk about.</li>
+        <li><b>σ<sub>dip</sub> = arcsin σ<sub>n</sub></b> expresses that scatter in degrees.</li>
         <li><b>The dips are weighted by energy.</b> A dip measured where there is no reflection is a noise
           measurement and should not count equally.</li>
         <li><b>The energy gradient version finds edges rather than interiors.</b> Salt boundaries, channel
           margins, amplitude fronts.</li>
         <li><b>The covariance is the larger eigenvalue of a 2×2 matrix</b> built from the two, and responds
-          to either — convenient, and no longer diagnostic of which.</li>
-        <li><b>A pure amplitude feature is invisible to dip deviation.</b> The channel in this model proves
-          it, and nothing on the map would warn you.</li>
-        <li><b>Expect salt-and-pepper.</b> It is documented behavior, not a bug in your parameters.</li>
+          to either. It combines them into one map at the cost of showing which one responded.</li>
+        <li><b>A pure amplitude feature does not register on dip deviation.</b> The channel in this model
+          demonstrates that, and the map carries no indication of the omission.</li>
+        <li><b>Salt-and-pepper speckle is documented behavior</b> rather than a symptom of poorly chosen
+          parameters.</li>
       </ul>
     </div>
   </section>
@@ -448,8 +447,8 @@
         variation. AASPI computes it in a 3D window along structural dip, and its analysis window defaults
         to double the one used in <span class="k">dip3d</span>. The dip components here come from
         differentiating a known surface rather than from a semblance scan, which makes them cleaner than
-        real ones. The noise slider adds scatter back to compensate. What that scatter does to the
-        speckliness of the result is the honest part of the trade. The normalization constants inside the
+        real ones. The noise slider adds scatter back to compensate, and its effect on the speckle in the
+        result is part of the same trade. The normalization constants inside the
         covariance are medians of the two deviations over the map. AASPI's are set differently. The choice
         affects the balance between the two contributions but not the character of the result. The
         off-diagonal entry of the 2×2 is the mean of the square root of the product of the two normalized
@@ -464,8 +463,8 @@
       <p><b>The panels are not the same kind of picture.</b> The map shows amplitude extracted along a
         pick. Deviation of vector dip is an angle-like spread with the units of dip. The covariance term
         is a product of two deviations and has neither the units of the first nor a sense in which large
-        is simply worse. Colors that look alike across the panels are not measuring alike, and the
-        crossplot is included because it is the display in which that is hardest to forget.</p>
+        is simply worse. Similar colors across the panels do not represent similar measurements, and the
+        crossplot is included because it keeps the two quantities on separate axes.</p>
       <p><b>What the model leaves out.</b> The horizon is a picked surface with no pick errors in it
         beyond the noise slider, and pick error is the dominant source of apparent nonparallelism on real
         horizon slices. Nothing here reproduces an autotracker jumping a cycle, which puts a step into the

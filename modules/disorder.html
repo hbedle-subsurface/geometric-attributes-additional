@@ -26,11 +26,11 @@
   <div class="mod-head">
     <p class="eyebrow">Module 03 &nbsp;·&nbsp; Program disorder</p>
     <h1>Disorder: measuring the noise instead of the geology</h1>
-    <p class="sub">Coherence is built to find edges and to treat everything else as background. Disorder is
-      built the other way round: edges are signal, and what it hunts for is the chaotic, unpickable mess
-      that makes a horizon hard to follow. That sounds like a small change of emphasis. It produces a
-      completely different map, and it answers a question no other attribute here answers — how much should
-      I trust this pick?</p>
+    <p class="sub">Coherence is built to find edges and to treat everything else as background. Disorder
+      reverses that: an edge counts as ordinary signal, and the attribute responds instead to the chaotic,
+      unpickable data that makes a horizon hard to follow. The resulting map is a very different one, and
+      it answers a question none of the other attributes here answer: how much should I trust this
+      pick?</p>
   </div>
 
   <div class="labhead">
@@ -125,8 +125,8 @@
     <p class="lede">A second difference is zero on anything smooth. Feed it a flat surface and it returns
       zero; feed it a straight ramp and it still returns zero, because a ramp does not bend. Feed it
       something that goes up, down, up from one sample to the next and it returns a large number. That is
-      what "rough" means, arithmetically, and it is why this operator is blind to gently dipping reflectors
-      and wide awake to noise.</p>
+      what "rough" means arithmetically, and it is why this operator responds weakly to gently dipping
+      reflectors and strongly to noise.</p>
 
     <div class="sec-row" id="row1">
       <div class="panel-col">
@@ -163,11 +163,11 @@
     <p class="lede" style="font-family:var(--mono);font-size:15px;background:var(--cream);
       border-left:3px solid var(--crimson);padding:8px 12px;display:inline-block">
       disorder = | L &middot; e | / ( ‖L‖ ‖e‖ + &epsilon; )</p>
-    <p class="lede">Anyone who has met the dot product will recognize what that is: the cosine of the angle
-      between the data and the operator. It runs from 0 to 1 no matter how loud the data are. Zero means the
-      window contains nothing the operator responds to; one would mean the window <em>is</em> the operator's
-      pattern, which in practice means noise of the worst kind. It is a ratio of roughness to strength, and
-      that is a signal-to-noise measurement, which is what the attribute is for.</p>
+    <p class="lede">That expression is the cosine of the angle between the data and the operator. It runs
+      from 0 to 1 regardless of the amplitude of the data. Zero means the window contains nothing the
+      operator responds to; one would mean the window <em>is</em> the operator's pattern, which in practice
+      corresponds to severe noise. It is a ratio of roughness to strength, which makes it a measure of
+      signal-to-noise ratio.</p>
 
     <div class="sec-row" id="row2">
       <div class="panel-col">
@@ -202,7 +202,7 @@
       takes its <b>standard deviation</b> along dip over a second window.</p>
     <p class="lede">Taking a standard deviation rather than an average is a deliberate choice, and it is
       what makes the attribute mappable. An average asks how rough the data are on the whole. A standard
-      deviation asks how <em>inconsistently</em> rough they are — and a package where roughness varies
+      deviation asks how <em>inconsistently</em> rough they are, and a package where roughness varies
       wildly from sample to sample is exactly a package where a horizon tracker will jump.</p>
 
     <div class="sec-row" id="row3">
@@ -229,9 +229,9 @@
     </div>
     <p class="legend prose"><span>Separation is the gap between the mean disorder of the chaotic package and
       that of the conformable package above it, divided by the scatter within them. It is the number that
-      says whether you could actually draw a boundary between the two on the map. The raw volume and the
-      stat3d volume have nearly the same <em>ratio</em> of means, and completely different separations,
-      which is the point of the second stage.</span></p>
+      says whether a boundary between the two could be drawn on the map. The raw volume and the stat3d
+      volume have nearly the same <em>ratio</em> of means and very different separations, which is what the
+      second stage supplies.</span></p>
   </section>
 
   <!-- ================================ 4 ================================ -->
@@ -241,8 +241,8 @@
       <span class="hint">The fault is the test</span>
     </div>
     <p class="lede">Both attributes return a number near zero for well-behaved data and a larger one for
-      trouble, so it is tempting to assume they are the same measurement with the sign flipped. Put a fault
-      in front of them and the difference is immediate.</p>
+      problem data, which invites reading them as the same measurement with the sign reversed. A fault
+      separates them.</p>
     <p class="lede">Neither attribute is silent at either feature, so the question worth asking is not
       whether each responds but which it responds to <em>more</em>. Coherence responds to both and stays
       within a factor of two of itself across the two: its fault response is more than half its response to
@@ -252,10 +252,10 @@
       different times. A second difference has much less to say about that than about data that genuinely
       bends. The two numbers under the panels are measured live, so the comparison can be checked at any
       setting rather than taken on trust here.</p>
-    <p class="lede">That preference is the design, and it is what makes the attribute useful for the job in
-      step 5. If you are asking which parts of a horizon you can trust, a fault is not the answer you want:
-      your pick against a fault may be one of the best on the survey. What you want is the attribute that
-      reserves its strongest response for data that cannot be picked at all.</p>
+    <p class="lede">That preference is deliberate, and it is what suits the attribute to the use made of it
+      in step 5. For the question of which parts of a horizon are reliably picked, a fault is not a useful
+      response: a pick against a fault may be among the best on the survey. The measurement needed is one
+      whose strongest response is to data that cannot be picked at all.</p>
 
     <div class="sec-row" id="row4">
       <div class="panel-col">
@@ -289,16 +289,16 @@
   <section class="tabpane" id="p5" role="tabpanel" hidden>
     <div class="plot-head" style="margin-bottom:14px">
       <h3><span class="stepno">5</span>A confidence map for a pick</h3>
-      <span class="hint">The reason the attribute exists</span>
+      <span class="hint">What the attribute is used for</span>
     </div>
     <p class="lede">Alistair Brown's workflow for quantifying interpretation confidence asked the
       interpreter to score each pick 0, 1 or 2 for reflector quality and build a map from those scores. It
-      is a good idea that almost nobody does, because scoring every pick by hand on a modern survey is not
-      realistic. Disorder computes the same thing volumetrically.</p>
+      is rarely carried out, because scoring every pick by hand on a modern survey is not practical.
+      Disorder computes the same quantity volumetrically.</p>
     <p class="lede">The panel below tracks a horizon automatically — following the strongest peak from trace
       to trace, the way an autopicker does — and colors the result by the disorder along it. Green is a pick
-      you can defend. Red is a pick you should look at before you contour it, and the two are impossible to
-      tell apart on the time-structure map alone.</p>
+      that the data support. Red marks one to check before contouring. The two are indistinguishable on
+      the time-structure map alone.</p>
 
     <div class="sec-row" id="row5">
       <div class="panel-col">
@@ -314,8 +314,7 @@
 
     <p class="lede" style="margin-top:12px">Because the model was built from known horizons, the tracker can
       be scored: the lower panel shows how far each pick is from where the reflector actually is. The
-      question this step exists to answer is whether disorder predicted the errors before you knew about
-      them.</p>
+      question here is whether disorder marked those errors in advance of their being known.</p>
 
     <div class="stats">
       <div class="stat"><span>Traces the tracker got within one sample</span><b id="s5a">—</b></div>
@@ -330,15 +329,15 @@
   <section class="tabpane" id="pb" role="tabpanel" hidden>
     <div class="plot-head" style="margin-bottom:14px">
       <h3><span class="stepno">6</span>A blind test</h3>
-      <span class="hint">The part that tells you about yourself</span>
+      <span class="hint">The attribute first, the model afterward</span>
     </div>
-    <p class="lede">Everything up to here has shown you the model and then the attribute computed from it.
-      That is the wrong way round. On real data the attribute arrives first, and the geology it is supposed
-      to be showing is the thing you are trying to work out.</p>
+    <p class="lede">Every step up to here has shown the model first and the attribute computed from it
+      second. On real data that order is reversed: the attribute arrives first, and the geology behind it is
+      what has to be worked out.</p>
     <p class="lede">Below is a disorder map from a section you have not seen, with the model hidden and the
       settings randomized. Click on the map where you think the top of a chaotic package is. If you think
-      there is no chaotic package in this one, say so &mdash; roughly a third of the cases do not contain
-      one, and calling those correctly is the harder half of the test.</p>
+      there is no chaotic package in this one, say so. Roughly a third of the cases do not contain one, and
+      those are the harder cases to call correctly.</p>
 
     <div class="sec-row" id="rowb">
       <div class="panel-col">
@@ -368,22 +367,20 @@
 
     <p class="legend prose"><span>A call counts as correct if the marked time lands inside the package, or
       if you said there was none and there was none. Noise raises disorder everywhere, and a case with high
-      noise and no chaotic package is the one that catches people: the map is not blank, it is uniformly
-      busy, and a uniformly busy map is what background looks like rather than what an anomaly looks
-      like.</span></p>
+      noise and no chaotic package is the one most often misread. The map is not blank but uniformly busy,
+      and a uniformly busy map is background rather than an anomaly.</span></p>
   </section>
 
   <!-- ============================ WHY IT MATTERS ========================= -->
   <section class="tabpane" id="pw" role="tabpanel" hidden>
-    <p class="lede">Every map an interpreter hands over carries an implied claim that it is equally reliable
-      everywhere on it, and that claim is never true. Disorder is one of the few attributes whose output is
-      about the interpretation rather than about the rock.</p>
+    <p class="lede">A finished map is read as though it were equally reliable everywhere on it, and it
+      rarely is. Disorder is one of the few attributes whose output describes the interpretation rather
+      than the rock.</p>
     <ul style="font-size:14.5px;color:var(--ink-soft);max-width:96ch">
       <li><b>It turns a contour map into a contour map with error bars.</b> A closure that sits entirely in
         a high-disorder area is a different prospect from the same closure in a quiet one, and nothing on the
         structure map itself says which you have.</li>
-      <li><b>It tells you where autotracking will fail before you run it.</b> That is worth knowing in
-        advance rather than after a day of editing.</li>
+      <li><b>It marks where autotracking will fail before the tracker is run.</b></li>
       <li><b>It is a data-quality map, so it is also a processing map.</b> Areas of persistently high
         disorder are where reprocessing, or a different migration, has something to offer. Areas of low
         disorder are where it does not.</li>
@@ -391,9 +388,9 @@
         every fault as low confidence, and a pick against a fault is often one of the better picks on the
         survey.</li>
       <li><b>Read it alongside coherence, never instead of it.</b> They answer different questions and the
-        useful thing is usually where they disagree — high coherence and high disorder together means the
-        traces agree with each other and are all equally bad, which is a specific and treacherous situation
-        the AASPI documentation describes on a real horizon in the Norwegian North Sea.</li>
+        informative places are usually where they disagree. High coherence and high disorder together
+        means the traces agree with each other and are all equally poor, a case the AASPI documentation
+        describes on a real horizon in the Norwegian North Sea.</li>
     </ul>
   </section>
 
@@ -438,16 +435,17 @@
             several times more strongly than it does to the fault. Neither attribute is blind to either feature; what
             separates them is which one they reserve their response for, and that is enough to make them
             answer different questions. Note also what happens when you take the chaos away entirely: with
-            clean data the background disorder is so close to zero that any response at all looks enormous
-            as a percentage, which is a good reminder that a ratio against a near-zero baseline is not a
-            measurement you should quote.</span></details></li>
+            clean data the background disorder is so close to zero that any response at all is a very large
+            percentage of it. A ratio taken against a near-zero baseline carries little
+            information.</span></details></li>
         <li><b>Test the confidence claim.</b> <em>Why bother: this is the reason to compute disorder at all rather than to read coherence and stop.</em> In step 5, raise the noise until the tracker starts making
           mistakes, then compare the two mean-disorder figures.
           <details class="reveal"><summary>Hint</summary><span class="ans">Disorder along the mistracked
-            traces runs well above disorder along the good ones. That gap is the entire practical claim of
-            the attribute, and you can watch it open up as the data get worse. Note the limitation too: it
-            tells you the pick is <em>unreliable</em>, not which way it is wrong, and a confident wrong pick
-            in quiet data is something no attribute here will catch.</span></details></li>
+            traces runs well above disorder along the good ones, and the gap widens as the data get worse.
+            That relationship is the practical claim made for the attribute. Its limitation is that it
+            marks a pick as <em>unreliable</em> without indicating which way the error runs, and a
+            confident wrong pick in quiet data is not detected by any attribute
+            here.</span></details></li>
               <li><b>Put the fault below the limit of what you can see.</b> <em>Why bother: it is the reason
           discontinuity attributes are computed at all.</em> Set the fault throw to 4 samples. The scale
           panel reads that back as a fraction of the wavelength, and 4 samples is close to
@@ -459,8 +457,8 @@
             interference changes the shape of the waveform even where it no longer produces a step you can
             point at. That leftover distortion is what a discontinuity attribute measures. Raise the throw
             back up and the response grows, but it does not switch on at the resolution limit, because
-            nothing physical happens there — the limit is a statement about the eye, not about the
-            rock.</span></details></li>
+            nothing in the data changes there. The limit describes what is visually separable, not a
+            property of the rock.</span></details></li>
 </ol>
     </div>
   </section>
@@ -524,8 +522,8 @@
       <p><b>The panels are not the same kind of picture.</b> The section is amplitude, signed. Coherence
         is a bounded similarity with no units. Disorder is a ratio of a second difference to the energy in
         the window, also unitless but unbounded above and running the opposite way. Three panels, three
-        quantities, and the only honest comparison between them is the one made here: each measured
-        against its own background rather than against the others.</p>
+        quantities. The comparison made here is each attribute measured against its own background rather
+        than against the others.</p>
       <p><b>What the model leaves out.</b> The fault is a rigid offset of an otherwise undisturbed
         section: no drag, no damage zone, no fault-plane reflection, no tip diffractions. Those are exactly
         the features that make a real fault produce more disorder than the clean offset modeled here, so
